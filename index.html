@@ -569,7 +569,9 @@ function animateSurface(w,i,dt){
   w.drill.rotation.y+=dt*6;w.facBeacon.material.emissiveIntensity=(simTime*.9)%1<.5?1.8:.3;
   w.pods.forEach((pod,k)=>{const t=(simTime*.12+k/4)%1;slerpDir(FAC_DIR,CONV_END,t,_b);pod.position.copy(_b).multiplyScalar(R+.12*s+Math.sin(t*Math.PI)*.06*s)});
   w.anim.forEach((f,k)=>{if(w.tiers[k+1]&&w.tiers[k+1].visible)f(dt)});
-  w.rovers.forEach(rv=>{if(rv.tier>=n)return;const ph=((simTime/rv.period)+rv.off)%1;let u,carrying=false,mining=false,inside=false;
+  // all rovers share one cycle and are spread evenly around it, so departures and returns are staggered
+  const active=n*3,CYCLE=18;
+  w.rovers.forEach((rv,j)=>{if(rv.tier>=n)return;const ph=((simTime/CYCLE)+j/active+i*.137)%1;let u,carrying=false,mining=false,inside=false;
     // leave the depot -> drive out along the roads -> mine -> drive back -> unload inside the depot
     if(ph<.36)u=ph/.36;else if(ph<.5){u=1;mining=true}else if(ph<.86){u=1-(ph-.5)/.36;carrying=true}else{u=0;inside=true}
     rv.g.visible=!inside;if(inside)return;
