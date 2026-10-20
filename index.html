@@ -85,6 +85,8 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
 .btn.ghost{background:none;border:1px solid var(--line);color:var(--ink)}
 .btn.ghost:disabled{color:#4a5075}
 .btn.ship{background:var(--ship);color:#052523}
+.btn.ship.bnr{box-shadow:0 0 0 2px var(--panel),0 0 0 4px var(--bad)}
+.btn.ship.bnr:disabled{box-shadow:0 0 0 2px var(--panel),0 0 0 4px #7a3a44}
 .btn.up{background:#232849;color:var(--ink);border:1px solid #343a66}
 .btn.up.hot{background:var(--bad);color:#2b0606;border-color:var(--bad);box-shadow:0 0 0 3px rgba(255,122,122,.18)}
 .btn.up.hot:disabled{background:#3a1d26;color:#ffb3b3;border-color:var(--bad);box-shadow:none}
@@ -193,7 +195,14 @@ const PLANETS=[
  {n:'Obelis', cost:2.6e18,size:1.05,c1:'#6e2a5a',c2:'#ff9fd8',mix:[[16,.5],[17,.5]],ring:'#ffc2e8'},
  {n:'Veil',   cost:2e19,  size:1.45,c1:'#3d3d48',c2:'#e8e8f5',mix:[[17,.6],[18,.4]],gas:1},
  {n:'Zenith', cost:1.6e20,size:1.8,c1:'#2a1f4f',c2:'#fff1c4',mix:[[18,.7],[17,.3]],ring:'#fff1c4',gas:1}];
-PLANETS.forEach((p,i)=>{p.r=5+i*2.5;p.base=Math.max(8,p.cost*.12);p.speed=.11/Math.sqrt(p.r);p.a0=i*2.39996;});
+PLANETS.forEach((p,i)=>{p.r=5+i*2.5;p.speed=.11/Math.sqrt(p.r);p.a0=i*2.39996;});
+/* Economy. Planet output comes only from its mining teams (and research / star dust).
+   Each planet's base output is scaled to its claim price so every new planet is worth claiming. */
+const ECON={DUST_A:2,DUST_K:.2,EXP:.7,PAY:3,SCALE_MIN:100,HIRE:[1,4,30],UP_BASE:.12,UP_GROW:1.32,TEAM_X:[1,6,40],SHIP_BASE:1.6,CARGO_FIT:.9};
+PLANETS.forEach((p,i)=>{const avg=p.mix.reduce((a,[o,f])=>a+ORES[o].v*f,0);
+  p.scale=Math.max(ECON.SCALE_MIN,p.cost);
+  p.rate=i===0?.8:Math.pow(p.cost,ECON.EXP)/(ECON.PAY*avg);
+  p.cargo=p.rate*(2*p.r/ECON.SHIP_BASE)*ECON.CARGO_FIT;});
 const RESEARCH=[
  {id:'auto',n:'Trade Contracts',d:'Unlocks auto-sell toggles in the Market.',cost:400},
  {id:'smelt',n:'Smelter',d:'Refine 8 ore into a bar worth 12× one ore.',cost:1200},
@@ -225,15 +234,19 @@ const BAR_IN=8, BAR_MULT=12, OD_LEN=120, OD_CD=600, WARP_AT=5;
 
 /* ===================== STATE ===================== */
 const KEY='starquarry_save_v1';
-function newRun(keep){keep=keep||{};return{v:1,music:keep.music||{on:true,vol:.6},cash:0,dm:keep.dm||0,runEarned:0,lifetime:keep.lifetime||0,warps:keep.warps||0,
- planets:PLANETS.map((p,i)=>({u:i===0,m:1,s:1,c:1,stock:0,t:Math.random()*.4,load:0,mn:(keep.miners&&keep.miners[i])||null})),
+function newRun(keep){keep=keep||{};return{v:1,econ:2,music:keep.music||{on:true,vol:.6},cash:0,dm:keep.dm||0,runEarned:0,lifetime:keep.lifetime||0,warps:keep.warps||0,
+ planets:PLANETS.map((p,i)=>({u:i===0,teams:i===0?[{n:0,t:{}}]:[],stock:0,t:Math.random()*.4,load:0})),
  inv:{},bars:{},research:{},auto:{},slots:[{r:null,p:0,a:false},{r:null,p:0,a:false},{r:null,p:0,a:false}],
  od:{until:0,ready:0},last:Date.now(),tut:0,sel:0}}
 let S;
 try{const raw=localStorage.getItem(KEY);S=raw?JSON.parse(raw):null}catch(e){S=null}
 if(!S||S.v!==1)S=newRun();
-while(S.planets.length<PLANETS.length)S.planets.push({u:false,m:1,s:1,c:1,stock:0,t:0,load:0});
-S.planets.forEach(p=>{if(p.mn&&p.mn.t)delete p.mn.t.f});
+while(S.planets.length<PLANETS.length)S.planets.push({u:false,teams:[],stock:0,t:0,load:0});
+// Older saves: planet levels are gone; an existing mining team becomes the planet's first team.
+if(S.econ!==2){S.planets.forEach((p,i)=>{const mn=p.mn;p.teams=[];
+    if(p.u||i===0){p.u=true;p.teams.push(mn?{n:mn.n,t:{m:mn.t.m||0,s:mn.t.s||0,c:mn.t.c||0}}:{n:0,t:{}})}
+    delete p.m;delete p.s;delete p.c;delete p.mn});S.econ=2}
+S.planets.forEach(p=>{if(!p.teams)p.teams=[]});
 if(!S.music)S.music={on:true,vol:.6};
 function save(){S.last=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 
@@ -243,22 +256,27 @@ function rmult(k){let m=1;for(const r of RESEARCH)if(r[k]&&has(r.id))m*=r[k];ret
 const odOn=()=>Date.now()<S.od.until;
 const valueMult=()=>rmult('value')*(1+.1*S.dm);
 /* Mining teams: one per planet, up to 20 upgrades, each worth +0.25x on the trait it is assigned to. */
-const MINER_MAX=20,MINER_STEP=.25;
+const MINER_MAX=20,MINER_STEP=.25,TEAM_MAX=3;
 const TRAITS=[['m','Mining'],['s','Ship speed'],['c','Cargo']];
 const MINER_NAMES=['Flint Crew','Rustline Gang','Deepcut Company','Ironjaw Team','Ember Diggers','Shale Brigade','Hollow Point Crew','Quarry Wolves','Lodestar Team','Bedrock Union','Vein Hunters','Pickaxe Collective','Graviton Crew','Starfall Diggers','Core Breakers','Dustwalkers','Night Shift Crew','Crystal Guild','Void Sappers','Pulsar Company','Zero-G Crew','Last Light Team'];
-const minerT=(i,k)=>{const mn=S.planets[i]&&S.planets[i].mn;return mn?1+MINER_STEP*(mn.t[k]||0):1};
-const minerHireCost=i=>Math.max(300,PLANETS[i].cost*1.5);
-const minerUpCost=i=>minerHireCost(i)*.5*Math.pow(1.45,S.planets[i].mn.n);
+const teamPts=(i,k)=>{const p=S.planets[i];return p&&p.teams?p.teams.reduce((a,tm)=>a+(tm.t[k]||0),0):0};
+const minerT=(i,k)=>1+MINER_STEP*teamPts(i,k);
+const teamHireCost=(i,j)=>j===0?PLANETS[i].cost:PLANETS[i].scale*ECON.HIRE[j];
+const teamUpCost=(i,j)=>PLANETS[i].scale*ECON.UP_BASE*ECON.TEAM_X[j]*Math.pow(ECON.UP_GROW,S.planets[i].teams[j].n);
+const PREFIX=['Flint','Rustline','Deepcut','Ironjaw','Ember','Shale','Hollow Point','Quarry','Lodestar','Bedrock','Vein','Pickaxe','Graviton','Starfall','Core','Dust','Night Shift','Crystal','Void','Pulsar','Zero-G','Last Light'];
+const SUFFIX=['Crew','Gang','Company','Team','Diggers','Brigade','Union','Guild','Collective','Sappers','Hunters','Walkers'];
+const teamName=(i,j)=>j===0?MINER_NAMES[i%MINER_NAMES.length]:PREFIX[(i*7+j*9+3)%PREFIX.length]+' '+SUFFIX[(i*5+j*7)%SUFFIX.length];
+function hireTeam(i){const p=S.planets[i],j=p.teams.length;if(j>=TEAM_MAX)return false;const c=teamHireCost(i,j);if(S.cash<c)return false;
+  S.cash-=c;p.teams.push({n:0,t:{}});if(j===0){p.u=true;p.t=0}return true}
+function teamBuy(i,j,k){const tm=S.planets[i].teams[j];if(!tm||tm.n>=MINER_MAX||minerFree(tm)>0||!TRAITS.some(t=>t[0]===k))return false;
+  const c=teamUpCost(i,j);if(S.cash<c)return false;S.cash-=c;tm.n++;tm.t[k]=(tm.t[k]||0)+1;return true}
 const minerFree=mn=>mn.n-TRAITS.reduce((a,[k])=>a+(mn.t[k]||0),0);
-function mineRate(i,raw){const p=S.planets[i],b=.8*(1+i*.3)*p.m*Math.pow(1.05,p.m);return raw?b:b*rmult('mine')*minerT(i,'m')*(odOn()?2:1)}
-function shipSpeed(i,raw){const b=1.6*(1+.15*(S.planets[i].s-1));return raw?b:b*rmult('ship')*minerT(i,'s')*(odOn()?2:1)}
-function cargo(i,raw){const p=S.planets[i],b=5*(1+i*.6)*p.c*Math.pow(1.08,p.c);return raw?b:b*rmult('cargo')*minerT(i,'c')}
+function mineRate(i){return PLANETS[i].rate*rmult('mine')*minerT(i,'m')*(odOn()?2:1)}
+function shipSpeed(i){return ECON.SHIP_BASE*rmult('ship')*minerT(i,'s')*(odOn()?2:1)}
+function cargo(i){return PLANETS[i].cargo*rmult('cargo')*minerT(i,'c')}
 const tripTime=i=>2*PLANETS[i].r/shipSpeed(i);
 const haul=i=>Math.min(mineRate(i),cargo(i)/tripTime(i));
 const avgValue=i=>PLANETS[i].mix.reduce((a,[o,f])=>a+ORES[o].v*f,0);
-const GROW={m:1.18,s:1.2,c:1.19}, KMULT={m:1,s:1.1,c:1.05};
-function upCost(i,k,n){const p=S.planets[i],b=PLANETS[i].base*KMULT[k],g=GROW[k],l=p[k]-1;return b*Math.pow(g,l)*(Math.pow(g,n)-1)/(g-1)}
-function maxBuy(i,k){const p=S.planets[i],b=PLANETS[i].base*KMULT[k],g=GROW[k],l=p[k]-1;return Math.floor(Math.log(S.cash*(g-1)/(b*Math.pow(g,l))+1)/Math.log(g))}
 const smeltSlots=()=>has('smelt')?1+(has('slot2')?1:0)+(has('slot3')?1:0):0;
 const smeltTime=o=>5*(1+o*.35)/rmult('smelt');
 const reserve=o=>S.slots.slice(0,smeltSlots()).filter(s=>s.r===o).length*BAR_IN*2;
@@ -299,7 +317,7 @@ function offline(sec,announce){
     toast(`Welcome back. In ${h?h+'h ':''}${m}m your fleet hauled ${fmt(units)} ore`+(S.cash>before?` and earned ${fmt(S.cash-before)} credits.`:'. Sell it in the Market.'),6000)}
 }
 function incomeEstimate(){let t=0;S.planets.forEach((p,i)=>{if(p.u)t+=haul(i)*avgValue(i)});return t*valueMult()}
-const pendingDM=()=>Math.floor(3*Math.sqrt(S.runEarned/1e6));
+const pendingDM=()=>Math.floor(ECON.DUST_A*Math.pow(Math.max(0,S.runEarned)/1e6,ECON.DUST_K));
 
 /* ===================== FORMAT ===================== */
 const SUF=['K','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc','Ud','Dd','Td','Qad','Qid','Sxd','Spd','Ocd','Nod','Vg'];
@@ -421,7 +439,7 @@ function buildFacility(w,i){const P=PLANETS[i],s=P.size*.16,R=P.size,g=new THREE
 const DEP_DIRS=[surfDir(1.25,1.25),surfDir(.62,1.45),surfDir(1.05,.05)];
 const COLONY_DIR=PORT_DIR.clone(),COLONY_TEAM_DIR=PORT_DIR.clone().add(FAC_DIR).add(DEP_DIRS[0]).add(DEP_DIRS[1]).add(DEP_DIRS[2]).normalize();
 const _cd=new THREE.Vector3(),_cv=new THREE.Vector3();
-function colonyDir(i){return _cd.copy(S.planets[i].mn?COLONY_TEAM_DIR:COLONY_DIR).applyQuaternion(W[i].mesh.quaternion)}
+function colonyDir(i){return _cd.copy(S.planets[i].u?COLONY_TEAM_DIR:COLONY_DIR).applyQuaternion(W[i].mesh.quaternion)}
 function animateSurface(w,i,dt){
   if(w.portBeacon){const on=(simTime*1.2+i)%1<.5;w.portBeacon.material.emissiveIntensity=on?2:.2;w.portLights.forEach((l,k)=>l.material.emissiveIntensity=.4+1.2*Math.max(0,Math.sin(simTime*4-k)))}
   if(!w.fac||!w.fac.visible)return;const R=w.facR,s=w.facS;
@@ -447,14 +465,15 @@ const W=PLANETS.map((P,i)=>{
   const label=document.createElement('div');label.className='plabel';document.getElementById('labels').appendChild(label);
   return{mesh,mat,ringM,orbit,ship,label,pos:new THREE.Vector3(),angle:P.a0,port:null,fac:null}});
 let simTime=0;
+function planetLabel(i){const p=S.planets[i];return p.u?`<b>${PLANETS[i].n}</b>${'★'.repeat(p.teams.length)}${'☆'.repeat(TEAM_MAX-p.teams.length)}`:`<b>${PLANETS[i].n}</b>${fmt(PLANETS[i].cost)} cr`}
 function refreshWorld(){
   const firstLocked=S.planets.findIndex(p=>!p.u);
   W.forEach((w,i)=>{const u=S.planets[i].u,vis=u||i===firstLocked;
     w.mesh.visible=w.orbit.visible=vis;w.ship.visible=u;w.label.hidden=!vis;
     w.mat.opacity=u?1:.35;w.mat.color.set(u?0xffffff:0x6670a0);if(w.mat.transparent===u){w.mat.transparent=!u;w.mat.needsUpdate=true}w.orbit.material.opacity=u?.55:.22;
-    if(u&&!w.port)buildPort(w,i);if(u&&S.planets[i].mn&&!w.fac)buildFacility(w,i);
+    if(u&&!w.port)buildPort(w,i);if(u&&!w.fac)buildFacility(w,i);
     w.label.className='plabel'+(u?'':' locked')+(S.sel===i?' sel':'');
-    w.label.innerHTML=`<b>${PLANETS[i].n}${u&&S.planets[i].mn?' ★':''}</b>${u?'Lv '+S.planets[i].m:fmt(PLANETS[i].cost)+' cr'}`});
+    w.label.innerHTML=planetLabel(i)});
 }
 const tmp=new THREE.Vector3(),tmp2=new THREE.Vector3(),_pw=new THREE.Vector3(),_ds=new THREE.Vector3(),_ap=new THREE.Vector3(),_st=new THREE.Vector3(),_sd=new THREE.Vector3();
 // Hauler path: station -> a point in front of the planet -> curve round to land on the space port pad.
@@ -475,7 +494,7 @@ function updateWorld(dt){
   W.forEach((w,i)=>{if(!w.mesh.visible)return;const P=PLANETS[i];
     w.angle+=dt*P.speed;w.pos.set(Math.cos(w.angle)*P.r,0,Math.sin(w.angle)*P.r);w.mesh.position.copy(w.pos);w.mesh.rotation.y+=dt*.05;
     const camD=camera.position.distanceTo(w.pos),near=camD<P.size*18&&S.planets[i].u;
-    if(w.port)w.port.visible=near;if(w.fac)w.fac.visible=near&&!!S.planets[i].mn;
+    if(w.port)w.port.visible=near;if(w.fac)w.fac.visible=near;
     if(near)animateSurface(w,i,dt);
     if(w.ship.visible){const t=S.planets[i].t,f=t<.5?t*2:2-t*2,out=t<.5;
       shipPoint(w,P,f,out,w.ship.position);const sc=w._sc;w.ship.scale.setScalar(sc);
@@ -514,7 +533,7 @@ const outerR=()=>{let r=4;W.forEach((w,i)=>{if(w.mesh.visible)r=Math.max(r,PLANE
 function fitDistance(){if(!vb)vb=viewBox();const R=outerR()*1.08,fw=(vb.right-vb.left)/vb.h,fh=(vb.bottom-vb.top)/vb.h;
   const byW=R/(TAN*fw),byH=R*Math.max(Math.cos(cam.phi),.25)/(TAN*fh)+R*Math.sin(cam.phi)*.15,d=Math.max(byW,byH);return isFinite(d)?clampR(d):30}
 const clampR=r=>Math.min(340,Math.max(cam.focus>=0?PLANETS[cam.focus].size*.35:8,r));
-function focusPlanet(i){cam.focus=i;cam.track=true;S.sel=i;cam.tr=PLANETS[i].size*(S.planets[i].mn?2.1:1.45);refreshWorld();toast('Pinch to zoom. Drag to leave the close-up.',2200)}
+function focusPlanet(i){cam.focus=i;cam.track=true;S.sel=i;cam.tr=PLANETS[i].size*2.1;refreshWorld();toast('Pinch to zoom. Drag to leave the close-up.',2200)}
 function unfocus(){if(cam.focus<0)return;const i=cam.focus;cam.focus=-1;cam.track=false;cam.tt.copy(W[i].pos);cam.target.copy(W[i].pos);if(cam.tr<8)cam.tr=Math.max(14,PLANETS[i].size*10)}
 function recenter(){cam.focus=-1;cam.track=false;resize();cam.tt.set(0,0,0);cam.target.set(0,0,0);cam.phi=1.0;cam.tr=fitDistance();toast('Map recentered',1000)}
 
@@ -637,7 +656,7 @@ const Music=(()=>{
 
 /* ===================== UI ===================== */
 const $=id=>document.getElementById(id);
-const pbody=$('pbody');let tab='planet',buyMode=1,pressing=false,lastHTML='',arm=null;
+const pbody=$('pbody');let tab='planet',pressing=false,lastHTML='',arm=null;
 function hideToast(){const t=$('toast');t.classList.remove('show');clearTimeout(toast.h2);toast.h2=setTimeout(()=>{if(!t.classList.contains('show'))t.hidden=true},320)}
 function toast(msg,ms){const t=$('toast');t.textContent=msg;t.hidden=false;clearTimeout(toast.h2);requestAnimationFrame(()=>t.classList.add('show'));clearTimeout(toast.h);toast.h=setTimeout(hideToast,Math.min(ms||2200,4000))}
 $('toast').addEventListener('click',()=>{clearTimeout(toast.h);hideToast()});
@@ -657,43 +676,41 @@ pbody.addEventListener('scroll',()=>lastScroll=performance.now(),{passive:true,c
 const armed=k=>arm&&arm.k===k&&Date.now()<arm.until;
 
 function oreChip(o,f){return `<span class="ore"><i style="background:${ORES[o].c}"></i>${ORES[o].n}${f!=null?` <span class="num" style="color:var(--muted)">${Math.round(f*100)}%</span>`:''}</span>`}
-function upBtn(i,k,hot){const n=buyMode==='max'?Math.max(1,maxBuy(i,k)):buyMode,c=upCost(i,k,n);
-  return `<button class="btn up${hot?' hot':''}" data-act="up" data-p="${i}" data-k="${k}" data-n="${n}" ${S.cash>=c?'':'disabled'} type="button">+${n} Lv<small>${fmt(c)}</small></button>`}
-
 function viewPlanet(){
   const i=S.sel,P=PLANETS[i],p=S.planets[i],firstLocked=S.planets.findIndex(x=>!x.u);
   let chips='<div class="chips">';S.planets.forEach((x,k)=>{if(x.u||k===firstLocked)chips+=`<button class="chip${k===i?' on':''}${x.u?'':' lock'}" data-act="sel" data-p="${k}" type="button">${PLANETS[k].n}</button>`});chips+='</div>';
   let h=chips+`<div class="head"><h2>${P.n}</h2><span class="num" style="color:var(--muted);font-size:12px">Orbit ${i+1} · ${P.r.toFixed(1)} AU</span>${p.u?`<button class="tog${cam.focus===i&&cam.track?' on':''}" data-act="${cam.focus===i&&cam.track?'unfocus':'focus'}" data-p="${i}" type="button">${cam.focus===i?(cam.track?'Back to galaxy':'Center colony'):'Close-up'}</button>`:''}</div>
   <div class="ores">${P.mix.map(([o,f])=>oreChip(o,f)).join('')}</div>`;
-  if(!p.u){h+=`<p>A survey drone has mapped ${P.n}. Claim it to start mining ${P.mix.map(([o])=>ORES[o].n.toLowerCase()).join(' and ')}.</p>
-    <button class="btn wide" data-act="unlock" data-p="${i}" ${S.cash>=P.cost?'':'disabled'} type="button">Claim ${P.n}<small>${fmt(P.cost)} credits</small></button>`;return h}
+  if(!p.u){const c=teamHireCost(i,0);h+=`<p>A survey drone has mapped ${P.n}. Hire a mining team to claim it and start mining ${P.mix.map(([o])=>ORES[o].n.toLowerCase()).join(' and ')}.</p>
+    <button class="btn wide" data-act="hire" data-p="${i}" ${S.cash>=c?'':'disabled'} type="button">Hire the ${teamName(i,0)} and claim ${P.n}<small>${fmt(c)} credits</small></button>`;return h}
   const rate=mineRate(i),hl=haul(i),T=tripTime(i),shipsBN=hl<rate*.97,BN='<span class="bn">Bottleneck</span>';
+  const mult=k=>`×${minerT(i,k).toFixed(2)} from teams`;
   h+=`<div class="rows">
-   <div class="row"><div class="txt"><span class="t">Mine rate${shipsBN?'':BN}</span><span class="s">Lv ${p.m} · ${fmt(rate)} ore/s</span></div>${upBtn(i,'m',!shipsBN)}</div>
-   <div class="row"><div class="txt"><span class="t">Ship speed${shipsBN?BN:''}</span><span class="s">Lv ${p.s} · ${shipSpeed(i).toFixed(1)} AU/s · trip ${T.toFixed(1)}s</span></div>${upBtn(i,'s',shipsBN)}</div>
-   <div class="row"><div class="txt"><span class="t">Cargo hold${shipsBN?BN:''}</span><span class="s">Lv ${p.c} · ${fmt(cargo(i))} ore/trip</span></div>${upBtn(i,'c',shipsBN)}</div></div>
-  <div class="note"><span>Hauling <b class="num">${fmt(hl)}/s</b> of ${fmt(rate)}/s mined.</span>${shipsBN?'<span style="color:var(--bad)">Ships are the bottleneck.</span>':'<span style="color:var(--bad)">Mine rate is the bottleneck.</span>'}<span>Stockpile <b class="num">${fmt(p.stock)}</b></span></div>
-  <div class="note"><span>Buy</span><span class="seg">${[1,10,'max'].map(m=>`<button data-act="mode" data-m="${m}" class="${buyMode===m?'on':''}" type="button">${m==='max'?'Max':'×'+m}</button>`).join('')}</span></div>`+viewMiner(i);
+   <div class="row"><div class="txt"><span class="t">Mine rate${shipsBN?'':BN}</span><span class="s">${fmt(rate)} ore/s · ${mult('m')}</span></div></div>
+   <div class="row"><div class="txt"><span class="t">Ship speed${shipsBN?BN:''}</span><span class="s">${shipSpeed(i).toFixed(1)} AU/s · trip ${T.toFixed(1)}s · ${mult('s')}</span></div></div>
+   <div class="row"><div class="txt"><span class="t">Cargo hold${shipsBN?BN:''}</span><span class="s">${fmt(cargo(i))} ore/trip · ${mult('c')}</span></div></div></div>
+  <div class="note"><span>Hauling <b class="num">${fmt(hl)}/s</b> of ${fmt(rate)}/s mined.</span>${shipsBN?'<span style="color:var(--bad)">Ships are the bottleneck.</span>':'<span style="color:var(--bad)">Mine rate is the bottleneck.</span>'}<span>Stockpile <b class="num">${fmt(p.stock)}</b></span></div>`
+   +viewTeams(i,shipsBN);
   return h}
 
-function viewMiner(i){
-  const mn=S.planets[i].mn;
-  if(!mn){const c=minerHireCost(i);return `<div class="card miner"><div class="head"><h3>Mining team</h3><span class="num" style="font-size:12px;color:var(--muted)">0 / ${MINER_MAX} upgrades</span></div>
-    <p>Hire a mining team for ${PLANETS[i].n}. Each of their ${MINER_MAX} upgrades adds +${MINER_STEP}× to a trait you choose: mining, ship speed or cargo. Teams stay with you through warps.</p>
-    <button class="btn" data-act="hire" data-p="${i}" ${S.cash>=c?'':'disabled'} type="button">Hire the ${MINER_NAMES[i%MINER_NAMES.length]}<small>${fmt(c)}</small></button></div>`}
-  const free=minerFree(mn),full=mn.n>=MINER_MAX,uc=full?0:minerUpCost(i);
-  let h=`<div class="card miner"><div class="head"><h3>Mining team · ${MINER_NAMES[i%MINER_NAMES.length]}</h3><span class="num" style="font-size:12px;color:var(--muted)">${mn.n} / ${MINER_MAX} upgrades</span></div>
-    <div class="bar"><i style="width:${(mn.n/MINER_MAX*100).toFixed(1)}%;background:var(--ship)"></i></div>
+const teamSel={};
+function viewTeams(i,shipsBN){
+  const p=S.planets[i],n=p.teams.length;let j=Math.min(teamSel[i]||0,n-1);
+  let h=`<div class="card miner"><div class="head"><h3>Mining teams</h3><span class="num" style="font-size:12px;color:var(--muted)">${n} / ${TEAM_MAX} hired</span></div>`;
+  if(n>1){h+='<div class="chips">';p.teams.forEach((tm,k)=>{h+=`<button class="chip${k===j?' on':''}" data-act="tsel" data-p="${i}" data-j="${k}" type="button">${teamName(i,k)}</button>`});h+='</div>'}
+  const tm=p.teams[j],free=minerFree(tm),full=tm.n>=MINER_MAX,uc=full?0:teamUpCost(i,j);
+  h+=`<div class="head"><span style="font:600 15px var(--f-body)">${teamName(i,j)}</span><span class="num" style="font-size:12px;color:var(--muted)">${tm.n} / ${MINER_MAX} upgrades</span></div>
+    <div class="bar"><i style="width:${(tm.n/MINER_MAX*100).toFixed(1)}%;background:var(--ship)"></i></div>
     ${free>0?`<div class="note"><b style="color:var(--ship)">${free} free point${free>1?'s':''} to place.</b><span>Tap a green button.</span></div>`:''}
     <div class="rows">`;
-  TRAITS.forEach(([k,name])=>{const pts=mn.t[k]||0;
-    h+=`<div class="row"><div class="txt"><span class="t">${name}</span><span class="s">×${(1+MINER_STEP*pts).toFixed(2)} · ${pts} point${pts===1?'':'s'}</span></div>
-      ${free>0?`<button class="btn ship" data-act="assign" data-p="${i}" data-k="${k}" type="button" aria-label="Add a free point to ${name}">+${MINER_STEP}×<small>Free</small></button>`
+  TRAITS.forEach(([k,name])=>{const pts=tm.t[k]||0,hot=(k==='m')!==shipsBN;
+    h+=`<div class="row"><div class="txt"><span class="t">${name}</span><span class="s">+${(MINER_STEP*pts).toFixed(2)}× · ${pts} point${pts===1?'':'s'}</span></div>
+      ${free>0?`<button class="btn ship${hot?' bnr':''}" data-act="assign" data-p="${i}" data-j="${j}" data-k="${k}" type="button" aria-label="Add a free point to ${name}">+${MINER_STEP}×<small>Free</small></button>`
         :full?`<button class="btn ship" disabled type="button">Maxed<small>${MINER_MAX} / ${MINER_MAX}</small></button>`
-        :`<button class="btn ship" data-act="mbuy" data-p="${i}" data-k="${k}" ${S.cash>=uc?'':'disabled'} type="button" aria-label="Upgrade ${name} for ${fmt(uc)} credits">+${MINER_STEP}×<small>${fmt(uc)}</small></button>`}</div>`});
-  h+=`</div><div class="note" style="justify-content:space-between">`;
-  h+=full?`<span><b>Fully upgraded.</b></span>`:`<span>Each upgrade costs more than the last.</span>`;
-  h+=`<button class="btn ghost${armed('respec'+i)?' warn':''}" data-act="respec" data-p="${i}" ${mn.n-free>0?'':'disabled'} type="button" style="min-width:0">${armed('respec'+i)?'Tap to confirm':'Reassign points'}</button></div>`;
+        :`<button class="btn ship${hot?' bnr':''}" data-act="mbuy" data-p="${i}" data-j="${j}" data-k="${k}" ${S.cash>=uc?'':'disabled'} type="button" aria-label="Upgrade ${name} for ${fmt(uc)} credits">+${MINER_STEP}×<small>${fmt(uc)}</small></button>`}</div>`});
+  h+=`</div><div class="note" style="justify-content:space-between"><span>${full?'<b>Fully upgraded.</b>':'Red outline marks the bottleneck.'}</span>
+    <button class="btn ghost${armed('respec'+i+'_'+j)?' warn':''}" data-act="respec" data-p="${i}" data-j="${j}" ${tm.n-free>0?'':'disabled'} type="button" style="min-width:0">${armed('respec'+i+'_'+j)?'Tap to confirm':'Reassign points'}</button></div>`;
+  if(n<TEAM_MAX){const c=teamHireCost(i,n);h+=`<button class="btn wide" data-act="hire" data-p="${i}" ${S.cash>=c?'':'disabled'} type="button">Hire a ${n===1?'second':'third'} team: the ${teamName(i,n)}<small>${fmt(c)} credits</small></button>`}
   return h+'</div>'}
 function viewMarket(){
   const items=[];discovered().forEach(o=>{items.push('o'+o);if(has('smelt'))items.push('b'+o)});
@@ -732,7 +749,7 @@ function viewWarp(){
   const ok=S.planets[WARP_AT].u,pd=pendingDM();
   let h=`<div class="head"><h2>Galaxy Warp</h2></div>
    <div class="card"><h3>Star dust</h3><div class="big num">${fmt(S.dm)}</div><p>Each unit makes everything sell for 10% more, forever. You have +${fmt(S.dm*10)}%.</p></div>
-   <p>Warping resets planets, credits, cargo and research, and starts a fresh galaxy. Your mining teams and their upgrades stay. Star dust earned this run: <b class="num" style="color:var(--ink)">+${fmt(pd)}</b>.</p>`;
+   <p>Warping resets planets, mining teams, credits, cargo and research, and starts a fresh galaxy. Star dust earned this run: <b class="num" style="color:var(--ink)">+${fmt(pd)}</b>.</p>`;
   if(!ok)h+=`<button class="btn wide" disabled type="button">Claim ${PLANETS[WARP_AT].n} to unlock warp</button>`;
   else h+=`<button class="btn wide${armed('warp')?' warn':''}" data-act="warp" ${pd>0?'':'disabled'} type="button">${armed('warp')?'Tap again to warp':'Warp for '+fmt(pd)+' star dust'}</button>`;
   h+=`<div class="card"><h3>Captain's log</h3>
@@ -798,23 +815,22 @@ $('od').addEventListener('click',()=>{if(odOn()||Date.now()<S.od.ready)return;S.
 pbody.addEventListener('click',e=>{
   const b=e.target.closest('[data-act]');if(!b||b.disabled)return;const a=b.dataset.act;
   if(a==='sel'){S.sel=+b.dataset.p;refreshWorld()}
-  else if(a==='mode'){buyMode=b.dataset.m==='max'?'max':+b.dataset.m}
-  else if(a==='up'){const i=+b.dataset.p,k=b.dataset.k,n=+b.dataset.n,c=upCost(i,k,n);if(S.cash>=c){S.cash-=c;S.planets[i][k]+=n;if(k==='m')refreshWorld()}}
-  else if(a==='unlock'){const i=+b.dataset.p;if(S.cash>=PLANETS[i].cost){S.cash-=PLANETS[i].cost;S.planets[i].u=true;S.planets[i].t=0;refreshWorld();{const f=fitDistance();if(f>cam.tr)cam.tr=f}toast(`${PLANETS[i].n} claimed. A hauler is on its way.`);if(i===WARP_AT)toast('Galaxy Warp is now available in the Warp tab.',4000);save()}}
   else if(a==='sell'){const v=sellItem(b.dataset.k);if(v)toast('+'+fmt(v)+' credits',1200)}
-  else if(a==='sellall'){let v=0;for(const o in S.inv)v+=sellItem('o'+o);for(const o in S.bars)v+=sellItem('b'+o);if(v)toast('+'+fmt(v)+' credits',1400);if(S.tut===1){S.tut=2;setTimeout(()=>toast('Spend credits on Mine, Ship and Cargo upgrades. Tap planets in the sky to switch.',5000),1500)}}
+  else if(a==='sellall'){let v=0;for(const o in S.inv)v+=sellItem('o'+o);for(const o in S.bars)v+=sellItem('b'+o);if(v)toast('+'+fmt(v)+' credits',1400);if(S.tut===1){S.tut=2;setTimeout(()=>toast('Spend credits on your mining team\u2019s upgrades with the green buttons. Tap planets in the sky to switch.',5000),1500)}}
   else if(a==='resinfo'){showResearch(b.dataset.id);return}
   else if(a==='focus'){focusPlanet(+b.dataset.p)}
   else if(a==='unfocus'){cam.focus=-1;recenter()}
-  else if(a==='hire'){const i=+b.dataset.p,c=minerHireCost(i);if(!S.planets[i].mn&&S.cash>=c){S.cash-=c;S.planets[i].mn={n:0,t:{}};refreshWorld();if(cam.focus!==i)focusPlanet(i);toast('The '+MINER_NAMES[i%MINER_NAMES.length]+' are now working '+PLANETS[i].n+'.');save()}}
-  else if(a==='mbuy'){const i=+b.dataset.p,mn=S.planets[i].mn,k=b.dataset.k;if(mn&&mn.n<MINER_MAX&&minerFree(mn)===0&&TRAITS.some(t=>t[0]===k)){const c=minerUpCost(i);if(S.cash>=c){S.cash-=c;mn.n++;mn.t[k]=(mn.t[k]||0)+1;save()}}}
-  else if(a==='mup'){const i=+b.dataset.p,mn=S.planets[i].mn;if(mn&&mn.n<MINER_MAX){const c=minerUpCost(i);if(S.cash>=c){S.cash-=c;mn.n++;save()}}}
-  else if(a==='assign'){const mn=S.planets[+b.dataset.p].mn;if(mn&&minerFree(mn)>0){mn.t[b.dataset.k]=(mn.t[b.dataset.k]||0)+1;save()}}
-  else if(a==='respec'){const i=+b.dataset.p;if(!armed('respec'+i)){arm={k:'respec'+i,until:Date.now()+4000}}else{S.planets[i].mn.t={};arm=null;toast('Points returned. Assign them again.');save()}}
+  else if(a==='tsel'){teamSel[+b.dataset.p]=+b.dataset.j}
+  else if(a==='hire'){const i=+b.dataset.p,j=S.planets[i].teams.length;if(hireTeam(i)){teamSel[i]=j;refreshWorld();
+      if(j===0){{const f=fitDistance();if(f>cam.tr)cam.tr=f}toast(`The ${teamName(i,0)} claimed ${PLANETS[i].n}. A hauler is on its way.`);if(i===WARP_AT)toast('Galaxy Warp is now available in the Warp tab.',4000);if(cam.focus!==i)focusPlanet(i)}
+      else toast(`The ${teamName(i,j)} joined ${PLANETS[i].n}.`);save()}}
+  else if(a==='mbuy'){if(teamBuy(+b.dataset.p,+b.dataset.j,b.dataset.k))save()}
+  else if(a==='assign'){const tm=S.planets[+b.dataset.p].teams[+b.dataset.j];if(tm&&minerFree(tm)>0&&TRAITS.some(t=>t[0]===b.dataset.k)){tm.t[b.dataset.k]=(tm.t[b.dataset.k]||0)+1;save()}}
+  else if(a==='respec'){const i=+b.dataset.p,j=+b.dataset.j,key='respec'+i+'_'+j;if(!armed(key)){arm={k:key,until:Date.now()+4000}}else{S.planets[i].teams[j].t={};arm=null;toast('Points returned. Place them again.');save()}}
   else if(a==='auto'){S.auto[b.dataset.k]=!S.auto[b.dataset.k]}
   else if(a==='slot'){const sl=S.slots[+b.dataset.i],r=+b.dataset.r;if(sl.a&&sl.r!==null)S.inv[sl.r]=(S.inv[sl.r]||0)+BAR_IN;sl.r=r<0?null:r;sl.a=false;sl.p=0}
   else if(a==='res'){const r=RESEARCH.find(x=>x.id===b.dataset.id);if(S.cash>=r.cost){S.cash-=r.cost;S.research[r.id]=1;toast(r.n+' complete.');if(r.id==='smelt')toast('The Smelter tab is open. Pick an ore for your furnace.',4000);save()}}
-  else if(a==='warp'){if(!armed('warp')){arm={k:'warp',until:Date.now()+4000}}else{const g=pendingDM();S=newRun({dm:S.dm+g,lifetime:S.lifetime,warps:S.warps+1,miners:S.planets.map(p=>p.mn||null),music:S.music});arm=null;refreshWorld();recenter();save();toast(`Warped. +${fmt(g)} star dust. Everything now sells for +${fmt(S.dm*10)}%.`,4500);setTab('planet')}}
+  else if(a==='warp'){if(!armed('warp')){arm={k:'warp',until:Date.now()+4000}}else{const g=pendingDM();S=newRun({dm:S.dm+g,lifetime:S.lifetime,warps:S.warps+1,music:S.music});arm=null;refreshWorld();recenter();save();toast(`Warped. +${fmt(g)} star dust. Everything now sells for +${fmt(S.dm*10)}%.`,4500);setTab('planet')}}
   else if(a==='reset'){if(!armed('reset')){arm={k:'reset',until:Date.now()+4000}}else{S=newRun({music:S.music});arm=null;refreshWorld();save();toast('Save erased. Fresh start.');setTab('planet')}}
   pressing=false;render(true);hud();
 });
@@ -826,7 +842,7 @@ function frame(now){
   if(dt>3){offline(dt,dt>60)}else step(Math.min(dt,.25));
   updateWorld(Math.min(dt,.1));renderer.render(scene,camera);placeLabels();
   uiT+=dt;if(uiT>.25){uiT=0;hud();render(false);
-    W.forEach((w,i)=>{if(S.planets[i].u){const t=`<b>${PLANETS[i].n}${S.planets[i].mn?' ★':''}</b>Lv ${S.planets[i].m}`;if(w.label.innerHTML!==t)w.label.innerHTML=t}})}
+    W.forEach((w,i)=>{if(S.planets[i].u){const t=planetLabel(i);if(w.label.innerHTML!==t)w.label.innerHTML=t}})}
   saveT+=dt;if(saveT>5){saveT=0;save()}
   requestAnimationFrame(frame)}
 document.addEventListener('visibilitychange',()=>{if(document.hidden){save();Music.hide()}else{lastT=performance.now()-Math.max(0,Date.now()-S.last);if(S.music.on)Music.show()}})
