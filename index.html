@@ -731,10 +731,10 @@ function viewResearch(){
 function viewWarp(){
   const ok=S.planets[WARP_AT].u,pd=pendingDM();
   let h=`<div class="head"><h2>Galaxy Warp</h2></div>
-   <div class="card"><h3>Dark matter</h3><div class="big num">${fmt(S.dm)}</div><p>Each unit makes everything sell for 10% more, forever. You have +${fmt(S.dm*10)}%.</p></div>
-   <p>Warping resets planets, credits, cargo and research, and starts a fresh galaxy. Your mining teams and their upgrades stay. Dark matter earned this run: <b class="num" style="color:var(--ink)">+${fmt(pd)}</b>.</p>`;
+   <div class="card"><h3>Star dust</h3><div class="big num">${fmt(S.dm)}</div><p>Each unit makes everything sell for 10% more, forever. You have +${fmt(S.dm*10)}%.</p></div>
+   <p>Warping resets planets, credits, cargo and research, and starts a fresh galaxy. Your mining teams and their upgrades stay. Star dust earned this run: <b class="num" style="color:var(--ink)">+${fmt(pd)}</b>.</p>`;
   if(!ok)h+=`<button class="btn wide" disabled type="button">Claim ${PLANETS[WARP_AT].n} to unlock warp</button>`;
-  else h+=`<button class="btn wide${armed('warp')?' warn':''}" data-act="warp" ${pd>0?'':'disabled'} type="button">${armed('warp')?'Tap again to warp':'Warp for '+fmt(pd)+' dark matter'}</button>`;
+  else h+=`<button class="btn wide${armed('warp')?' warn':''}" data-act="warp" ${pd>0?'':'disabled'} type="button">${armed('warp')?'Tap again to warp':'Warp for '+fmt(pd)+' star dust'}</button>`;
   h+=`<div class="card"><h3>Captain's log</h3>
    <div class="stat"><span>Earned this run</span><span>${fmt(S.runEarned)}</span></div>
    <div class="stat"><span>Earned all time</span><span>${fmt(S.lifetime)}</span></div>
@@ -754,7 +754,7 @@ function render(force){
 }
 function hud(){
   $('cash').textContent=fmt(S.cash);$('rate').textContent='≈ '+fmt(incomeEstimate())+' /s';
-  $('dm').textContent=S.dm?`◆ ${fmt(S.dm)} dark matter`:'';
+  $('dm').textContent=S.dm?`✦ ${fmt(S.dm)} star dust`:'';
   const od=$('od'),now=Date.now();
   if(odOn()){od.className='on';od.disabled=false;od.textContent='2× · '+fmtTime((S.od.until-now)/1000)}
   else if(now<S.od.ready){od.className='';od.disabled=true;od.textContent='Recharge '+fmtTime((S.od.ready-now)/1000)}
@@ -814,7 +814,7 @@ pbody.addEventListener('click',e=>{
   else if(a==='auto'){S.auto[b.dataset.k]=!S.auto[b.dataset.k]}
   else if(a==='slot'){const sl=S.slots[+b.dataset.i],r=+b.dataset.r;if(sl.a&&sl.r!==null)S.inv[sl.r]=(S.inv[sl.r]||0)+BAR_IN;sl.r=r<0?null:r;sl.a=false;sl.p=0}
   else if(a==='res'){const r=RESEARCH.find(x=>x.id===b.dataset.id);if(S.cash>=r.cost){S.cash-=r.cost;S.research[r.id]=1;toast(r.n+' complete.');if(r.id==='smelt')toast('The Smelter tab is open. Pick an ore for your furnace.',4000);save()}}
-  else if(a==='warp'){if(!armed('warp')){arm={k:'warp',until:Date.now()+4000}}else{const g=pendingDM();S=newRun({dm:S.dm+g,lifetime:S.lifetime,warps:S.warps+1,miners:S.planets.map(p=>p.mn||null),music:S.music});arm=null;refreshWorld();recenter();save();toast(`Warped. +${fmt(g)} dark matter. Everything now sells for +${fmt(S.dm*10)}%.`,4500);setTab('planet')}}
+  else if(a==='warp'){if(!armed('warp')){arm={k:'warp',until:Date.now()+4000}}else{const g=pendingDM();S=newRun({dm:S.dm+g,lifetime:S.lifetime,warps:S.warps+1,miners:S.planets.map(p=>p.mn||null),music:S.music});arm=null;refreshWorld();recenter();save();toast(`Warped. +${fmt(g)} star dust. Everything now sells for +${fmt(S.dm*10)}%.`,4500);setTab('planet')}}
   else if(a==='reset'){if(!armed('reset')){arm={k:'reset',until:Date.now()+4000}}else{S=newRun({music:S.music});arm=null;refreshWorld();save();toast('Save erased. Fresh start.');setTab('planet')}}
   pressing=false;render(true);hud();
 });
