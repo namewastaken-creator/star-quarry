@@ -396,6 +396,11 @@ const DM={
   rover:new THREE.MeshStandardMaterial({color:0xf2c14e,metalness:.4,roughness:.45}),
   tube:new THREE.MeshStandardMaterial({color:0x6f7896,metalness:.7,roughness:.4,emissive:0x1a2240})};
 const PORT_DIR=surfDir(.70,0), FAC_DIR=surfDir(.95,.62);
+// Where the conveyor meets the launch pad: on the line from the facility to the port,
+// one pad radius (1.12 x 0.16 of the planet radius) short of the pad centre.
+const CONV_END=(()=>{const pad=1.12*.16,v=new THREE.Vector3();let lo=0,hi=1;
+  for(let k=0;k<40;k++){const m=(lo+hi)/2;slerpDir(FAC_DIR,PORT_DIR,m,v);if(v.angleTo(PORT_DIR)>pad)lo=m;else hi=m}
+  return slerpDir(FAC_DIR,PORT_DIR,lo,new THREE.Vector3())})();
 function buildPort(w,i){const P=PLANETS[i],s=P.size*.16,g=new THREE.Group();
   const pad=new THREE.Mesh(new THREE.CylinderGeometry(1*s,1.12*s,.14*s,28),DM.pad);pad.position.y=.07*s;g.add(pad);
   const ring=new THREE.Mesh(new THREE.TorusGeometry(.82*s,.035*s,8,40),DM.teal);ring.rotation.x=Math.PI/2;ring.position.y=.15*s;g.add(ring);
@@ -453,9 +458,12 @@ function buildFacility(w,i){const P=PLANETS[i],s=P.size*.16,R=P.size,g=new THREE
   const beacon=new THREE.Mesh(new THREE.SphereGeometry(.06*s,8,6),DM.teal.clone());beacon.position.set(.7*s,1.35*s,-.45*s);site.add(beacon);
   const ant=new THREE.Mesh(new THREE.CylinderGeometry(.012*s,.012*s,.5*s,6),DM.hull);ant.position.set(-.3*s,.75*s,.2*s);site.add(ant);
   // enclosed conveyor from the facility to the space port, following the curve of the planet
-  const pts=[];for(let k=0;k<=24;k++){const t=k/24,d=slerpDir(FAC_DIR,PORT_DIR,t,new THREE.Vector3());pts.push(d.multiplyScalar(R+.12*s+Math.sin(t*Math.PI)*.06*s))}
+  const pts=[];for(let k=0;k<=24;k++){const t=k/24,d=slerpDir(FAC_DIR,CONV_END,t,new THREE.Vector3());pts.push(d.multiplyScalar(R+.12*s+Math.sin(t*Math.PI)*.06*s))}
   const tube=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),48,.06*s,8,false),DM.tube);t0.add(tube);
   const pods=[];for(let k=0;k<4;k++){const pod=new THREE.Mesh(new THREE.BoxGeometry(.1*s,.1*s,.1*s),DM.amber);t0.add(pod);pods.push(pod)}
+  const loader=new THREE.Group();setOnSurface(loader,R,CONV_END,-.02*s);t0.add(loader);
+  const hop=new THREE.Mesh(new THREE.BoxGeometry(.24*s,.2*s,.24*s),DM.dark);hop.position.y=.1*s;loader.add(hop);
+  const lip=new THREE.Mesh(new THREE.BoxGeometry(.26*s,.03*s,.26*s),DM.amber);lip.position.y=.21*s;loader.add(lip);
   w.pods=pods;w.drill=drill;w.facBeacon=beacon;
   addDepositsAndRovers(w,0,t0)}
 function buildTier(w,tier){const s=w.facS,R=w.facR,g=new THREE.Group();w.fac.add(g);w.tiers[tier]=g;
@@ -517,7 +525,7 @@ function animateSurface(w,i,dt){
   if(w.portBeacon){const on=(simTime*1.2+i)%1<.5;w.portBeacon.material.emissiveIntensity=on?2:.2;w.portLights.forEach((l,k)=>l.material.emissiveIntensity=.4+1.2*Math.max(0,Math.sin(simTime*4-k)))}
   if(!w.fac||!w.fac.visible)return;const R=w.facR,s=w.facS,n=S.planets[i].teams.length;
   w.drill.rotation.y+=dt*6;w.facBeacon.material.emissiveIntensity=(simTime*.9)%1<.5?1.8:.3;
-  w.pods.forEach((pod,k)=>{const t=(simTime*.12+k/4)%1;slerpDir(FAC_DIR,PORT_DIR,t,_b);pod.position.copy(_b).multiplyScalar(R+.12*s+Math.sin(t*Math.PI)*.06*s)});
+  w.pods.forEach((pod,k)=>{const t=(simTime*.12+k/4)%1;slerpDir(FAC_DIR,CONV_END,t,_b);pod.position.copy(_b).multiplyScalar(R+.12*s+Math.sin(t*Math.PI)*.06*s)});
   w.anim.forEach((f,k)=>{if(w.tiers[k+1]&&w.tiers[k+1].visible)f(dt)});
   w.rovers.forEach(rv=>{if(rv.tier>=n)return;const ph=((simTime/rv.period)+rv.off)%1;let u,carrying=false,mining=false;
     // leave facility -> drive out -> mine -> drive back -> unload
