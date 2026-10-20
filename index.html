@@ -85,8 +85,8 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
 .btn.ghost{background:none;border:1px solid var(--line);color:var(--ink)}
 .btn.ghost:disabled{color:#4a5075}
 .btn.ship{background:var(--ship);color:#052523}
-.btn.ship.bnr{box-shadow:0 0 0 2px var(--panel),0 0 0 4px var(--bad)}
-.btn.ship.bnr:disabled{box-shadow:0 0 0 2px var(--panel),0 0 0 4px #7a3a44}
+.btn.ship.bnr{background:var(--bad);color:#2b0606}
+.btn.ship.bnr:disabled{background:#3a1d26;color:#ffb3b3;box-shadow:inset 0 0 0 1px var(--bad)}
 .btn.up{background:#232849;color:var(--ink);border:1px solid #343a66}
 .btn.up.hot{background:var(--bad);color:#2b0606;border-color:var(--bad);box-shadow:0 0 0 3px rgba(255,122,122,.18)}
 .btn.up.hot:disabled{background:#3a1d26;color:#ffb3b3;border-color:var(--bad);box-shadow:none}
@@ -708,7 +708,7 @@ function viewTeams(i,shipsBN){
       ${free>0?`<button class="btn ship${hot?' bnr':''}" data-act="assign" data-p="${i}" data-j="${j}" data-k="${k}" type="button" aria-label="Add a free point to ${name}">+${MINER_STEP}×<small>Free</small></button>`
         :full?`<button class="btn ship" disabled type="button">Maxed<small>${MINER_MAX} / ${MINER_MAX}</small></button>`
         :`<button class="btn ship${hot?' bnr':''}" data-act="mbuy" data-p="${i}" data-j="${j}" data-k="${k}" ${S.cash>=uc?'':'disabled'} type="button" aria-label="Upgrade ${name} for ${fmt(uc)} credits">+${MINER_STEP}×<small>${fmt(uc)}</small></button>`}</div>`});
-  h+=`</div><div class="note" style="justify-content:space-between"><span>${full?'<b>Fully upgraded.</b>':'Red outline marks the bottleneck.'}</span>
+  h+=`</div><div class="note" style="justify-content:space-between"><span>${full?'<b>Fully upgraded.</b>':'Red buttons fix the bottleneck.'}</span>
     <button class="btn ghost${armed('respec'+i+'_'+j)?' warn':''}" data-act="respec" data-p="${i}" data-j="${j}" ${tm.n-free>0?'':'disabled'} type="button" style="min-width:0">${armed('respec'+i+'_'+j)?'Tap to confirm':'Reassign points'}</button></div>`;
   if(n<TEAM_MAX){const c=teamHireCost(i,n);h+=`<button class="btn wide" data-act="hire" data-p="${i}" ${S.cash>=c?'':'disabled'} type="button">Hire a ${n===1?'second':'third'} team: the ${teamName(i,n)}<small>${fmt(c)} credits</small></button>`}
   return h+'</div>'}

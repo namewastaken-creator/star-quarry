@@ -1,6 +1,6 @@
 // Star Quarry offline support. The game page is fetched fresh when online (so updates show up)
 // and served from the cache when offline.
-const CACHE='starquarry-dcd2e47384';
+const CACHE='starquarry-2f0270a42d';
 const CORE=['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png','./icon-maskable-512.png','./apple-touch-icon.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
