@@ -449,6 +449,9 @@ function trackMesh(pts2,R,s){const g=new THREE.Group(),dirs=pts2.map(([e,n])=>lo
       pos.push(c.x+w.x,c.y+w.y,c.z+w.z,c.x-w.x,c.y-w.y,c.z-w.z);if(k){const i=k*2;idx.push(i-2,i-1,i,i-1,i+1,i)}});
     const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));geo.setIndex(idx);g.add(new THREE.Mesh(geo,DM.track))}
   return g}
+function surfaceTube(a2,b2,R,s,height,radius,mat){const a=locDir(...a2),b=locDir(...b2),steps=Math.max(6,Math.ceil(a.angleTo(b)/.02)),pts=[];
+  for(let k=0;k<=steps;k++)pts.push(slerpDir(a,b,k/steps,new THREE.Vector3()).multiplyScalar(R+height*s));
+  return new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),steps*2,radius*s,8,false),mat)}
 function placeLocal(parent,R,e,n,s){const g=new THREE.Group(),d=locDir(e,n);g.position.copy(d).multiplyScalar(R-.02*s);
   const north=new THREE.Vector3(0,1,0).addScaledVector(d,-d.y).normalize();orient(g,d,north);parent.add(g);return g}
 Object.assign(DM,{
@@ -515,18 +518,24 @@ function buildTier(w,tier){const s=w.facS,R=w.facR,g=new THREE.Group();w.fac.add
     const body=new THREE.Mesh(new THREE.CylinderGeometry(.42*s,.46*s,.42*s,18),DM.dark);body.position.y=.21*s;hab.add(body);
     const top=new THREE.Mesh(new THREE.SphereGeometry(.42*s,18,10,0,Math.PI*2,0,Math.PI/2),DM.glass);top.position.y=.42*s;hab.add(top);
     const ring=new THREE.Mesh(new THREE.TorusGeometry(.445*s,.03*s,6,28),DM.window);ring.rotation.x=Math.PI/2;ring.position.y=.3*s;hab.add(ring);
-    const lp=[];{const a=locDir(.85,.15),b=locDir(1.65,.28);for(let k=0;k<=10;k++){const d=slerpDir(a,b,k/10,new THREE.Vector3());lp.push(d.multiplyScalar(R+.16*s))}}
-    g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(lp),16,.07*s,8,false),DM.tube));
+    // enclosed walkway from the hall's east wall into the habitat, with a doorway collar at each end
+    g.add(surfaceTube([.42,.2],[1.8,.3],R,s,.18,.075,DM.tube));
+    for(const [e,n] of[[.58,.21],[1.62,.29]]){const c=placeLocal(g,R,e,n,s);const col=new THREE.Mesh(new THREE.BoxGeometry(.06*s,.24*s,.24*s),DM.hull);col.position.y=.18*s;c.add(col)}
     // refinery with a glowing vent and rising smoke
     const ref=placeLocal(g,R,-3.0,.3,s);
     const tower=new THREE.Mesh(new THREE.CylinderGeometry(.22*s,.3*s,1.4*s,14),DM.hull);tower.position.y=.7*s;ref.add(tower);
     const vent=new THREE.Mesh(new THREE.TorusGeometry(.2*s,.04*s,8,20),DM.amber.clone());vent.rotation.x=Math.PI/2;vent.position.y=1.42*s;ref.add(vent);
     const tank=new THREE.Mesh(new THREE.SphereGeometry(.26*s,14,10),DM.hull);tank.position.set(.45*s,.26*s,.1*s);ref.add(tank);
+    // feed pipe from the hall's west wall to the refinery, on low supports
+    g.add(surfaceTube([-.45,.08],[-2.75,.28],R,s,.12,.045,DM.tube));
+    for(const f of[.3,.55,.8]){const e=-.45+(-2.75+.45)*f,n=.08+.2*f,sup=placeLocal(g,R,e,n,s);const leg=new THREE.Mesh(new THREE.CylinderGeometry(.02*s,.02*s,.12*s,6),DM.hull);leg.position.y=.06*s;sup.add(leg)}
     const smoke=[];for(let k=0;k<4;k++){const sp=new THREE.Sprite(smokeMat.clone());ref.add(sp);smoke.push(sp)}
     w.anim.push(dt=>{vent.material.emissiveIntensity=1+.6*Math.sin(simTime*3);
       smoke.forEach((sp,k)=>{const ph=(simTime*.28+k/4)%1;sp.position.set(Math.sin(k*2.1+ph*3)*.08*s,(1.5+ph*1.4)*s,0);const sc=(.25+ph*.55)*s;sp.scale.set(sc,sc,1);sp.material.opacity=.55*(1-ph)})});
     // solar array
     const sol=placeLocal(g,R,1.2,-2.3,s);
+    // power cable from the solar array to the hall's south wall
+    g.add(surfaceTube([.25,-.42],[1.05,-1.85],R,s,.02,.022,DM.dark));
     for(let r=0;r<2;r++)for(let c=0;c<3;c++){const post=new THREE.Mesh(new THREE.CylinderGeometry(.02*s,.02*s,.22*s,6),DM.hull);post.position.set((c-1)*.36*s,.11*s,(r-.5)*.42*s);sol.add(post);
       const pn=new THREE.Mesh(new THREE.BoxGeometry(.32*s,.02*s,.28*s),DM.solar);pn.position.set((c-1)*.36*s,.24*s,(r-.5)*.42*s);pn.rotation.x=-.45;sol.add(pn)}
   }else{
