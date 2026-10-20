@@ -684,13 +684,15 @@ function viewMiner(i){
   const free=minerFree(mn),full=mn.n>=MINER_MAX,uc=full?0:minerUpCost(i);
   let h=`<div class="card miner"><div class="head"><h3>Mining team · ${MINER_NAMES[i%MINER_NAMES.length]}</h3><span class="num" style="font-size:12px;color:var(--muted)">${mn.n} / ${MINER_MAX} upgrades</span></div>
     <div class="bar"><i style="width:${(mn.n/MINER_MAX*100).toFixed(1)}%;background:var(--ship)"></i></div>
-    ${free>0?`<div class="note"><b style="color:var(--ship)">${free} upgrade${free>1?'s':''} to assign.</b><span>Tap + on a trait.</span></div>`:''}
+    ${free>0?`<div class="note"><b style="color:var(--ship)">${free} free point${free>1?'s':''} to place.</b><span>Tap a green button.</span></div>`:''}
     <div class="rows">`;
   TRAITS.forEach(([k,name])=>{const pts=mn.t[k]||0;
     h+=`<div class="row"><div class="txt"><span class="t">${name}</span><span class="s">×${(1+MINER_STEP*pts).toFixed(2)} · ${pts} point${pts===1?'':'s'}</span></div>
-      <button class="btn ship" style="min-width:52px" data-act="assign" data-p="${i}" data-k="${k}" ${free>0?'':'disabled'} type="button" aria-label="Add a point to ${name}">+</button></div>`});
+      ${free>0?`<button class="btn ship" data-act="assign" data-p="${i}" data-k="${k}" type="button" aria-label="Add a free point to ${name}">+${MINER_STEP}×<small>Free</small></button>`
+        :full?`<button class="btn ship" disabled type="button">Maxed<small>${MINER_MAX} / ${MINER_MAX}</small></button>`
+        :`<button class="btn ship" data-act="mbuy" data-p="${i}" data-k="${k}" ${S.cash>=uc?'':'disabled'} type="button" aria-label="Upgrade ${name} for ${fmt(uc)} credits">+${MINER_STEP}×<small>${fmt(uc)}</small></button>`}</div>`});
   h+=`</div><div class="note" style="justify-content:space-between">`;
-  h+=full?`<span><b>Fully upgraded.</b></span>`:`<button class="btn" data-act="mup" data-p="${i}" ${S.cash>=uc?'':'disabled'} type="button">Upgrade team<small>${fmt(uc)}</small></button>`;
+  h+=full?`<span><b>Fully upgraded.</b></span>`:`<span>Each upgrade costs more than the last.</span>`;
   h+=`<button class="btn ghost${armed('respec'+i)?' warn':''}" data-act="respec" data-p="${i}" ${mn.n-free>0?'':'disabled'} type="button" style="min-width:0">${armed('respec'+i)?'Tap to confirm':'Reassign points'}</button></div>`;
   return h+'</div>'}
 function viewMarket(){
@@ -805,6 +807,7 @@ pbody.addEventListener('click',e=>{
   else if(a==='focus'){focusPlanet(+b.dataset.p)}
   else if(a==='unfocus'){cam.focus=-1;recenter()}
   else if(a==='hire'){const i=+b.dataset.p,c=minerHireCost(i);if(!S.planets[i].mn&&S.cash>=c){S.cash-=c;S.planets[i].mn={n:0,t:{}};refreshWorld();if(cam.focus!==i)focusPlanet(i);toast('The '+MINER_NAMES[i%MINER_NAMES.length]+' are now working '+PLANETS[i].n+'.');save()}}
+  else if(a==='mbuy'){const i=+b.dataset.p,mn=S.planets[i].mn,k=b.dataset.k;if(mn&&mn.n<MINER_MAX&&minerFree(mn)===0&&TRAITS.some(t=>t[0]===k)){const c=minerUpCost(i);if(S.cash>=c){S.cash-=c;mn.n++;mn.t[k]=(mn.t[k]||0)+1;save()}}}
   else if(a==='mup'){const i=+b.dataset.p,mn=S.planets[i].mn;if(mn&&mn.n<MINER_MAX){const c=minerUpCost(i);if(S.cash>=c){S.cash-=c;mn.n++;save()}}}
   else if(a==='assign'){const mn=S.planets[+b.dataset.p].mn;if(mn&&minerFree(mn)>0){mn.t[b.dataset.k]=(mn.t[b.dataset.k]||0)+1;save()}}
   else if(a==='respec'){const i=+b.dataset.p;if(!armed('respec'+i)){arm={k:'respec'+i,until:Date.now()+4000}}else{S.planets[i].mn.t={};arm=null;toast('Points returned. Assign them again.');save()}}
