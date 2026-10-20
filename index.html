@@ -689,7 +689,7 @@ function viewPlanet(){
    <div class="row"><div class="txt"><span class="t">Mine rate${shipsBN?'':BN}</span><span class="s">${fmt(rate)} ore/s · ${mult('m')}</span></div></div>
    <div class="row"><div class="txt"><span class="t">Ship speed${shipsBN?BN:''}</span><span class="s">${shipSpeed(i).toFixed(1)} AU/s · trip ${T.toFixed(1)}s · ${mult('s')}</span></div></div>
    <div class="row"><div class="txt"><span class="t">Cargo hold${shipsBN?BN:''}</span><span class="s">${fmt(cargo(i))} ore/trip · ${mult('c')}</span></div></div></div>
-  <div class="note"><span>Hauling <b class="num">${fmt(hl)}/s</b> of ${fmt(rate)}/s mined.</span>${shipsBN?'<span style="color:var(--bad)">Ships are the bottleneck.</span>':'<span style="color:var(--bad)">Mine rate is the bottleneck.</span>'}<span>Stockpile <b class="num">${fmt(p.stock)}</b></span></div>`
+  <div class="note"><span>Hauling <b class="num">${fmt(hl)}/s</b> of ${fmt(rate)}/s mined.</span><span>Stockpile <b class="num">${fmt(p.stock)}</b></span></div>`
    +viewTeams(i,shipsBN);
   return h}
 
