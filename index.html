@@ -452,6 +452,10 @@ function trackMesh(pts2,R,s){const g=new THREE.Group(),dirs=pts2.map(([e,n])=>lo
 function surfaceTube(a2,b2,R,s,height,radius,mat){const a=locDir(...a2),b=locDir(...b2),steps=Math.max(6,Math.ceil(a.angleTo(b)/.02)),pts=[];
   for(let k=0;k<=steps;k++)pts.push(slerpDir(a,b,k/steps,new THREE.Vector3()).multiplyScalar(R+height*s));
   return new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),steps*2,radius*s,8,false),mat)}
+function surfaceTubePath(way,R,s,height,radius,mat){const pts=[];
+  for(let k=0;k<way.length-1;k++){const a=locDir(...way[k]),b=locDir(...way[k+1]),steps=Math.max(6,Math.ceil(a.angleTo(b)/.02));
+    for(let q=(k?1:0);q<=steps;q++)pts.push(slerpDir(a,b,q/steps,new THREE.Vector3()).multiplyScalar(R+height*s))}
+  return new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),pts.length*2,radius*s,8,false),mat)}
 function placeLocal(parent,R,e,n,s){const g=new THREE.Group(),d=locDir(e,n);g.position.copy(d).multiplyScalar(R-.02*s);
   const north=new THREE.Vector3(0,1,0).addScaledVector(d,-d.y).normalize();orient(g,d,north);parent.add(g);return g}
 Object.assign(DM,{
@@ -524,15 +528,17 @@ function buildTier(w,tier){const s=w.facS,R=w.facR,g=new THREE.Group();w.fac.add
     g.add(surfaceTube([.42,.2],[1.8,.3],R,s,.18,.075,DM.tube));
     for(const [e,n] of[[.58,.21],[1.62,.29]]){const c=placeLocal(g,R,e,n,s);const col=new THREE.Mesh(new THREE.BoxGeometry(.06*s,.24*s,.24*s),DM.hull);col.position.y=.18*s;c.add(col)}
     // refinery with a glowing vent and rising smoke
-    const ref=placeLocal(g,R,-5.2,1.2,s);
+    const ref=placeLocal(g,R,-3.6,1.3,s);
     const tower=new THREE.Mesh(new THREE.CylinderGeometry(.22*s,.3*s,1.4*s,14),DM.hull);tower.position.y=.7*s;ref.add(tower);
     const vent=new THREE.Mesh(new THREE.TorusGeometry(.2*s,.04*s,8,20),DM.amber.clone());vent.rotation.x=Math.PI/2;vent.position.y=1.42*s;ref.add(vent);
     const tank=new THREE.Mesh(new THREE.SphereGeometry(.26*s,14,10),DM.hull);tank.position.set(.45*s,.26*s,.1*s);ref.add(tank);
     // feed pipe from the hall's west wall to the refinery, on low supports
     // (it ends inside the big dome's wall; a short extension reaches the smaller tower before the dome is built)
-    g.add(surfaceTube([-.45,.08],[-4.3,1.0],R,s,.12,.045,DM.tube));
-    w.refExt=surfaceTube([-4.3,1.0],[-4.95,1.15],R,s,.12,.045,DM.tube);g.add(w.refExt);
-    for(const f of[.2,.4,.6,.8]){const e=-.45+(-4.3+.45)*f,n=.08+.92*f,sup=placeLocal(g,R,e,n,s);const leg=new THREE.Mesh(new THREE.CylinderGeometry(.02*s,.02*s,.12*s,6),DM.hull);leg.position.y=.06*s;sup.add(leg)}
+    // bends south of the greenhouse and clear of the launch pad
+    const PIPE=[[-.45,.05],[-2.2,.2],[-3.05,.9]];
+    g.add(surfaceTubePath(PIPE,R,s,.12,.045,DM.tube));
+    w.refExt=surfaceTube([-3.05,.9],[-3.35,1.08],R,s,.12,.045,DM.tube);g.add(w.refExt);
+    for(const [e,n] of[[-1.0,.1],[-1.6,.15],[-2.2,.2],[-2.65,.53]]){const sup=placeLocal(g,R,e,n,s);const leg=new THREE.Mesh(new THREE.CylinderGeometry(.02*s,.02*s,.12*s,6),DM.hull);leg.position.y=.06*s;sup.add(leg)}
     const smoke=[];for(let k=0;k<4;k++){const sp=new THREE.Sprite(smokeMat.clone());ref.add(sp);smoke.push(sp)}
     w.anim.push(dt=>{vent.material.emissiveIntensity=1+.6*Math.sin(simTime*3);
       smoke.forEach((sp,k)=>{const ph=(simTime*.28+k/4)%1;sp.position.set(Math.sin(k*2.1+ph*3)*.08*s,(1.5+ph*1.4)*s,0);const sc=(.25+ph*.55)*s;sp.scale.set(sc,sc,1);sp.material.opacity=.55*(1-ph)})});
@@ -562,7 +568,7 @@ function buildTier(w,tier){const s=w.facS,R=w.facR,g=new THREE.Group();w.fac.add
     const base=new THREE.Mesh(new THREE.CylinderGeometry(.5*s,.52*s,.08*s,24),DM.pad);base.position.y=.04*s;gh.add(base);
     const gdome=new THREE.Mesh(new THREE.SphereGeometry(.48*s,20,10,0,Math.PI*2,0,Math.PI/2),DM.green);gdome.position.y=.08*s;gh.add(gdome);
     // the refinery grows into a large domed refinery
-    const big=placeLocal(g,R,-5.2,1.2,s);
+    const big=placeLocal(g,R,-3.6,1.3,s);big.scale.setScalar(.875);
     const plinth=new THREE.Mesh(new THREE.CylinderGeometry(.84*s,.88*s,.12*s,32),DM.pad);plinth.position.y=.06*s;big.add(plinth);
     const bdome=new THREE.Mesh(new THREE.SphereGeometry(.8*s,32,16,0,Math.PI*2,0,Math.PI/2),DM.hull);bdome.position.y=.12*s;big.add(bdome);
     for(const [r,y] of[[.79,.32],[.66,.62]]){const band=new THREE.Mesh(new THREE.TorusGeometry(r*s,.025*s,6,40),DM.window);band.rotation.x=Math.PI/2;band.position.y=y*s;big.add(band)}
@@ -577,12 +583,13 @@ function buildTier(w,tier){const s=w.facS,R=w.facR,g=new THREE.Group();w.fac.add
   }
   addDepositsAndRovers(w,tier,g)}
 // Two rows of solar panels per team, side by side south-east of the hall, chained by power cables.
-const SOLAR_N=-2.3,solarE=k=>1.0+k*1.15;
-function addSolarBlock(parent,R,s,k){const sol=placeLocal(parent,R,solarE(k),SOLAR_N,s);
+// spaced using true distances on the curved surface so the blocks never overlap
+const SOLAR=[[.78,-1.68],[1.53,-3.32],[2.54,-5.51]];
+function addSolarBlock(parent,R,s,k){const sol=placeLocal(parent,R,SOLAR[k][0],SOLAR[k][1],s);
   for(let r=0;r<2;r++)for(let c=0;c<3;c++){const post=new THREE.Mesh(new THREE.CylinderGeometry(.02*s,.02*s,.22*s,6),DM.hull);post.position.set((c-1)*.36*s,.11*s,(r-.5)*.42*s);sol.add(post);
     const pn=new THREE.Mesh(new THREE.BoxGeometry(.32*s,.02*s,.28*s),DM.solar);pn.position.set((c-1)*.36*s,.24*s,(r-.5)*.42*s);pn.rotation.x=-.45;sol.add(pn)}
-  parent.add(k===0?surfaceTube([.25,-.42],[solarE(0)-.1,SOLAR_N+.5],R,s,.02,.022,DM.dark)
-                  :surfaceTube([solarE(k-1)+.55,SOLAR_N],[solarE(k)-.55,SOLAR_N],R,s,.02,.022,DM.dark))}
+  const A=k?SOLAR[k-1]:[.2,-.38],B=SOLAR[k],L=Math.hypot(B[0]-A[0],B[1]-A[1]),ua=(k?.5:0)/L,ub=.5/L;
+  parent.add(surfaceTube([A[0]+(B[0]-A[0])*ua,A[1]+(B[1]-A[1])*ua],[B[0]-(B[0]-A[0])*ub,B[1]-(B[1]-A[1])*ub],R,s,.02,.022,DM.dark))}
 // Show the base tiers and rovers that match the number of teams hired.
 function syncBase(w,i){const n=S.planets[i].teams.length;if(!S.planets[i].u||!n)return;
   if(!w.fac)buildFacility(w,i);
