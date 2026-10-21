@@ -407,9 +407,30 @@ let irisOpen=0;
 // habitat ring with lit windows, modules and spokes
 const habRing=new THREE.Group();station.add(habRing);
 { const ring=new THREE.Mesh(new THREE.TorusGeometry(1.25,.1,12,64),metal);ring.rotation.x=Math.PI/2;habRing.add(ring);
-  for(let k=0;k<20;k++){const a=k/20*Math.PI*2,win=new THREE.Mesh(new THREE.BoxGeometry(.03,.05,.12),stWin);win.position.set(Math.cos(a)*1.355,0,Math.sin(a)*1.355);win.rotation.y=-a;habRing.add(win)}
+  for(let k=0;k<20;k++){const a=k/20*Math.PI*2,win=new THREE.Mesh(new THREE.BoxGeometry(.03,.05,.12),stWin);win.position.set(Math.cos(a)*1.145,0,Math.sin(a)*1.145);win.rotation.y=-a;habRing.add(win)}
   for(let k=0;k<4;k++){const a=k/4*Math.PI*2+Math.PI/4,sp=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,.8,8),trim);sp.rotation.z=Math.PI/2;sp.rotation.y=-a;sp.position.set(Math.cos(a)*.78,0,Math.sin(a)*.78);habRing.add(sp);
-    const mod=new THREE.Mesh(new THREE.BoxGeometry(.24,.2,.2),hubMat);mod.position.set(Math.cos(a+Math.PI/4)*1.25,0,Math.sin(a+Math.PI/4)*1.25);mod.rotation.y=-(a+Math.PI/4);habRing.add(mod)}}
+  }}
+// Docking ports on the habitat ring: 24 slots; each claimed planet gets its own port (at least 4 are always built).
+// Slot order spreads the first ports evenly round the ring.
+const DOCK_SLOTS=24,DOCK_ORDER=[0,12,6,18,3,15,9,21,1,13,7,19,4,16,10,22,2,14,8,20,5,17,11,23];
+const slotAngle=k=>(k+.5)/DOCK_SLOTS*Math.PI*2;
+const dockMats={clamp:new THREE.MeshStandardMaterial({color:0xf0c040,metalness:.4,roughness:.5}),
+  hatch:new THREE.MeshStandardMaterial({color:0x10131f,roughness:.6}),
+  free:new THREE.MeshStandardMaterial({color:0xf0a33c,emissive:0xf0a33c,emissiveIntensity:1.2}),
+  busy:new THREE.MeshStandardMaterial({color:0x7cf0a0,emissive:0x2fd36a,emissiveIntensity:1.8})};
+const docks=[];
+for(let k=0;k<DOCK_SLOTS;k++){const a=slotAngle(k),g=new THREE.Group();g.position.set(Math.cos(a)*1.25,0,Math.sin(a)*1.25);g.rotation.y=-a;habRing.add(g); // local +x points out from the ring
+  const base=new THREE.Mesh(new THREE.BoxGeometry(.22,.21,.26),hubMat);base.position.x=.02;g.add(base);
+  const plate=new THREE.Mesh(new THREE.BoxGeometry(.02,.17,.2),trim);plate.position.x=.135;g.add(plate);
+  const collar=new THREE.Mesh(new THREE.TorusGeometry(.065,.018,8,20),trim);collar.rotation.y=Math.PI/2;collar.position.x=.15;g.add(collar);
+  const hatch=new THREE.Mesh(new THREE.CircleGeometry(.05,16),dockMats.hatch);hatch.rotation.y=Math.PI/2;hatch.position.x=.152;g.add(hatch);
+  for(const z of[-.1,.1]){const arm=new THREE.Mesh(new THREE.BoxGeometry(.11,.025,.025),dockMats.clamp);arm.position.set(.2,0,z);g.add(arm);
+    const tip=new THREE.Mesh(new THREE.BoxGeometry(.025,.025,.04),dockMats.clamp);tip.position.set(.25,0,z*.82);g.add(tip)}
+  for(const y of[-.075,.075]){const gl=new THREE.Mesh(new THREE.SphereGeometry(.014,6,4),stTeal);gl.position.set(.15,y,0);g.add(gl)}
+  const status=new THREE.Mesh(new THREE.SphereGeometry(.022,8,6),dockMats.free);status.position.set(.05,.12,0);g.add(status);
+  g.visible=false;docks.push({g,status})}
+const planetSlot=i=>DOCK_ORDER[i%DOCK_SLOTS];
+function syncDocks(){const used=new Set();S.planets.forEach((p,i)=>{if(p.u||i<4)used.add(planetSlot(i))});docks.forEach((d,k)=>d.g.visible=used.has(k))}
 const ring2=new THREE.Mesh(new THREE.TorusGeometry(.95,.022,8,48),stTeal);ring2.rotation.x=Math.PI/2.6;station.add(ring2);
 // solar wings below the ring plane
 const stLights=[];
@@ -672,6 +693,7 @@ const W=PLANETS.map((P,i)=>{
 let simTime=0;
 function planetLabel(i){const p=S.planets[i];return p.u?`<b>${PLANETS[i].n}</b><span class="st">${'★'.repeat(p.teams.length)}</span>${'☆'.repeat(TEAM_MAX-p.teams.length)}`:`<b>${PLANETS[i].n}</b>${fmt(PLANETS[i].cost)} cr`}
 function refreshWorld(){
+  syncDocks();
   const firstLocked=S.planets.findIndex(p=>!p.u);
   W.forEach((w,i)=>{const u=S.planets[i].u,vis=u||i===firstLocked;
     w.mesh.visible=w.orbit.visible=vis;w.ship.visible=u;w.label.hidden=!vis;
@@ -683,7 +705,7 @@ function refreshWorld(){
 const tmp=new THREE.Vector3(),tmp2=new THREE.Vector3(),_pw=new THREE.Vector3(),_ds=new THREE.Vector3(),_ap=new THREE.Vector3(),_st=new THREE.Vector3(),_sd=new THREE.Vector3();
 // Hauler flight: cruise from the station, swing into orbit, slow controlled descent onto the pad,
 // pause while ore is loaded, lift off, orbit round and cruise home. Follows the trip timeline in P.lay.
-const STATION_SPIN=.04,RING_SPIN=.11,SPIN_TOTAL=STATION_SPIN+RING_SPIN,DOCK_R=1.5,_dh=new THREE.Vector3(),_dock=new THREE.Vector3(),_appr=new THREE.Vector3();
+const STATION_SPIN=.04,RING_SPIN=.11,SPIN_TOTAL=STATION_SPIN+RING_SPIN,DOCK_R=1.52,SAFE_R=2.75,_near=new THREE.Vector3(),_dh=new THREE.Vector3(),_dock=new THREE.Vector3(),_appr=new THREE.Vector3();
 const _q=new THREE.Quaternion(),_qi=new THREE.Quaternion(),_ai=new THREE.Vector3(),_ao=new THREE.Vector3(),_bp=new THREE.Vector3(),_side=new THREE.Vector3(),_od=new THREE.Vector3();
 const ss=x=>x*x*(3-2*x);
 function orbitDir(a,b,e,out){_q.setFromUnitVectors(a,b);_qi.identity().slerp(_q,e);return out.copy(a).applyQuaternion(_qi)}
@@ -691,23 +713,27 @@ function shipPos(w,P,t,res,i){const L=P.lay,R0=P.size*2,land=P.size+(w.padH||0)+
   _ds.copy(w.pos).negate().normalize();_side.set(-_ds.z,0,_ds.x).normalize();
   _ai.copy(_ds).addScaledVector(_side,.55).normalize();_ao.copy(_ds).addScaledVector(_side,-.55).normalize();
   _bp.copy(PORT_DIR).applyQuaternion(w.mesh.quaternion);
-  // docking berth on the habitat ring, on the side facing this ship's planet
-  // while berthed the ship turns with the ring, so the berth (and the point it backs out to) rotate by the
-  // angle the ring has turned since the ship docked
-  const since=t>=P.berth0?t-P.berth0:t<L[0]?(1-P.berth0)+t:t<L[1]?P.berthLen:0;
-  const sinceSec=Math.min(since,P.berthLen)*tripTime(i),ang=w.angle-P.speed*sinceSec; // planet's bearing when the ship docked
-  _dh.set(Math.cos(ang),0,Math.sin(ang)).applyAxisAngle(UP,SPIN_TOTAL*sinceSec);
-  _dock.copy(_dh).multiplyScalar(DOCK_R);_appr.copy(_dh).multiplyScalar(2.35);_appr.y=.18;
+  // each planet's ship uses its own port on the habitat ring; the port turns with the ring, so a berthed
+  // ship turns with it. Ships swing round the station at a safe radius to reach the port.
+  const alpha=slotAngle(planetSlot(i))-(station.rotation.y+habRing.rotation.y),beta=Math.atan2(w.pos.z,w.pos.x);
+  _dock.set(Math.cos(alpha)*DOCK_R,0,Math.sin(alpha)*DOCK_R);_appr.set(Math.cos(alpha)*SAFE_R,.2,Math.sin(alpha)*SAFE_R);
+  _near.set(Math.cos(beta)*SAFE_R,.2,Math.sin(beta)*SAFE_R);
+  const arc=(from,to,e)=>{let d=to-from;d=Math.atan2(Math.sin(d),Math.cos(d));const a=from+d*e;return res.set(Math.cos(a)*SAFE_R,.2,Math.sin(a)*SAFE_R)};
   const dockSeg=(q,leaving)=>{ // q: 0..1 within a dock segment; 70% of it is spent berthed
-    const k=leaving?Math.max(0,(q-.7)/.3):Math.max(0,1-q/.3);res.lerpVectors(_dock,_appr,ss(k));w._sc=.45;w._mode=3;w._th=k>0&&k<1?.6:0;return res};
+    const k=leaving?Math.max(0,(q-.7)/.3):Math.max(0,1-q/.3);res.lerpVectors(_dock,_appr,ss(k));w._sc=.45;w._mode=3;w._th=k>0&&k<1?.6:0;w._docked=k===0;return res};
+  w._docked=false;
   if(t<L[0])return dockSeg(t/L[0],true);
-  if(t<L[1]){const r=(t-L[0])/(L[1]-L[0]);_od.copy(w.pos).addScaledVector(_ai,R0);res.lerpVectors(_appr,_od,r);res.y+=Math.sin(r*Math.PI)*bump;w._sc=.45+.55*Math.min(1,r/.3);w._mode=0;w._th=.7;return res}
+  if(t<L[1]){const r=(t-L[0])/(L[1]-L[0]);w._mode=0;w._th=.7;
+    if(r<.3){arc(alpha,beta,ss(r/.3));w._sc=.45;return res}
+    const r2=(r-.3)/.7;_od.copy(w.pos).addScaledVector(_ai,R0);res.lerpVectors(_near,_od,r2);res.y+=Math.sin(r2*Math.PI)*bump;w._sc=.45+.55*Math.min(1,r2/.3);return res}
   if(t<L[2]){const e=ss((t-L[1])/(L[2]-L[1]));res.copy(w.pos).addScaledVector(orbitDir(_ai,_bp,e,_od),R0);w._sc=1-.55*e;w._mode=0;w._th=.45;return res}
   if(t<L[3]){const q=(t-L[2])/(L[3]-L[2]);res.copy(w.pos).addScaledVector(_bp,R0+(land-R0)*(1-(1-q)*(1-q)));w._sc=.45-.23*q;w._mode=1;w._th=1.1-.8*q;return res}
   if(t<L[4]){res.copy(w.pos).addScaledVector(_bp,land);w._sc=.22;w._mode=1;w._th=0;return res}
   if(t<L[5]){const q=(t-L[4])/(L[5]-L[4]);res.copy(w.pos).addScaledVector(_bp,land+(R0-land)*q*q);w._sc=.22+.23*q;w._mode=1;w._th=1.3-.5*q;return res}
   if(t<L[6]){const e=ss((t-L[5])/(L[6]-L[5]));res.copy(w.pos).addScaledVector(orbitDir(_bp,_ao,e,_od),R0);w._sc=.45+.55*e;w._mode=0;w._th=.5;return res}
-  if(t<L[7]){const r=(t-L[6])/(L[7]-L[6]);_od.copy(w.pos).addScaledVector(_ao,R0);res.lerpVectors(_od,_appr,r);res.y+=Math.sin(r*Math.PI)*bump;w._sc=.45+.55*Math.min(1,(1-r)/.3);w._mode=0;w._th=.7;return res}
+  if(t<L[7]){const r=(t-L[6])/(L[7]-L[6]);w._mode=0;w._th=.7;
+    if(r>.7){arc(beta,alpha,ss((r-.7)/.3));w._sc=.45;return res}
+    const r2=r/.7;_od.copy(w.pos).addScaledVector(_ao,R0);res.lerpVectors(_od,_near,r2);res.y+=Math.sin(r2*Math.PI)*bump;w._sc=.45+.55*Math.min(1,(1-r2)/.3);return res}
   return dockSeg((t-L[7])/(1-L[7]),false)}
 function updateWorld(dt){
   simTime+=dt;
@@ -722,10 +748,11 @@ function updateWorld(dt){
     const camD=camera.position.distanceTo(w.pos),near=camD<P.size*18&&S.planets[i].u;
     if(w.port)w.port.visible=near;if(w.fac)w.fac.visible=near;
     if(near)animateSurface(w,i,dt);
-    if(w.ship.visible){const t=S.planets[i].t;shipPos(w,P,t,w.ship.position,i);const sc=w._sc,mode=w._mode,th=w._th;w.ship.scale.setScalar(sc);
+    if(w.ship.visible){const t=S.planets[i].t;shipPos(w,P,t,w.ship.position,i);const sc=w._sc,mode=w._mode,th=w._th;
+      {const d=docks[planetSlot(i)];if(d)d.status.material=w._docked?dockMats.busy:dockMats.free} // port light: green while berthedw.ship.scale.setScalar(sc);
       if(mode===1)tmp2.copy(PORT_DIR).applyQuaternion(w.mesh.quaternion).multiplyScalar(50).add(w.ship.position); // nose up while landing
       else if(mode===2)tmp2.set(0,50,0).add(w.ship.position); // nose up (iris door, kept for later)
-      else if(mode===3)tmp2.set(0,0,0); // docked: nose against the habitat ring, turning with it
+      else if(mode===3)tmp2.set(0,0,0); // docked: nose in the port's collar, turning with the ring
       else shipPos(w,P,Math.min(.9999,t+.003),tmp2,i);
       w.ship.lookAt(tmp2);
       w.flame.material.opacity=th>0?1:0;w.flame.scale.setScalar(.2+.75*th*(.85+.15*Math.sin(simTime*45+i)))}
