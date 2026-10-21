@@ -773,6 +773,7 @@ function updateWorld(dt){
       let dth=tTheta-cam.theta;dth=Math.atan2(Math.sin(dth),Math.cos(dth));cam.theta+=dth*k;cam.phi+=(tPhi-cam.phi)*k}}
   const sw=W[S.sel];if(sw&&sw.mesh.visible&&!(cam.focus===S.sel&&cam.tr<PLANETS[S.sel].size*10)){selRing.visible=true;selRing.position.copy(sw.pos);const s=PLANETS[S.sel].size*3.2*(1+Math.sin(simTime*3)*.04);selRing.scale.set(s,s,1);selRing.material.rotation+=dt*.4}else selRing.visible=false;
   if(!isFinite(cam.tr))cam.tr=30;if(!isFinite(cam.r))cam.r=cam.tr;if(!isFinite(cam.tt.x+cam.tt.z))cam.tt.set(0,0,0);if(!isFinite(cam.target.x+cam.target.z))cam.target.set(0,0,0);
+  if(cam.station&&cam.tr>12)cam.station=false;
   cam.r+=(cam.tr-cam.r)*Math.min(1,dt*8);cam.target.lerp(cam.tt,Math.min(1,dt*8));
   camera.position.set(cam.r*Math.sin(cam.phi)*Math.cos(cam.theta),cam.r*Math.cos(cam.phi),cam.r*Math.sin(cam.phi)*Math.sin(cam.theta)).add(cam.target);camera.lookAt(cam.target);sky.position.copy(camera.position);farGroup.position.copy(camera.position);
 }
@@ -806,11 +807,13 @@ function fitDistance(){if(!vb)vb=viewBox();const R=outerR()*1.08,fw=(vb.right-vb
   const byW=R/(TAN*fw),byH=R*Math.max(Math.cos(cam.phi),.25)/(TAN*fh)+R*Math.sin(cam.phi)*.15,d=Math.max(byW,byH);return isFinite(d)?clampR(d):30}
 // the galaxy map can't tilt so far that planets line up behind each other; close-ups can
 const maxTilt=()=>cam.focus>=0?1.45:1.2;
-const clampR=r=>Math.min(340,Math.max(cam.focus>=0?PLANETS[cam.focus].size*.35:8,r));
-function focusPlanet(i){cam.focus=i;cam.track=true;S.sel=i;cam.tr=PLANETS[i].size*(S.planets[i].u?2.5+.25*Math.max(1,S.planets[i].teams.length):3.6);refreshWorld();
+const clampR=r=>Math.min(340,Math.max(cam.focus>=0?PLANETS[cam.focus].size*.35:cam.station?2.2:8,r));
+// double-tapping the station zooms in on it and opens the Research tab
+function focusStation(){cam.focus=-1;cam.track=false;cam.station=true;cam.tt.set(0,.1,0);cam.tr=5.4;cam.phi=.9;setTab('research');if(sheet.classList.contains('collapsed'))toggleSheet()}
+function focusPlanet(i){cam.station=false;cam.focus=i;cam.track=true;S.sel=i;cam.tr=PLANETS[i].size*(S.planets[i].u?2.5+.25*Math.max(1,S.planets[i].teams.length):3.6);refreshWorld();
   if(!S.tipClose){S.tipClose=1;toast('Pinch to zoom. Drag to leave the close-up.',2600)}}
 function unfocus(){if(cam.focus<0)return;const i=cam.focus;cam.focus=-1;cam.track=false;cam.phi=Math.min(cam.phi,1.2);cam.tt.copy(W[i].pos);cam.target.copy(W[i].pos);if(cam.tr<8)cam.tr=Math.max(14,PLANETS[i].size*10)}
-function recenter(){cam.focus=-1;cam.track=false;resize();cam.tt.set(0,0,0);cam.target.set(0,0,0);cam.phi=1.0;cam.tr=fitDistance();toast('Map recentered',1000)}
+function recenter(){cam.station=false;cam.focus=-1;cam.track=false;resize();cam.tt.set(0,0,0);cam.target.set(0,0,0);cam.phi=1.0;cam.tr=fitDistance();toast('Map recentered',1000)}
 
 // Camera input: one finger / left mouse = pan, pinch / wheel = zoom,
 // two-finger twist = rotate, two fingers up/down = tilt, right mouse = rotate + tilt.
@@ -840,6 +843,12 @@ canvas.addEventListener('wheel',e=>{e.preventDefault();cam.tr=clampR(cam.tr*(1+M
 const ray=new THREE.Raycaster();
 let lastPick={i:-1,t:0};
 function pick(x,y){const v=new THREE.Vector2(x/window.innerWidth*2-1,-(y/window.innerHeight)*2+1);ray.setFromCamera(v,camera);
+  // the station: a tap inside its on-screen footprint (ring radius, at least 28px)
+  {tmp.set(0,0,0).project(camera);const sx=(tmp.x+1)/2*innerWidth,sy=(1-tmp.y)/2*innerHeight;tmp2.set(1.5,0,0).project(camera);
+   const rad=Math.max(28,Math.abs((tmp2.x-tmp.x)/2*innerWidth));
+   const stD=camera.position.length(),front=ray.intersectObjects(W.filter(w=>w.mesh.visible).map(w=>w.mesh),false).some(hh=>hh.distance<stD); // a planet in front of the station wins
+   if(tmp.z<1&&Math.hypot(sx-x,sy-y)<rad&&!front){
+     const now=performance.now();if(lastPick.i===-2&&now-lastPick.t<450){focusStation();lastPick.i=-9}else lastPick={i:-2,t:now};return}}
   const hits=ray.intersectObjects(W.filter(w=>w.mesh.visible).map(w=>w.mesh),false);
   let i=hits.length?hits[0].object.userData.i:-1;
   if(i<0){let best=1e9;W.forEach((w,k)=>{if(!w.mesh.visible)return;tmp.copy(w.pos).project(camera);const sx=(tmp.x+1)/2*window.innerWidth,sy=(1-tmp.y)/2*window.innerHeight,d=Math.hypot(sx-x,sy-y);if(d<40&&d<best){best=d;i=k}})}
