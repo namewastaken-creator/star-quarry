@@ -460,13 +460,14 @@ const IRIS_Y=.455,IRIS=new THREE.Vector3(0,IRIS_Y,0),DOCK_IN=new THREE.Vector3(0
 }
 // iris door: eight blades that slide back into the rim when the space probe launches or returns
 const irisHole=new THREE.Mesh(new THREE.CircleGeometry(.27,24),new THREE.MeshBasicMaterial({color:0x07080f}));irisHole.rotation.x=-Math.PI/2;irisHole.position.y=IRIS_Y-.05;station.add(irisHole);
-const irisRim=new THREE.Mesh(new THREE.TorusGeometry(.29,.025,8,32),stTeal);irisRim.rotation.x=Math.PI/2;irisRim.position.y=.485;station.add(irisRim);
+// iris rim: smooth, and resting on the deck rather than cutting into it
+const irisRim=new THREE.Mesh(new THREE.TorusGeometry(.29,.022,12,128),stTeal);irisRim.rotation.x=Math.PI/2;irisRim.position.y=.503;station.add(irisRim);
 const irisBlades=[];for(let k=0;k<8;k++){const g=new THREE.Group();g.rotation.y=k*Math.PI/4;g.position.y=IRIS_Y;station.add(g);
   const b=new THREE.Mesh(new THREE.BoxGeometry(.2,.018,.13),trim);b.rotation.y=.35;g.add(b);irisBlades.push(b)}
 // dark collar over the blades' outer edges, so the door reads as a clean circle (blades retract under it)
 const irisCollar=new THREE.Mesh(new THREE.RingGeometry(.165,.275,48),new THREE.MeshStandardMaterial({color:0x1a1e33,metalness:.5,roughness:.6,side:THREE.DoubleSide}));
 irisCollar.rotation.x=-Math.PI/2;irisCollar.position.y=IRIS_Y+.013;station.add(irisCollar);
-let irisOpen=0;
+let irisOpen=0;const IRIS_T=2.5;
 // habitat ring with lit windows, modules and spokes
 const habRing=new THREE.Group();station.add(habRing);
 { const ring=new THREE.Mesh(new THREE.TorusGeometry(1.25,.1,12,64),metal);ring.rotation.x=Math.PI/2;habRing.add(ring);
@@ -819,10 +820,14 @@ function updateWorld(dt){
        if(f<.05||f>.95)tmp2.set(0,50,0).add(probeObj.position);else probePos(Math.min(.999,f+.002),pr.out.ang,tmp2);probeObj.lookAt(tmp2);
        probeGlow.material.color.set(ORES[pr.out.ore].c);const far=(f<.05||f>.95)?.55:cam.probe?1.1:Math.min(4,1+probeObj.position.length()/12);probeObj.scale.setScalar(far); // normal size when the camera follows it
        probeBlink.material.emissiveIntensity=(simTime*1.6)%1<.25?2.5:.2}else probeObj.visible=false}else probeObj.visible=false}
-  {let target=0;W.forEach(w=>{if(!w.ship.visible)return;const d=w.ship.position.distanceTo(IRIS);if(d<1.4)target=Math.max(target,Math.min(1,1-(d-.35)/1.0))});
-   if(probeObj.visible){const d=probeObj.position.distanceTo(IRIS);if(d<1.6)target=Math.max(target,Math.min(1,1-(d-.35)/1.2))}
-   irisOpen+=(target-irisOpen)*Math.min(1,dt*7);irisBlades.forEach(b=>{b.position.x=.1+.17*irisOpen;b.scale.x=1-.55*irisOpen});
-   irisRim.material.emissiveIntensity=.9+irisOpen*1.2}
+  // iris: opens and closes at one steady speed (IRIS_T seconds either way). It starts opening just before a probe
+  // launches or arrives so it is fully open in time, and closes once the probe is clear.
+  {const pr=S.probe,nw=Date.now(),fly=ECON.PROBE_FLY*1000;let want=false;
+   if(pr&&!pr.out&&pr.nextAt-nw<IRIS_T*1000)want=true;                         // about to launch
+   if(pr&&pr.out){const el=nw-pr.out.at;if(el<fly*.035||el>fly*.95-IRIS_T*1000)want=true} // leaving, or on final approach
+   irisOpen=Math.max(0,Math.min(1,irisOpen+(want?1:-1)*dt/IRIS_T));
+   const e=ss(irisOpen);irisBlades.forEach(b=>{b.position.x=.1+.17*e;b.scale.x=1-.55*e});
+   irisRim.material.emissiveIntensity=.9+e*1.2}
   pulse=Math.max(0,pulse-dt*2.5);hubMat.emissiveIntensity=.15+pulse*.9;stGlow.material.opacity=.35+pulse*.65;
   W.forEach((w,i)=>{if(!w.mesh.visible)return;const P=PLANETS[i];
     w.angle+=dt*P.speed;w.pos.set(Math.cos(w.angle)*P.r,0,Math.sin(w.angle)*P.r);w.mesh.position.copy(w.pos);w.mesh.rotation.y+=dt*.05;
