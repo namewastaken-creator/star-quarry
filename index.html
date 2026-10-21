@@ -67,6 +67,15 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
 .chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
 .chips::-webkit-scrollbar{display:none}
 .chips.wrap{flex-wrap:wrap;overflow-x:visible}
+.chipnav{display:flex;align-items:center;gap:6px;min-width:0}
+.chipnav .chips{flex:1;min-width:0;position:relative}
+.chipnav.more-r .chips{-webkit-mask-image:linear-gradient(to right,#000 82%,transparent);mask-image:linear-gradient(to right,#000 82%,transparent)}
+.chipnav.more-l .chips{-webkit-mask-image:linear-gradient(to left,#000 82%,transparent);mask-image:linear-gradient(to left,#000 82%,transparent)}
+.chipnav.more-l.more-r .chips{-webkit-mask-image:linear-gradient(to right,transparent,#000 14%,#000 86%,transparent);mask-image:linear-gradient(to right,transparent,#000 14%,#000 86%,transparent)}
+.cnav{flex:0 0 30px;height:30px;border-radius:6px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font:700 18px/1 var(--f-display);cursor:pointer;display:grid;place-items:center;padding:0}
+.cnav:disabled{opacity:.25;cursor:default}
+.cnav:focus-visible{outline:2px solid var(--ship);outline-offset:2px}
+.chipnav.fits .cnav{display:none}
 .chip{flex:0 0 auto;background:var(--panel2);border:1px solid var(--line);color:var(--muted);border-radius:999px;padding:6px 11px;font:600 12px var(--f-display);letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
 .chip.on{border-color:var(--ore);color:var(--ore)}
 .chip.lock{border-style:dashed}
@@ -899,7 +908,9 @@ const armed=k=>arm&&arm.k===k&&Date.now()<arm.until;
 function oreChip(o,f){return `<span class="ore"><i style="background:${ORES[o].c}"></i>${ORES[o].n}${f!=null?` <span class="num" style="color:var(--muted)">${Math.round(f*100)}%</span>`:''}</span>`}
 function viewPlanet(){
   const i=S.sel,P=PLANETS[i],p=S.planets[i],firstLocked=S.planets.findIndex(x=>!x.u);
-  let chips='<div class="chips">';S.planets.forEach((x,k)=>{if(x.u||k===firstLocked)chips+=`<button class="chip${k===i?' on':''}${x.u?'':' lock'}" data-act="sel" data-p="${k}" type="button">${PLANETS[k].n}</button>`});chips+='</div>';
+  let chips='<div class="chipnav" id="pnav"><button class="cnav" data-act="cscroll" data-d="-1" type="button" aria-label="Scroll planets left">‹</button><div class="chips" id="pchips">';
+  S.planets.forEach((x,k)=>{if(x.u||k===firstLocked)chips+=`<button class="chip${k===i?' on':''}${x.u?'':' lock'}" data-act="sel" data-p="${k}" type="button">${PLANETS[k].n}</button>`});
+  chips+='</div><button class="cnav" data-act="cscroll" data-d="1" type="button" aria-label="Scroll planets right">›</button></div>';
   let h=chips+`<div class="head"><h2>${P.n}</h2><span class="num" style="color:var(--muted);font-size:12px">Orbit ${i+1} · ${P.r.toFixed(1)} AU</span>${p.u?`<button class="tog${cam.focus===i&&cam.track?' on':''}" data-act="${cam.focus===i&&cam.track?'unfocus':'focus'}" data-p="${i}" type="button">${cam.focus===i?(cam.track?'Back to galaxy':'Center colony'):'Close-up'}</button>`:''}</div>
   <div class="ores">${P.mix.map(([o,f])=>oreChip(o,f)).join('')}</div>`;
   if(!p.u){const c=teamHireCost(i,0);h+=`<p>A survey drone has mapped ${P.n}. Hire a mining team to claim it and start mining ${P.mix.map(([o])=>ORES[o].n.toLowerCase()).join(' and ')}.</p>
@@ -984,11 +995,24 @@ function viewWarp(){
    <button class="btn ghost wide${armed('reset')?' warn':''}" data-act="reset" type="button">${armed('reset')?'Tap again to erase your save':'Erase save and start over'}</button>`;
   return h}
 
+// planet button row: arrows, edge fades, selected planet kept in view, mouse drag and wheel on computers
+let shownSel=-1;
+function chipNav(){const nav=$('pnav'),c=$('pchips');if(!nav||!c)return;const max=c.scrollWidth-c.clientWidth;
+  nav.classList.toggle('fits',max<=2);nav.classList.toggle('more-l',c.scrollLeft>2);nav.classList.toggle('more-r',c.scrollLeft<max-2);
+  const [l,r]=nav.querySelectorAll('.cnav');l.disabled=c.scrollLeft<=2;r.disabled=c.scrollLeft>=max-2}
+function centerSelChip(){const c=$('pchips');if(!c)return;const on=c.querySelector('.chip.on');if(on)c.scrollLeft=on.offsetLeft-(c.clientWidth-on.offsetWidth)/2}
+let chipDrag=null,chipDragged=false;
+pbody.addEventListener('pointerdown',e=>{const c=e.target.closest('#pchips');if(c&&e.pointerType==='mouse'){chipDrag={x:e.clientX,l:c.scrollLeft,c};chipDragged=false}});
+window.addEventListener('pointermove',e=>{if(!chipDrag)return;const dx=e.clientX-chipDrag.x;if(Math.abs(dx)>5)chipDragged=true;if(chipDragged){chipDrag.c.scrollLeft=chipDrag.l-dx;lastScroll=performance.now()}});
+window.addEventListener('pointerup',()=>{chipDrag=null;setTimeout(()=>chipDragged=false,0)});
+pbody.addEventListener('wheel',e=>{const c=e.target.closest('#pchips');if(c&&Math.abs(e.deltaY)>Math.abs(e.deltaX)){c.scrollLeft+=e.deltaY;e.preventDefault()}},{passive:false});
+pbody.addEventListener('scroll',e=>{if(e.target.id==='pchips')chipNav()},{passive:true,capture:true});
 function render(force){
   if((pressing||touchHold||performance.now()-lastScroll<500)&&!force)return;
   if(sheet.classList.contains('collapsed')&&!force)return;
   const v={planet:viewPlanet,market:viewMarket,smelter:viewSmelter,research:viewResearch,warp:viewWarp}[tab]();
-  if(v!==lastHTML){const st=pbody.scrollTop,sl=[...pbody.querySelectorAll('.chips')].map(c=>c.scrollLeft);pbody.innerHTML=v;pbody.scrollTop=st;pbody.querySelectorAll('.chips').forEach((c,k)=>{if(sl[k])c.scrollLeft=sl[k]});lastHTML=v}
+  if(v!==lastHTML){const st=pbody.scrollTop,sl=[...pbody.querySelectorAll('.chips')].map(c=>c.scrollLeft);pbody.innerHTML=v;pbody.scrollTop=st;pbody.querySelectorAll('.chips').forEach((c,k)=>{if(sl[k])c.scrollLeft=sl[k]});lastHTML=v;
+    if(tab==='planet'&&shownSel!==S.sel){shownSel=S.sel;centerSelChip()}chipNav()}
 }
 function hud(){
   $('cash').textContent=fmt(S.cash);$('rate').textContent='≈ '+fmt(incomeEstimate())+' /s';
@@ -1035,6 +1059,8 @@ $('od').addEventListener('click',()=>{if(odOn()||Date.now()<S.od.ready)return;S.
 
 pbody.addEventListener('click',e=>{
   const b=e.target.closest('[data-act]');if(!b||b.disabled)return;const a=b.dataset.act;
+  if(a==='cscroll'){const c=$('pchips');if(c){c.scrollBy({left:+b.dataset.d*c.clientWidth*.7,behavior:'smooth'});lastScroll=performance.now()}return}
+  if(a==='sel'&&chipDragged)return;
   if(a==='sel'){S.sel=+b.dataset.p;refreshWorld()}
   else if(a==='sell'){const v=sellItem(b.dataset.k);if(v)toast('+'+fmt(v)+' credits',1200)}
   else if(a==='sellall'){let v=0;for(const o in S.inv)v+=sellItem('o'+o);for(const o in S.bars)v+=sellItem('b'+o);if(v)toast('+'+fmt(v)+' credits',1400);if(S.tut===1){S.tut=2;setTimeout(()=>toast('Spend credits on your mining team\u2019s upgrades with the green buttons. Tap planets in the sky to switch.',5000),1500)}}
