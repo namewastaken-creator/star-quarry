@@ -32,7 +32,8 @@ body{background:radial-gradient(120% 80% at 70% 10%,#151a3a 0%,#090b1a 45%,var(-
 .cash .lbl{font:600 10px var(--f-display);letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
 .cash .val{font:700 30px/1 var(--f-display);color:var(--ore);font-variant-numeric:tabular-nums;letter-spacing:.01em}
 .cash .rate{font:500 12px var(--f-data);color:var(--muted);font-variant-numeric:tabular-nums}
-.cash .probe{color:var(--ship);font-size:11px}
+.cash .probe{color:var(--ship);font-size:11px;pointer-events:auto;background:none;border:0;padding:4px 0;margin:-4px 0;text-align:left;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px}
+.cash .probe:focus-visible{outline:2px solid var(--ship);outline-offset:2px}
 .hudr{display:flex;flex-direction:column;align-items:flex-end;gap:6px;pointer-events:auto}
 .dm{font:500 12px var(--f-data);color:#c9b8ff}
 #od{font:700 13px var(--f-display);letter-spacing:.12em;text-transform:uppercase;background:var(--panel2);color:var(--ship);border:1px solid #2d6b66;border-radius:6px;padding:7px 11px;min-width:118px;cursor:pointer}
@@ -53,7 +54,9 @@ body{background:radial-gradient(120% 80% at 70% 10%,#151a3a 0%,#090b1a 45%,var(-
 #sheet.collapsed{height:calc(56px + env(safe-area-inset-bottom,0px))}
 #sheet.collapsed #pbody{display:none}
 .tabbar{display:flex;align-items:stretch;border-bottom:1px solid var(--line);padding-left:max(4px,env(safe-area-inset-left,0px));padding-right:max(4px,env(safe-area-inset-right,0px))}
-.tab{flex:1;background:none;border:0;color:var(--muted);font:700 13px var(--f-display);letter-spacing:.12em;text-transform:uppercase;padding:17px 2px 15px;cursor:pointer;position:relative;min-width:0}
+.tabscroll{position:relative;flex:1;min-width:0;display:flex;overflow-x:auto;scrollbar-width:none;overscroll-behavior-x:contain}
+.tabscroll::-webkit-scrollbar{display:none}
+.tab{flex:1 0 auto;background:none;border:0;color:var(--muted);font:700 13px var(--f-display);letter-spacing:.07em;text-transform:uppercase;padding:17px 9px 15px;cursor:pointer;position:relative;white-space:nowrap}
 .tab.on{color:var(--ink)}
 .tab.on::after{content:"";position:absolute;left:22%;right:22%;bottom:-1px;height:2px;background:var(--ore)}
 .tab[hidden]{display:none}
@@ -145,7 +148,7 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
     <span class="lbl">Credits</span>
     <span class="val" id="cash">0</span>
     <span class="rate" id="rate">≈ 0 /s</span>
-    <span class="rate probe" id="probeInfo"></span>
+    <button class="rate probe" id="probeInfo" type="button"></button>
   </div>
   <div class="hudr">
     <span class="dm" id="dm"></span>
@@ -159,11 +162,14 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
 <div id="modal" hidden><div class="box" role="dialog" aria-modal="true" aria-labelledby="mtitle"><span class="tag">Research complete</span><h2 id="mtitle"></h2><p id="mdesc" style="color:var(--ink)"></p><div id="meff"></div><span class="num" id="mcost" style="font-size:12px;color:var(--muted)"></span><button class="btn ghost wide" id="mclose" type="button">Close</button></div></div>
 <section id="sheet">
   <nav class="tabbar" id="tabs">
+    <div class="tabscroll" id="tabscroll">
     <button class="tab on" data-tab="planet" type="button">Planet</button>
     <button class="tab" data-tab="market" type="button">Market</button>
     <button class="tab" data-tab="smelter" type="button" hidden>Smelter</button>
     <button class="tab" data-tab="research" type="button">Research</button>
+    <button class="tab" data-tab="probe" type="button">Probe</button>
     <button class="tab" data-tab="warp" type="button">Warp</button>
+    </div>
     <button id="grip" type="button" aria-label="Collapse console"><i></i></button>
   </nav>
   <div id="pbody"></div>
@@ -260,7 +266,7 @@ const BAR_IN=8, BAR_MULT=12, OD_LEN=120, OD_CD=600, WARP_AT=5;
 
 /* ===================== STATE ===================== */
 const KEY='starquarry_save_v1';
-function newRun(keep){keep=keep||{};return{v:1,econ:2,probe:{nextAt:Date.now()+ECON.PROBE_FIRST*1000,out:null},music:keep.music||{on:true,vol:.6},cash:0,dm:keep.dm||0,runEarned:0,lifetime:keep.lifetime||0,warps:keep.warps||0,
+function newRun(keep){keep=keep||{};return{v:1,econ:2,probe:{nextAt:Date.now()+ECON.PROBE_FIRST*1000,out:null,st:{launched:0,returned:0,value:0,best:null,byOre:{},log:[]}},probeLife:keep.probeLife||{returned:0,value:0},music:keep.music||{on:true,vol:.6},cash:0,dm:keep.dm||0,runEarned:0,lifetime:keep.lifetime||0,warps:keep.warps||0,
  // Cinder's hauler starts already loaded and on its way home, so the first delivery comes quickly
  planets:PLANETS.map((p,i)=>({u:i===0,teams:i===0?[{n:0,t:{}}]:[],stock:0,t:i===0?.66:Math.random()*.4,load:i===0?8:0})),
  inv:{},bars:{},research:{},auto:{},slots:[{r:null,p:0,a:false},{r:null,p:0,a:false},{r:null,p:0,a:false}],
@@ -276,6 +282,8 @@ if(S.econ!==2){S.planets.forEach((p,i)=>{const mn=p.mn;p.teams=[];
 S.planets.forEach(p=>{if(!p.teams)p.teams=[]});
 if(!S.music)S.music={on:true,vol:.6};
 if(!S.probe)S.probe={nextAt:Date.now()+ECON.PROBE_FIRST*1000,out:null};
+if(!S.probe.st)S.probe.st={launched:S.probe.out?1:0,returned:0,value:0,best:null,byOre:{},log:[]};
+if(!S.probeLife)S.probeLife={returned:0,value:0};
 function save(){S.last=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 
 /* ===================== ECONOMY ===================== */
@@ -340,12 +348,14 @@ function step(dt){
    so probes keep flying while the game is closed (up to the offline earnings limit). */
 function totalMineValue(){let t=0;S.planets.forEach((p,i)=>{if(p.u)t+=mineRate(i)*avgValue(i)});return t}
 function probeReturn(){const pr=S.probe,o=pr.out.ore,qty=ECON.PROBE_SEC*totalMineValue()/ORES[o].v*(.85+Math.random()*.3);
+  {const st=pr.st,val=qty*ORES[o].v*valueMult(),at=pr.out.at+ECON.PROBE_FLY*1000;st.returned++;st.value+=val;st.byOre[o]=(st.byOre[o]||0)+qty;
+   if(!st.best||val>st.best.v)st.best={o,q:qty,v:val};st.log.unshift({o,q:qty,v:val,t:at});st.log.length=Math.min(st.log.length,6);S.probeLife.returned++;S.probeLife.value+=val}
   S.inv[o]=(S.inv[o]||0)+qty;pr.out=null;pulse=1;autoSell();return[o,qty]}
 function probeTick(now,quiet){const pr=S.probe,cap=(has('night')?24:8)*3600e3,got=[];
   if(pr.nextAt<now-cap)pr.nextAt=now-cap;
   for(let guard=0;guard<500;guard++){
     if(pr.out&&now>=pr.out.at+ECON.PROBE_FLY*1000){got.push(probeReturn());continue}
-    if(!pr.out&&now>=pr.nextAt){const d=discovered();pr.out={at:pr.nextAt,ore:d[Math.floor(Math.random()*d.length)],ang:Math.random()*Math.PI*2};pr.nextAt+=ECON.PROBE_EVERY*1000;continue}
+    if(!pr.out&&now>=pr.nextAt){const d=discovered();pr.out={at:pr.nextAt,ore:d[Math.floor(Math.random()*d.length)],ang:Math.random()*Math.PI*2};pr.st.launched++;pr.nextAt+=ECON.PROBE_EVERY*1000;continue}
     break}
   if(got.length&&!quiet)toast(got.length===1?`Probe returned with ${fmt(got[0][1])} ${ORES[got[0][0]].n} ore.`:`${got.length} probes returned.`,3400);
   return got}
@@ -779,7 +789,7 @@ function updateWorld(dt){
   {const pr=S.probe;if(pr&&pr.out){const f=(Date.now()-pr.out.at)/(ECON.PROBE_FLY*1000);
      if(f>=0&&f<1){probeObj.visible=true;probePos(f,pr.out.ang,probeObj.position);
        if(f<.05||f>.95)tmp2.set(0,50,0).add(probeObj.position);else probePos(Math.min(.999,f+.002),pr.out.ang,tmp2);probeObj.lookAt(tmp2);
-       probeGlow.material.color.set(ORES[pr.out.ore].c);const far=Math.min(4,1+probeObj.position.length()/12);probeObj.scale.setScalar(far);
+       probeGlow.material.color.set(ORES[pr.out.ore].c);const far=cam.probe?1.1:Math.min(4,1+probeObj.position.length()/12);probeObj.scale.setScalar(far); // normal size when the camera follows it
        probeBlink.material.emissiveIntensity=(simTime*1.6)%1<.25?2.5:.2}else probeObj.visible=false}else probeObj.visible=false}
   {let target=0;W.forEach(w=>{if(!w.ship.visible)return;const d=w.ship.position.distanceTo(IRIS);if(d<1.4)target=Math.max(target,Math.min(1,1-(d-.35)/1.0))});
    if(probeObj.visible){const d=probeObj.position.distanceTo(IRIS);if(d<1.6)target=Math.max(target,Math.min(1,1-(d-.35)/1.2))}
@@ -810,6 +820,7 @@ function updateWorld(dt){
   const sw=W[S.sel];if(sw&&sw.mesh.visible&&!(cam.focus===S.sel&&cam.tr<PLANETS[S.sel].size*10)){selRing.visible=true;selRing.position.copy(sw.pos);const s=PLANETS[S.sel].size*3.2*(1+Math.sin(simTime*3)*.04);selRing.scale.set(s,s,1);selRing.material.rotation+=dt*.4}else selRing.visible=false;
   if(!isFinite(cam.tr))cam.tr=30;if(!isFinite(cam.r))cam.r=cam.tr;if(!isFinite(cam.tt.x+cam.tt.z))cam.tt.set(0,0,0);if(!isFinite(cam.target.x+cam.target.z))cam.target.set(0,0,0);
   if(cam.station&&cam.tr>12)cam.station=false;
+  if(cam.probe){if(probeObj.visible){cam.tt.copy(probeObj.position)}else{cam.probe=false;cam.station=true;cam.tt.set(0,.5,0)}}
   cam.r+=(cam.tr-cam.r)*Math.min(1,dt*8);cam.target.lerp(cam.tt,Math.min(1,dt*8));
   camera.position.set(cam.r*Math.sin(cam.phi)*Math.cos(cam.theta),cam.r*Math.cos(cam.phi),cam.r*Math.sin(cam.phi)*Math.sin(cam.theta)).add(cam.target);camera.lookAt(cam.target);sky.position.copy(camera.position);farGroup.position.copy(camera.position);
 }
@@ -843,18 +854,22 @@ function fitDistance(){if(!vb)vb=viewBox();const R=outerR()*1.08,fw=(vb.right-vb
   const byW=R/(TAN*fw),byH=R*Math.max(Math.cos(cam.phi),.25)/(TAN*fh)+R*Math.sin(cam.phi)*.15,d=Math.max(byW,byH);return isFinite(d)?clampR(d):30}
 // the galaxy map can't tilt so far that planets line up behind each other; close-ups can
 const maxTilt=()=>cam.focus>=0?1.45:1.2;
-const clampR=r=>Math.min(340,Math.max(cam.focus>=0?PLANETS[cam.focus].size*.35:cam.station?2.2:8,r));
+const clampR=r=>Math.min(340,Math.max(cam.focus>=0?PLANETS[cam.focus].size*.35:cam.probe?1.2:cam.station?2.2:8,r));
 // double-tapping the station zooms in on it and opens the Research tab
-function focusStation(){cam.focus=-1;cam.track=false;cam.station=true;cam.tt.set(0,.1,0);cam.tr=5.4;cam.phi=.9;setTab('research');if(sheet.classList.contains('collapsed'))toggleSheet()}
-function focusPlanet(i){cam.station=false;cam.focus=i;cam.track=true;S.sel=i;cam.tr=PLANETS[i].size*(S.planets[i].u?2.5+.25*Math.max(1,S.planets[i].teams.length):3.6);refreshWorld();
+// tapping the probe status: follow the probe if it's out (otherwise look at the iris) and open the Probe tab
+function focusProbe(){cam.focus=-1;cam.track=false;cam.station=false;
+  if(S.probe.out){cam.probe=true;cam.tr=3.4}else{cam.probe=false;cam.station=true;cam.tt.set(0,.5,0);cam.tr=4.2}
+  cam.phi=Math.min(cam.phi,1.0);setTab('probe');if(sheet.classList.contains('collapsed'))toggleSheet()}
+function focusStation(){cam.probe=false;cam.focus=-1;cam.track=false;cam.station=true;cam.tt.set(0,.1,0);cam.tr=5.4;cam.phi=.9;setTab('research');if(sheet.classList.contains('collapsed'))toggleSheet()}
+function focusPlanet(i){cam.station=false;cam.probe=false;cam.focus=i;cam.track=true;S.sel=i;cam.tr=PLANETS[i].size*(S.planets[i].u?2.5+.25*Math.max(1,S.planets[i].teams.length):3.6);refreshWorld();
   if(!S.tipClose){S.tipClose=1;toast('Pinch to zoom. Drag to leave the close-up.',2600)}}
 function unfocus(){if(cam.focus<0)return;const i=cam.focus;cam.focus=-1;cam.track=false;cam.phi=Math.min(cam.phi,1.2);cam.tt.copy(W[i].pos);cam.target.copy(W[i].pos);if(cam.tr<8)cam.tr=Math.max(14,PLANETS[i].size*10)}
-function recenter(){cam.station=false;cam.focus=-1;cam.track=false;resize();cam.tt.set(0,0,0);cam.target.set(0,0,0);cam.phi=1.0;cam.tr=fitDistance();toast('Map recentered',1000)}
+function recenter(){cam.station=false;cam.probe=false;cam.focus=-1;cam.track=false;resize();cam.tt.set(0,0,0);cam.target.set(0,0,0);cam.phi=1.0;cam.tr=fitDistance();toast('Map recentered',1000)}
 
 // Camera input: one finger / left mouse = pan, pinch / wheel = zoom,
 // two-finger twist = rotate, two fingers up/down = tilt, right mouse = rotate + tilt.
 const ptrs=new Map();let tap=null,g2=null,mouseRot=false;
-function panBy(dx,dy){unfocus();const k=2*cam.r*TAN/window.innerHeight,c=Math.cos(cam.theta),s=Math.sin(cam.theta),fy=k/Math.max(Math.cos(cam.phi),.35);
+function panBy(dx,dy){unfocus();cam.probe=false;const k=2*cam.r*TAN/window.innerHeight,c=Math.cos(cam.theta),s=Math.sin(cam.theta),fy=k/Math.max(Math.cos(cam.phi),.35);
   cam.tt.x-=(s*dx)*k;cam.tt.z-=(-c*dx)*k;cam.tt.x-=c*dy*fy;cam.tt.z-=s*dy*fy;
   const lim=outerR();if(cam.tt.length()>lim)cam.tt.setLength(lim);cam.target.copy(cam.tt)}
 function twoState(){const [a,b]=[...ptrs.values()];return{d:Math.hypot(a.x-b.x,a.y-b.y),ang:Math.atan2(b.y-a.y,b.x-a.x),my:(a.y+b.y)/2}}
@@ -980,7 +995,8 @@ const pbody=$('pbody');let tab='planet',pressing=false,lastHTML='',arm=null;
 function hideToast(){const t=$('toast');t.classList.remove('show');clearTimeout(toast.h2);toast.h2=setTimeout(()=>{if(!t.classList.contains('show'))t.hidden=true},320)}
 function toast(msg,ms){const t=$('toast');t.textContent=msg;t.hidden=false;clearTimeout(toast.h2);requestAnimationFrame(()=>t.classList.add('show'));clearTimeout(toast.h);toast.h=setTimeout(hideToast,Math.min(ms||2200,4000))}
 $('toast').addEventListener('click',()=>{clearTimeout(toast.h);hideToast()});
-function setTab(t){tab=t;document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));pbody.scrollTop=0;render(true)}
+function setTab(t){tab=t;document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));pbody.scrollTop=0;render(true);
+  const on=document.querySelector('.tab.on'),sc=$('tabscroll');if(on&&sc&&sc.scrollWidth>sc.clientWidth)sc.scrollLeft=on.offsetLeft-(sc.clientWidth-on.offsetWidth)/2}
 function toggleSheet(){sheet.classList.toggle('collapsed');$('grip').setAttribute('aria-label',sheet.classList.contains('collapsed')?'Expand console':'Collapse console');setTimeout(resize,260)}
 $('tabs').addEventListener('click',e=>{const b=e.target.closest('.tab');if(b){if(sheet.classList.contains('collapsed'))toggleSheet();setTab(b.dataset.tab)}if(e.target.closest('#grip'))toggleSheet()});
 let touchHold=false,lastScroll=0;
@@ -1034,6 +1050,32 @@ function viewTeams(i,shipsBN){
     <button class="btn ghost${armed('respec'+i+'_'+j)?' warn':''}" data-act="respec" data-p="${i}" data-j="${j}" ${tm.n-free>0?'':'disabled'} type="button" style="min-width:0">${armed('respec'+i+'_'+j)?'Tap to confirm':'Reassign points'}</button></div>`;
   if(n<TEAM_MAX){const c=teamHireCost(i,n);h+=`<button class="btn wide" data-act="hire" data-p="${i}" ${S.cash>=c?'':'disabled'} type="button">Hire a ${n===1?'second':'third'} team: the ${teamName(i,n)}<small>${fmt(c)} credits</small></button>`}
   return h+'</div>'}
+function viewProbe(){const pr=S.probe,st=pr.st,nw=Date.now(),est=ECON.PROBE_SEC*totalMineValue()*valueMult();
+  const ago=t=>{const s=Math.max(0,(nw-t)/1000);return s<60?'just now':s<3600?Math.floor(s/60)+'m ago':Math.floor(s/3600)+'h '+Math.floor(s%3600/60)+'m ago'};
+  let h=`<div class="head"><h2>Space probe</h2>${pr.out?`<button class="tog${cam.probe?' on':''}" data-act="pfollow" type="button">${cam.probe?'Following':'Follow probe'}</button>`:''}</div>`;
+  if(pr.out){const f=Math.min(1,(nw-pr.out.at)/(ECON.PROBE_FLY*1000)),o=pr.out.ore,stage=f<.05?'Leaving the station':f>.95?'Docking through the iris':'Surveying the galaxy';
+    h+=`<div class="card"><div class="head"><h3>Probe out</h3><span class="num" style="font-size:12px;color:var(--muted)">back in ${fmtTime(Math.max(0,pr.out.at+ECON.PROBE_FLY*1000-nw)/1000)}</span></div>
+      <div class="bar"><i style="width:${(f*100).toFixed(1)}%;background:var(--ship)"></i></div>
+      <div class="note"><span>${stage}</span><span>Collecting ${oreChip(o)}</span></div>
+      <div class="stat"><span>Expected haul</span><span>≈ ${fmt(ECON.PROBE_SEC*totalMineValue()/ORES[o].v)} ${ORES[o].n}</span></div>
+      <div class="stat"><span>Worth about</span><span>${fmt(est)} credits</span></div></div>`}
+  else h+=`<div class="card"><div class="head"><h3>In the station</h3><span class="num" style="font-size:12px;color:var(--muted)">launches in ${fmtTime(Math.max(0,pr.nextAt-nw)/1000)}</span></div>
+      <div class="bar"><i style="width:${(100-Math.max(0,pr.nextAt-nw)/(ECON.PROBE_EVERY*1000)*100).toFixed(1)}%;background:var(--muted)"></i></div>
+      <div class="stat"><span>Next haul at today's mining</span><span>≈ ${fmt(est)} credits</span></div></div>`;
+  h+=`<div class="card"><h3>This galaxy</h3>
+    <div class="stat"><span>Probes launched</span><span>${st.launched}</span></div>
+    <div class="stat"><span>Probes returned</span><span>${st.returned}</span></div>
+    <div class="stat"><span>Ore value brought back</span><span>${fmt(st.value)} cr</span></div>
+    <div class="stat"><span>Biggest haul</span><span>${st.best?fmt(st.best.q)+' '+ORES[st.best.o].n+' · '+fmt(st.best.v)+' cr':'None yet'}</span></div>
+    <h3 style="margin-top:6px">All galaxies</h3>
+    <div class="stat"><span>Probes returned</span><span>${S.probeLife.returned}</span></div>
+    <div class="stat"><span>Ore value brought back</span><span>${fmt(S.probeLife.value)} cr</span></div></div>`;
+  const ores=Object.keys(st.byOre).map(Number).sort((a,b)=>a-b);
+  if(ores.length)h+=`<h3>Ore collected this galaxy</h3><div class="ores">${ores.map(o=>`<span class="ore"><i style="background:${ORES[o].c}"></i>${ORES[o].n} <span class="num" style="color:var(--muted)">${fmt(st.byOre[o])}</span></span>`).join('')}</div>`;
+  if(st.log.length)h+=`<h3>Recent returns</h3><div class="rows">${st.log.map(e=>`<div class="row"><div class="txt"><span class="t">${oreChip(e.o)} <span class="num">${fmt(e.q)}</span></span><span class="s">${fmt(e.v)} credits · ${ago(e.t)}</span></div></div>`).join('')}</div>`;
+  else h+='<div class="empty">No probes have come back yet.</div>';
+  h+=`<p style="font-size:12px">A probe launches every ${ECON.PROBE_EVERY/60} minutes and is out for ${ECON.PROBE_FLY/60} minutes. It brings back one random ore you have found, worth about ${ECON.PROBE_SEC} seconds of all your planets' mining.</p>`;
+  return h}
 function viewMarket(){
   const items=[];discovered().forEach(o=>{items.push('o'+o);if(has('smelt'))items.push('b'+o)});
   const list=items.filter(k=>k[0]==='o'||(S.bars[+k.slice(1)]||0)>0||S.auto[k]);
@@ -1100,7 +1142,7 @@ pbody.addEventListener('scroll',e=>{if(e.target.id==='pchips')chipNav()},{passiv
 function render(force){
   if((pressing||touchHold||performance.now()-lastScroll<500)&&!force)return;
   if(sheet.classList.contains('collapsed')&&!force)return;
-  const v={planet:viewPlanet,market:viewMarket,smelter:viewSmelter,research:viewResearch,warp:viewWarp}[tab]();
+  const v={planet:viewPlanet,market:viewMarket,smelter:viewSmelter,research:viewResearch,probe:viewProbe,warp:viewWarp}[tab]();
   if(v!==lastHTML){const st=pbody.scrollTop,sl=[...pbody.querySelectorAll('.chips')].map(c=>c.scrollLeft);pbody.innerHTML=v;pbody.scrollTop=st;pbody.querySelectorAll('.chips').forEach((c,k)=>{if(sl[k])c.scrollLeft=sl[k]});lastHTML=v;
     if(tab==='planet'&&shownSel!==S.sel){shownSel=S.sel;centerSelChip()}chipNav()}
 }
@@ -1128,6 +1170,7 @@ $('mclose').addEventListener('click',closeModal);
 $('modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
 $('center').addEventListener('click',recenter);
+$('probeInfo').addEventListener('click',e=>{e.stopPropagation();focusProbe()});
 function musicUI(){const b=$('music');if(!Music.supported){b.hidden=true;return}const on=S.music.on;b.classList.toggle('on',on);b.textContent=on?'♪ Music on':'♪ Music off';b.setAttribute('aria-pressed',on)}
 $('music').addEventListener('click',e=>{e.stopPropagation();S.music.on=!S.music.on;if(S.music.on)Music.play();else Music.stop();musicUI();save()});
 // Phones only allow sound after a tap, so music starts on the first interaction.
@@ -1156,6 +1199,7 @@ pbody.addEventListener('click',e=>{
   else if(a==='sell'){const v=sellItem(b.dataset.k);if(v)toast('+'+fmt(v)+' credits',1200)}
   else if(a==='sellall'){let v=0;for(const o in S.inv)v+=sellItem('o'+o);for(const o in S.bars)v+=sellItem('b'+o);if(v)toast('+'+fmt(v)+' credits',1400);if(S.tut===1){S.tut=2;setTimeout(()=>toast('Spend credits on your mining team\u2019s upgrades with the green buttons. Tap planets in the sky to switch.',5000),1500)}}
   else if(a==='resinfo'){showResearch(b.dataset.id);return}
+  else if(a==='pfollow'){focusProbe()}
   else if(a==='focus'){focusPlanet(+b.dataset.p)}
   else if(a==='unfocus'){cam.focus=-1;recenter()}
   else if(a==='tsel'){teamSel[+b.dataset.p]=+b.dataset.j}
@@ -1168,7 +1212,7 @@ pbody.addEventListener('click',e=>{
   else if(a==='auto'){S.auto[b.dataset.k]=!S.auto[b.dataset.k]}
   else if(a==='slot'){const sl=S.slots[+b.dataset.i],r=+b.dataset.r;if(sl.a&&sl.r!==null)S.inv[sl.r]=(S.inv[sl.r]||0)+BAR_IN;sl.r=r<0?null:r;sl.a=false;sl.p=0}
   else if(a==='res'){const r=RESEARCH.find(x=>x.id===b.dataset.id);if(S.cash>=r.cost){S.cash-=r.cost;S.research[r.id]=1;toast(r.n+' complete.');if(r.id==='smelt')toast('The Smelter tab is open. Pick an ore for your furnace.',4000);save()}}
-  else if(a==='warp'){if(!armed('warp')){arm={k:'warp',until:Date.now()+4000}}else{const g=pendingDM();S=newRun({dm:S.dm+g,lifetime:S.lifetime,warps:S.warps+1,music:S.music});arm=null;refreshWorld();recenter();save();toast(`Warped. +${fmt(g)} star dust. Everything now sells for +${fmt(S.dm*10)}%.`,4500);setTab('planet')}}
+  else if(a==='warp'){if(!armed('warp')){arm={k:'warp',until:Date.now()+4000}}else{const g=pendingDM();S=newRun({dm:S.dm+g,lifetime:S.lifetime,warps:S.warps+1,music:S.music,probeLife:S.probeLife});arm=null;refreshWorld();recenter();save();toast(`Warped. +${fmt(g)} star dust. Everything now sells for +${fmt(S.dm*10)}%.`,4500);setTab('planet')}}
   else if(a==='reset'){if(!armed('reset')){arm={k:'reset',until:Date.now()+4000}}else{S=newRun({music:S.music});arm=null;refreshWorld();save();toast('Save erased. Fresh start.');setTab('planet')}}
   pressing=false;render(true);hud();
 });
