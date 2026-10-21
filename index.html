@@ -858,48 +858,67 @@ function addSolarBlock(parent,R,s,k){const sol=placeLocal(parent,R,SOLAR[k][0],S
     const pn=new THREE.Mesh(new THREE.BoxGeometry(.32*s,.02*s,.28*s),DM.solar);pn.position.set((c-1)*.36*s,.24*s,(r-.5)*.42*s);pn.rotation.x=-.45;sol.add(pn)}
   const A=k?SOLAR[k-1]:[.2,-.38],B=SOLAR[k],L=Math.hypot(B[0]-A[0],B[1]-A[1]),ua=(k?.5:0)/L,ub=.5/L;
   parent.add(surfaceTube([A[0]+(B[0]-A[0])*ua,A[1]+(B[1]-A[1])*ua],[B[0]-(B[0]-A[0])*ub,B[1]-(B[1]-A[1])*ub],R,s,.02,.022,DM.dark))}
-// Settlement south-west of the hall, clear of the launch pad, domes and solar panels (positions checked against them).
-// Level 1 Outpost: plaza, five houses, lamps and a walkway from the processing dome. Level 2 Town: three towers,
-// three more houses, a park dome and a ring road. Level 3 City: a glowing central spire and five tall towers.
-// Roofs and trim use the planet's own colour.
-const SET_C=[-3.5,-4.1],SET_AT=(r,deg)=>[SET_C[0]+r*Math.cos(deg*Math.PI/180),SET_C[1]+r*Math.sin(deg*Math.PI/180)];
-function setHouse(g,R,s,[e,n],acc,k){const h=placeLocal(g,R,e,n,s);h.rotation.y+=k*1.3;
+// Settlement: south of the launch pad, well away from the mines, and joined to the pad by a lit road.
+// It has its own surface frame centred on the plaza, with "north" pointing at the pad, so its buildings keep
+// true sizes and spacing on the curved planet (layout checked against the pad, its tower and hangar, domes and solar panels).
+// Level 1 Outpost: plaza, five houses, lamps and the road. Level 2 Town: three towers, three more houses, a park
+// dome and a ring road. Level 3 City: a glowing central spire and five tall towers. Everything is 1.25x base scale;
+// roofs and trim use the planet's own colour.
+const SET_SC=1.25,SET_DIR=(()=>{const t=locDir(-3.13,-6.15),ax=new THREE.Vector3().crossVectors(PORT_DIR,t).normalize();return PORT_DIR.clone().applyAxisAngle(ax,4.8*.16)})();
+const SET_N=PORT_DIR.clone().addScaledVector(SET_DIR,-PORT_DIR.dot(SET_DIR)).normalize(),SET_E=new THREE.Vector3().crossVectors(SET_N,SET_DIR);
+const setDir=(e,n)=>SET_DIR.clone().addScaledVector(SET_E,e*.16).addScaledVector(SET_N,n*.16).normalize();
+const SET_AT=(r,deg)=>[r*SET_SC*Math.cos(deg*Math.PI/180),r*SET_SC*Math.sin(deg*Math.PI/180)];
+function placeSet(parent,R,e,n,s){const g=new THREE.Group(),d=setDir(e,n);g.position.copy(d).multiplyScalar(R-.02*s);
+  orient(g,d,SET_N.clone().addScaledVector(d,-SET_N.dot(d)).normalize());g.scale.setScalar(SET_SC);parent.add(g);return g}
+// a flat strip that hugs the surface along a list of directions
+function stripMesh(dirs,R,s,width,mat){const pos=[],idx=[],t=new THREE.Vector3(),side=new THREE.Vector3();
+  dirs.forEach((d,k)=>{const a=dirs[Math.max(0,k-1)],b=dirs[Math.min(dirs.length-1,k+1)];t.subVectors(b,a);side.crossVectors(d,t).normalize();
+    const c=d.clone().multiplyScalar(R+.006*s),w=side.clone().multiplyScalar(width*s/2);
+    pos.push(c.x+w.x,c.y+w.y,c.z+w.z,c.x-w.x,c.y-w.y,c.z-w.z);if(k){const i=k*2;idx.push(i-2,i-1,i,i-1,i+1,i)}});
+  const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));geo.setIndex(idx);geo.computeVertexNormals();return new THREE.Mesh(geo,mat)}
+const roadMat=new THREE.MeshStandardMaterial({color:0x3a4060,metalness:.4,roughness:.7,polygonOffset:true,polygonOffsetFactor:-2,side:THREE.DoubleSide});
+function setHouse(g,R,s,[e,n],acc,k){const h=placeSet(g,R,e,n,s);h.rotateY(k*1.3);
   const body=new THREE.Mesh(new THREE.BoxGeometry(.36*s,.24*s,.3*s),DM.hull);body.position.y=.12*s;h.add(body);
   const roof=k%2?new THREE.Mesh(new THREE.ConeGeometry(.29*s,.2*s,4),acc):new THREE.Mesh(new THREE.CylinderGeometry(.16*s,.16*s,.38*s,10,1,false,0,Math.PI),acc);
   if(k%2){roof.rotation.y=Math.PI/4;roof.position.y=.34*s}else{roof.rotation.z=Math.PI/2;roof.position.y=.24*s}h.add(roof);
   for(const z of[-.152,.152]){const win=new THREE.Mesh(new THREE.BoxGeometry(.2*s,.06*s,.01*s),DM.window);win.position.set(0,.14*s,z*s);h.add(win)}
   const door=new THREE.Mesh(new THREE.BoxGeometry(.01*s,.13*s,.08*s),DM.door);door.position.set(.181*s,.065*s,0);h.add(door)}
-function setTower(g,R,s,[e,n],hgt,acc,rad){const t=placeLocal(g,R,e,n,s),r=(rad||.2)*s;
+function setTower(g,R,s,[e,n],hgt,acc,rad){const t=placeSet(g,R,e,n,s),r=(rad||.2)*s;
   const body=new THREE.Mesh(new THREE.CylinderGeometry(r*.85,r,hgt*s,14),DM.hull);body.position.y=hgt*s/2;t.add(body);
   for(let y=.25;y<hgt-.1;y+=.22){const band=new THREE.Mesh(new THREE.CylinderGeometry(r*(1-.15*y/hgt)+.004*s,r*(1-.15*y/hgt)+.004*s,.05*s,14,1,true),DM.window);band.position.y=y*s;t.add(band)}
   const cap=new THREE.Mesh(new THREE.ConeGeometry(r*.95,.28*s,14),acc);cap.position.y=(hgt+.14)*s;t.add(cap);
   const tip=new THREE.Mesh(new THREE.SphereGeometry(.035*s,8,6),DM.red);tip.position.y=(hgt+.3)*s;t.add(tip);return t}
-function setLamp(g,R,s,[e,n]){const l=placeLocal(g,R,e,n,s);const post=new THREE.Mesh(new THREE.CylinderGeometry(.012*s,.012*s,.3*s,5),DM.hull);post.position.y=.15*s;l.add(post);
+function setLamp(g,R,s,[e,n]){const l=placeSet(g,R,e,n,s);const post=new THREE.Mesh(new THREE.CylinderGeometry(.012*s,.012*s,.3*s,5),DM.hull);post.position.y=.15*s;l.add(post);
   const bulb=new THREE.Mesh(new THREE.SphereGeometry(.03*s,8,6),DM.teal);bulb.position.y=.31*s;l.add(bulb)}
 function buildSettleLevel(w,i,k){const P=PLANETS[i],s=w.facS,R=w.facR,g=new THREE.Group();w.fac.add(g);w.settle[k]=g;
   if(!w.setAcc){w.setAcc=new THREE.MeshStandardMaterial({color:P.c2,metalness:.35,roughness:.45});
     w.setGlow=new THREE.MeshStandardMaterial({color:P.c2,emissive:P.c2,emissiveIntensity:1.1})}
   const acc=w.setAcc,glow=w.setGlow;
   if(k===0){
-    const plaza=placeLocal(g,R,SET_C[0],SET_C[1],s);
+    const plaza=placeSet(g,R,0,0,s);
     const deck=new THREE.Mesh(new THREE.CylinderGeometry(.6*s,.64*s,.06*s,32),DM.pad);deck.position.y=.03*s;plaza.add(deck);
     const rim=new THREE.Mesh(new THREE.TorusGeometry(.6*s,.025*s,6,40),glow);rim.rotation.x=Math.PI/2;rim.position.y=.065*s;plaza.add(rim);
     const pole=new THREE.Mesh(new THREE.CylinderGeometry(.015*s,.015*s,.7*s,6),DM.hull);pole.position.y=.35*s;plaza.add(pole);
     const flag=new THREE.Mesh(new THREE.BoxGeometry(.2*s,.12*s,.01*s),acc);flag.position.set(.1*s,.62*s,0);plaza.add(flag);
     [126,198,270,342,54].forEach((a,j)=>setHouse(g,R,s,SET_AT(1.0,a),acc,j));
-    [90,162,234,306,18].forEach(a=>setLamp(g,R,s,SET_AT(.72,a)));
-    // walkway from the processing dome to the nearest house
-    g.add(surfaceTube([-1.45,-2.5],[-2.7,-3.15],R,s,.14,.06,DM.tube));
+    [162,234,306,18,70,110].forEach(a=>setLamp(g,R,s,SET_AT(.72,a)));
+    // road from the launch pad's south edge straight to the plaza, lit on both sides
+    {const A=new THREE.Vector3().copy(PORT_DIR).applyAxisAngle(new THREE.Vector3().crossVectors(PORT_DIR,SET_DIR).normalize(),1.15*.16),B=setDir(0,.75*SET_SC),dirs=[];
+     for(let k=0;k<=24;k++)dirs.push(slerpDir(A,B,k/24,new THREE.Vector3()));g.add(stripMesh(dirs,R,s,.24*SET_SC,roadMat));
+     for(let k=2;k<24;k+=4){const d=dirs[k],t=dirs[k+1].clone().sub(dirs[k-1]),side=new THREE.Vector3().crossVectors(d,t).normalize();
+       for(const sd of[-1,1]){const ld=d.clone().addScaledVector(side,sd*.2*s/R*SET_SC).normalize(),l=new THREE.Group();setOnSurface(l,R,ld,-.01*s);
+         const post=new THREE.Mesh(new THREE.CylinderGeometry(.012*s,.012*s,.28*s,5),DM.hull);post.position.y=.14*s;l.add(post);
+         const bulb=new THREE.Mesh(new THREE.SphereGeometry(.03*s,8,6),DM.teal);bulb.position.y=.29*s;l.add(bulb);g.add(l)}}}
     w.setFlag=flag}
   else if(k===1){
     [180,250,320].forEach((a,j)=>setTower(g,R,s,SET_AT(1.65,a),.9+j*.2,acc));
     [215,285,355].forEach((a,j)=>setHouse(g,R,s,SET_AT(1.9,a),acc,j+5));
-    const park=placeLocal(g,R,-4.95,-2.95,s);
+    const park=placeSet(g,R,...SET_AT(1.8,150),s);
     const pb=new THREE.Mesh(new THREE.CylinderGeometry(.42*s,.44*s,.06*s,24),DM.pad);pb.position.y=.03*s;park.add(pb);
     const pd=new THREE.Mesh(new THREE.SphereGeometry(.4*s,20,10,0,Math.PI*2,0,Math.PI/2),DM.green);pd.position.y=.06*s;park.add(pd);
-    const ring=[];for(let a=0;a<=360;a+=12)ring.push(SET_AT(1.35,a));g.add(trackMesh(ring,R,s))}
+    const ring=[];for(let a=0;a<=360;a+=8)ring.push(setDir(...SET_AT(1.35,a)));g.add(stripMesh(ring,R,s,.1*SET_SC,roadMat))}
   else{
-    const sp=placeLocal(g,R,SET_C[0],SET_C[1],s);
+    const sp=placeSet(g,R,0,0,s);
     const base=new THREE.Mesh(new THREE.CylinderGeometry(.34*s,.42*s,.3*s,20),DM.dark);base.position.y=.15*s;sp.add(base);
     const shaft=new THREE.Mesh(new THREE.CylinderGeometry(.07*s,.22*s,2.5*s,16),DM.hull);shaft.position.y=1.55*s;sp.add(shaft);
     for(const [y,r] of[[.7,.24],[1.3,.2],[1.9,.15]]){const band=new THREE.Mesh(new THREE.TorusGeometry(r*s,.025*s,6,28),glow);band.rotation.x=Math.PI/2;band.position.y=y*s;sp.add(band)}
@@ -919,7 +938,7 @@ function syncBase(w,i){const n=S.planets[i].teams.length;if(!S.planets[i].u||!n)
   if(!w.fac)buildFacility(w,i);
   for(let k=1;k<TEAM_MAX;k++){if(n>k&&!w.tiers[k])buildTier(w,k);if(w.tiers[k])w.tiers[k].visible=n>k}
   syncSettlement(w,i)}
-const COLONY_DIR=PORT_DIR.clone(),COLONY_TEAM_DIR=locDir(-.5,1.6),COLONY_SET_DIR=locDir(-1.9,-1.4);
+const COLONY_DIR=PORT_DIR.clone(),COLONY_TEAM_DIR=locDir(-.5,1.6),COLONY_SET_DIR=COLONY_TEAM_DIR.clone().multiplyScalar(.4).addScaledVector(SET_DIR,.6).normalize();
 const _cd=new THREE.Vector3(),_cv=new THREE.Vector3();
 // with a settlement, the close-up looks between the base and the settlement
 function colonyDir(i){return _cd.copy(S.planets[i].u?(S.planets[i].set?COLONY_SET_DIR:COLONY_TEAM_DIR):COLONY_DIR).applyQuaternion(W[i].mesh.quaternion)}
@@ -1094,7 +1113,7 @@ function focusProbe(){cam.focus=-1;cam.track=false;cam.station=false;
   if(S.probe.out){cam.probe=true;cam.tr=3.4}else{cam.probe=false;cam.station=true;cam.tt.set(0,.5,0);cam.tr=4.2}
   cam.phi=Math.min(cam.phi,1.0);setTab('probe');if(sheet.classList.contains('collapsed'))toggleSheet()}
 function focusStation(){cam.probe=false;cam.focus=-1;cam.track=false;cam.station=true;cam.tt.set(0,.1,0);cam.tr=5.4;cam.phi=.9;setTab('research');if(sheet.classList.contains('collapsed'))toggleSheet()}
-function focusPlanet(i){cam.station=false;cam.probe=false;cam.focus=i;cam.track=true;S.sel=i;cam.tr=PLANETS[i].size*(S.planets[i].u?2.5+.25*Math.max(1,S.planets[i].teams.length)+(S.planets[i].set?.5:0):3.6);refreshWorld();
+function focusPlanet(i){cam.station=false;cam.probe=false;cam.focus=i;cam.track=true;S.sel=i;cam.tr=PLANETS[i].size*(S.planets[i].u?2.5+.25*Math.max(1,S.planets[i].teams.length)+(S.planets[i].set?1.1:0):3.6);refreshWorld();
   if(!S.tipClose){S.tipClose=1;toast('Pinch to zoom. Drag to leave the close-up.',2600)}}
 function unfocus(){if(cam.focus<0)return;const i=cam.focus;cam.focus=-1;cam.track=false;cam.phi=Math.min(cam.phi,1.2);cam.tt.copy(W[i].pos);cam.target.copy(W[i].pos);if(cam.tr<8)cam.tr=Math.max(14,PLANETS[i].size*10)}
 function recenter(){cam.station=false;cam.probe=false;cam.focus=-1;cam.track=false;resize();cam.tt.set(0,0,0);cam.target.set(0,0,0);cam.phi=1.0;cam.tr=fitDistance();toast('Map recentered',1000)}
