@@ -498,7 +498,28 @@ scene.add(new THREE.HemisphereLight(0x6070c0,0x101020,.25));
 const station=new THREE.Group();scene.add(station);
 const metal=new THREE.MeshStandardMaterial({color:0x8a90a8,metalness:.8,roughness:.35});
 const trim=new THREE.MeshStandardMaterial({color:0xc9cfdf,metalness:.7,roughness:.3});
-const hubMat=new THREE.MeshStandardMaterial({color:0x2a2f4a,metalness:.6,roughness:.4,emissive:0xf0a33c,emissiveIntensity:.15});
+const hubMat=new THREE.MeshStandardMaterial({color:0x3a4160,metalness:.6,roughness:.4,emissive:0xffd59a,emissiveIntensity:1.1});
+// Station look: a soft reflection map so the metal catches light, panel-line textures with lit portholes,
+// and a teal glow along the hull's edges (like the planets' atmosphere).
+const stEnv=(()=>{const c=document.createElement('canvas');c.width=256;c.height=128;const g=c.getContext('2d');
+  const gr=g.createLinearGradient(0,0,0,128);gr.addColorStop(0,'#3a4a80');gr.addColorStop(.45,'#1a2140');gr.addColorStop(.55,'#141a30');gr.addColorStop(1,'#070912');g.fillStyle=gr;g.fillRect(0,0,256,128);
+  const sun=g.createRadialGradient(70,40,0,70,40,36);sun.addColorStop(0,'rgba(255,240,215,1)');sun.addColorStop(1,'rgba(255,240,215,0)');g.fillStyle=sun;g.fillRect(0,0,256,128);
+  const fill=g.createRadialGradient(190,60,0,190,60,50);fill.addColorStop(0,'rgba(120,200,255,.55)');fill.addColorStop(1,'rgba(120,200,255,0)');g.fillStyle=fill;g.fillRect(0,0,256,128);
+  const t=new THREE.CanvasTexture(c);t.mapping=THREE.EquirectangularReflectionMapping;t.encoding=THREE.sRGBEncoding;
+  const pm=new THREE.PMREMGenerator(renderer),env=pm.fromEquirectangular(t).texture;pm.dispose();t.dispose();return env})();
+function hullTex(cols,rows,base,line,win){const W=512,H=256,c=document.createElement('canvas'),e=document.createElement('canvas');c.width=e.width=W;c.height=e.height=H;
+  const g=c.getContext('2d'),ge=e.getContext('2d'),R=rng(cols*31+rows*7);g.fillStyle=base;g.fillRect(0,0,W,H);ge.fillStyle='#000';ge.fillRect(0,0,W,H);
+  const pw=W/cols,ph=H/rows;
+  for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){const sh=Math.floor(R()*18)-9;g.fillStyle=`rgba(${sh>0?255:0},${sh>0?255:0},${sh>0?255:0},${Math.abs(sh)/100})`;g.fillRect(x*pw+1,y*ph+1,pw-2,ph-2)}
+  g.strokeStyle=line;g.lineWidth=2;for(let x=0;x<=cols;x++){g.beginPath();g.moveTo(x*pw,0);g.lineTo(x*pw,H);g.stroke()}for(let y=0;y<=rows;y++){g.beginPath();g.moveTo(0,y*ph);g.lineTo(W,y*ph);g.stroke()}
+  if(win)for(let y=0;y<rows;y++){if(R()<.35)continue;for(let x=0;x<cols;x++){if(R()<.45)continue;const cx=x*pw+pw/2,cy=y*ph+ph/2;
+    g.fillStyle='#10131f';g.fillRect(cx-5,cy-3,10,6);ge.fillStyle=R()<.8?'#ffcf8a':'#9fe6ff';ge.fillRect(cx-4,cy-2,8,4)}}
+  const t=new THREE.CanvasTexture(c),te=new THREE.CanvasTexture(e);t.encoding=te.encoding=THREE.sRGBEncoding;t.anisotropy=te.anisotropy=4;return{map:t,emissiveMap:te}}
+{const h=hullTex(24,6,'#5a6488','#2a3048',true);Object.assign(hubMat,{map:h.map,emissiveMap:h.emissiveMap,color:new THREE.Color(0xffffff)})}
+function hullRim(mat,col,k){mat.onBeforeCompile=sh=>{sh.fragmentShader=sh.fragmentShader.replace('gl_FragColor = vec4( outgoingLight, diffuseColor.a );',
+  'float hr=pow(1.0-clamp(abs(dot(normalize(vNormal),normalize(vViewPosition))),0.0,1.0),2.5);\n\tgl_FragColor = vec4( outgoingLight+vec3('+col.map(x=>x.toFixed(3)).join(',')+')*hr*'+k.toFixed(2)+', diffuseColor.a );')};mat.customProgramCacheKey=()=>'hullRim'+col+k}
+[metal,trim,hubMat].forEach(m=>{m.envMap=stEnv;m.envMapIntensity=1.1;m.needsUpdate=true});
+hullRim(metal,[.35,.85,.95],.55);hullRim(trim,[.35,.85,.95],.4);hullRim(hubMat,[.35,.85,.95],.5);
 const stWin=new THREE.MeshStandardMaterial({color:0xffd59a,emissive:0xffb85c,emissiveIntensity:1.1});
 const stTeal=new THREE.MeshStandardMaterial({color:0x5fd4c4,emissive:0x5fd4c4,emissiveIntensity:.9});
 const IRIS_Y=.455,IRIS=new THREE.Vector3(0,IRIS_Y,0),DOCK_IN=new THREE.Vector3(0,.15,0),DOCK_UP=new THREE.Vector3(0,1.3,0);
@@ -591,7 +612,14 @@ function probePos(f,ang,res){const top=2.6,base=.15;let Rmax=8;S.planets.forEach
   if(f<.05){const k=ss(f/.05);return res.set(0,base+(top-base)*k,0)}
   if(f>.95){const k=ss((f-.95)/.05);return res.set(0,top-(top-base)*k,0)}
   const u=(f-.05)/.9,Rr=Rmax*Math.sin(Math.PI*u),th=ang+Math.PI*2*u;return res.set(Math.cos(th)*Rr,top+(1.5+Rmax*.06)*Math.sin(Math.PI*u),Math.sin(th)*Rr)}
-const stGlow=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex('rgba(240,163,60,.9)','rgba(240,163,60,.2)'),blending:THREE.AdditiveBlending,depthWrite:false}));stGlow.material.opacity=.35;stGlow.scale.set(3.4,3.4,1);station.add(stGlow);
+// station glow: a wide cool halo, a warm core glow, glows on every navigation light and over the iris,
+// and a soft light inside the station that brightens the ring and docked ships
+const stGlow=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex('rgba(170,220,255,.85)','rgba(90,140,230,.22)'),blending:THREE.AdditiveBlending,depthWrite:false,transparent:true}));stGlow.material.opacity=.5;stGlow.scale.set(6,6,1);station.add(stGlow);
+const stCore=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex('rgba(255,215,150,.9)','rgba(255,170,90,.25)'),blending:THREE.AdditiveBlending,depthWrite:false,transparent:true}));stCore.material.opacity=.5;stCore.scale.set(1.9,1.9,1);station.add(stCore);
+const stLamp=new THREE.PointLight(0xa8dcff,1.1,5,2);stLamp.position.set(0,-.05,0);station.add(stLamp);
+const lightGlows=stLights.map(l=>{const c=l.material.emissive,sp=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex(`rgba(${c.r*255|0},${c.g*255|0},${c.b*255|0},1)`,`rgba(${c.r*255|0},${c.g*255|0},${c.b*255|0},.25)`),blending:THREE.AdditiveBlending,depthWrite:false,transparent:true}));
+  sp.scale.set(.42,.42,1);l.add(sp);return sp});
+const irisGlow=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex('rgba(120,240,230,.9)','rgba(95,212,196,.25)'),blending:THREE.AdditiveBlending,depthWrite:false,transparent:true}));irisGlow.position.y=IRIS_Y+.08;irisGlow.scale.set(.9,.9,1);station.add(irisGlow);
 
 // planets
 
@@ -1028,7 +1056,7 @@ function updateWorld(dt){
   // close-up starts or ends: redraw the unclaimed planet at full or faint strength
   if(cam.focus!==seenFocus){seenFocus=cam.focus;refreshWorld()}
   station.rotation.y+=dt*STATION_SPIN;habRing.rotation.y+=dt*RING_SPIN;
-  stLights.forEach((l,k)=>l.material.emissiveIntensity=((simTime*.8+k*.33)%1)<.25?2.2:.25);
+  stLights.forEach((l,k)=>{const on=((simTime*.8+k*.33)%1)<.25;l.material.emissiveIntensity=on?2.2:.25;lightGlows[k].material.opacity=on?.95:.12});
   // docks: clamps swing shut while a ship is berthed and open otherwise; the dock-face lights are steady green
   // while a ship is docked and off otherwise
   docks.forEach(d=>{if(!d.g.visible)return;const want=d.state==='free'?0:1;d.clamp=Math.max(0,Math.min(1,d.clamp+(want?1:-1)*dt*2.2));
@@ -1048,7 +1076,7 @@ function updateWorld(dt){
    if(pr&&pr.out){const el=nw-pr.out.at;if(el<fly*.035||el>fly*.95-IRIS_T*1000)want=true} // leaving, or on final approach
    irisOpen=Math.max(0,Math.min(1,irisOpen+(want?1:-1)*dt/IRIS_T));
    const e=ss(irisOpen);irisBlades.forEach(b=>{b.position.x=.15+.19*e;b.scale.x=1-.55*e});
-   irisRim.material.emissiveIntensity=.9+e*1.2}
+   irisRim.material.emissiveIntensity=.9+e*1.2;irisGlow.material.opacity=.08+e*.6}
   
   W.forEach((w,i)=>{if(!w.mesh.visible)return;const P=PLANETS[i];
     w.angle+=dt*P.speed;w.pos.set(Math.cos(w.angle)*P.r,0,Math.sin(w.angle)*P.r);w.mesh.position.copy(w.pos);w.mesh.rotation.y+=dt*.05;
