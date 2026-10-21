@@ -463,6 +463,9 @@ const irisHole=new THREE.Mesh(new THREE.CircleGeometry(.27,24),new THREE.MeshBas
 const irisRim=new THREE.Mesh(new THREE.TorusGeometry(.29,.025,8,32),stTeal);irisRim.rotation.x=Math.PI/2;irisRim.position.y=.485;station.add(irisRim);
 const irisBlades=[];for(let k=0;k<8;k++){const g=new THREE.Group();g.rotation.y=k*Math.PI/4;g.position.y=IRIS_Y;station.add(g);
   const b=new THREE.Mesh(new THREE.BoxGeometry(.2,.018,.13),trim);b.rotation.y=.35;g.add(b);irisBlades.push(b)}
+// dark collar over the blades' outer edges, so the door reads as a clean circle (blades retract under it)
+const irisCollar=new THREE.Mesh(new THREE.RingGeometry(.165,.275,48),new THREE.MeshStandardMaterial({color:0x1a1e33,metalness:.5,roughness:.6,side:THREE.DoubleSide}));
+irisCollar.rotation.x=-Math.PI/2;irisCollar.position.y=IRIS_Y+.013;station.add(irisCollar);
 let irisOpen=0;
 // habitat ring with lit windows, modules and spokes
 const habRing=new THREE.Group();station.add(habRing);
@@ -814,7 +817,7 @@ function updateWorld(dt){
   {const pr=S.probe;if(pr&&pr.out){const f=(Date.now()-pr.out.at)/(ECON.PROBE_FLY*1000);
      if(f>=0&&f<1){probeObj.visible=true;probePos(f,pr.out.ang,probeObj.position);
        if(f<.05||f>.95)tmp2.set(0,50,0).add(probeObj.position);else probePos(Math.min(.999,f+.002),pr.out.ang,tmp2);probeObj.lookAt(tmp2);
-       probeGlow.material.color.set(ORES[pr.out.ore].c);const far=cam.probe?1.1:Math.min(4,1+probeObj.position.length()/12);probeObj.scale.setScalar(far); // normal size when the camera follows it
+       probeGlow.material.color.set(ORES[pr.out.ore].c);const far=(f<.05||f>.95)?.55:cam.probe?1.1:Math.min(4,1+probeObj.position.length()/12);probeObj.scale.setScalar(far); // normal size when the camera follows it
        probeBlink.material.emissiveIntensity=(simTime*1.6)%1<.25?2.5:.2}else probeObj.visible=false}else probeObj.visible=false}
   {let target=0;W.forEach(w=>{if(!w.ship.visible)return;const d=w.ship.position.distanceTo(IRIS);if(d<1.4)target=Math.max(target,Math.min(1,1-(d-.35)/1.0))});
    if(probeObj.visible){const d=probeObj.position.distanceTo(IRIS);if(d<1.6)target=Math.max(target,Math.min(1,1-(d-.35)/1.2))}
