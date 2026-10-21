@@ -23,6 +23,8 @@ body{background:radial-gradient(120% 80% at 70% 10%,#151a3a 0%,#090b1a 45%,var(-
 .plabel.sel b{color:var(--ore)}
 .plabel .st{color:var(--ore)}
 .plabel.locked{opacity:.6}
+.plabel{transition:opacity .25s}
+.plabel.crowd{opacity:0}
 
 /* HUD */
 #hud{position:fixed;top:0;left:0;right:0;padding-top:calc(env(safe-area-inset-top,0px) + 10px);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;gap:12px;align-items:flex-start;justify-content:space-between;pointer-events:none;background:linear-gradient(#05060dcc,#05060d00);padding-bottom:18px}
@@ -205,7 +207,12 @@ const PLANETS=[
  {n:'Obelis', cost:2.6e18,size:1.05,c1:'#6e2a5a',c2:'#ff9fd8',mix:[[16,.5],[17,.5]],ring:'#ffc2e8'},
  {n:'Veil',   cost:2e19,  size:1.45,c1:'#3d3d48',c2:'#e8e8f5',mix:[[17,.6],[18,.4]],gas:1},
  {n:'Zenith', cost:1.6e20,size:1.8,c1:'#2a1f4f',c2:'#fff1c4',mix:[[18,.7],[17,.3]],ring:'#fff1c4',gas:1}];
-PLANETS.forEach((p,i)=>{p.r=5+i*2.5;p.speed=.11/Math.sqrt(p.r);p.a0=i*2.39996;});
+// Orbits are spaced by how much room each planet (and its rings and label) needs, and the planets are set at
+// angles chosen so none overlap from any viewing direction. The whole system turns together, so they stay spaced.
+const ORBIT_R=[5,7.41,9.96,13.68,17.36,19.98,22.74,26.93,30.92,33.68,37.35,41.23,44.27,47.8,51.76,54.76,59,63.27,66.2,69.98,73.83,78.78];
+const ORBIT_A=[0,3.089,4.608,1.623,5.603,0.367,3.77,2.775,4.869,6.074,0.995,1.937,4.241,5.445,3.508,0.367,4.765,2.461,1.466,6.021,2.985,0.838];
+const GALAXY_SPIN=.012;
+PLANETS.forEach((p,i)=>{p.r=ORBIT_R[i];p.speed=GALAXY_SPIN;p.a0=ORBIT_A[i];});
 /* Economy. Planet output comes only from its mining teams (and research / star dust).
    Each planet's base output is scaled to its claim price so every new planet is worth claiming. */
 const ECON={DUST_A:2,DUST_K:.2,EXP:.7,PAY:3,SCALE_MIN:100,HIRE:[1,4,30],UP_BASE:.12,UP_GROW:1.32,TEAM_X:[1,6,40],SHIP_BASE:.8,SHIP_OVH:16,DOCK_T:3,CARGO_FIT:.9};
@@ -700,7 +707,7 @@ function refreshWorld(){
     w.mat.opacity=u?1:.35;w.mat.color.set(u?0xffffff:0x6670a0);if(w.mat.transparent===u){w.mat.transparent=!u;w.mat.needsUpdate=true}w.orbit.material.opacity=u?.55:.22;
     if(u&&!w.port)buildPort(w,i);syncBase(w,i);
     w.label.className='plabel'+(u?'':' locked')+(S.sel===i?' sel':'');
-    w.label.innerHTML=planetLabel(i)});
+    w.label.innerHTML=planetLabel(i);w.lw=0});
 }
 const tmp=new THREE.Vector3(),tmp2=new THREE.Vector3(),_pw=new THREE.Vector3(),_ds=new THREE.Vector3(),_ap=new THREE.Vector3(),_st=new THREE.Vector3(),_sd=new THREE.Vector3();
 // Hauler flight: cruise from the station, swing into orbit, slow controlled descent onto the pad,
@@ -769,9 +776,17 @@ function updateWorld(dt){
   cam.r+=(cam.tr-cam.r)*Math.min(1,dt*8);cam.target.lerp(cam.tt,Math.min(1,dt*8));
   camera.position.set(cam.r*Math.sin(cam.phi)*Math.cos(cam.theta),cam.r*Math.cos(cam.phi),cam.r*Math.sin(cam.phi)*Math.sin(cam.theta)).add(cam.target);camera.lookAt(cam.target);sky.position.copy(camera.position);farGroup.position.copy(camera.position);
 }
-function placeLabels(){const w=window.innerWidth,h=window.innerHeight;
-  W.forEach((x,i)=>{if(x.label.hidden)return;tmp.copy(x.pos);tmp.y-=PLANETS[i].size*1.15;tmp.project(camera);
-    if(tmp.z>1){x.label.style.display='none';return}x.label.style.display='';x.label.style.left=((tmp.x+1)/2*w).toFixed(1)+'px';x.label.style.top=((1-tmp.y)/2*h+4).toFixed(1)+'px'})}
+// Labels are placed in priority order (selected planet, then inner planets outward). A label that would collide
+// with one already placed fades out until you zoom in far enough for it to fit.
+function placeLabels(){const w=window.innerWidth,h=window.innerHeight,placed=[],order=[];
+  if(W[S.sel]&&!W[S.sel].label.hidden)order.push(S.sel);W.forEach((x,i)=>{if(i!==S.sel&&!x.label.hidden)order.push(i)});
+  for(const i of order){const x=W[i];tmp.copy(x.pos);tmp.y-=PLANETS[i].size*1.15;tmp.project(camera);
+    if(tmp.z>1){x.label.style.display='none';continue}x.label.style.display='';
+    const cx=(tmp.x+1)/2*w,top=(1-tmp.y)/2*h+4;x.label.style.left=cx.toFixed(1)+'px';x.label.style.top=top.toFixed(1)+'px';
+    if(!x.lw){x.lw=x.label.offsetWidth;x.lh=x.label.offsetHeight}
+    const r={l:cx-x.lw/2-3,r:cx+x.lw/2+3,t:top-2,b:top+x.lh+2};
+    const clash=placed.some(p=>!(r.r<p.l||p.r<r.l||r.b<p.t||p.b<r.t));
+    if(!clash)placed.push(r);x.label.classList.toggle('crowd',clash)}}
 const sheet=document.getElementById('sheet'),hudEl=document.getElementById('hud');
 // The open area of the screen between the top bar and the console; the map is centered in it.
 function viewBox(){const w=window.innerWidth,h=window.innerHeight,hb=hudEl.getBoundingClientRect(),sb=sheet.getBoundingClientRect();
@@ -789,10 +804,12 @@ const outerR=()=>{let r=4;W.forEach((w,i)=>{if(w.mesh.visible)r=Math.max(r,PLANE
 // Camera distance that fits every visible orbit inside the open area.
 function fitDistance(){if(!vb)vb=viewBox();const R=outerR()*1.08,fw=(vb.right-vb.left)/vb.h,fh=(vb.bottom-vb.top)/vb.h;
   const byW=R/(TAN*fw),byH=R*Math.max(Math.cos(cam.phi),.25)/(TAN*fh)+R*Math.sin(cam.phi)*.15,d=Math.max(byW,byH);return isFinite(d)?clampR(d):30}
+// the galaxy map can't tilt so far that planets line up behind each other; close-ups can
+const maxTilt=()=>cam.focus>=0?1.45:1.2;
 const clampR=r=>Math.min(340,Math.max(cam.focus>=0?PLANETS[cam.focus].size*.35:8,r));
 function focusPlanet(i){cam.focus=i;cam.track=true;S.sel=i;cam.tr=PLANETS[i].size*(S.planets[i].u?2.5+.25*Math.max(1,S.planets[i].teams.length):3.6);refreshWorld();
   if(!S.tipClose){S.tipClose=1;toast('Pinch to zoom. Drag to leave the close-up.',2600)}}
-function unfocus(){if(cam.focus<0)return;const i=cam.focus;cam.focus=-1;cam.track=false;cam.tt.copy(W[i].pos);cam.target.copy(W[i].pos);if(cam.tr<8)cam.tr=Math.max(14,PLANETS[i].size*10)}
+function unfocus(){if(cam.focus<0)return;const i=cam.focus;cam.focus=-1;cam.track=false;cam.phi=Math.min(cam.phi,1.2);cam.tt.copy(W[i].pos);cam.target.copy(W[i].pos);if(cam.tr<8)cam.tr=Math.max(14,PLANETS[i].size*10)}
 function recenter(){cam.focus=-1;cam.track=false;resize();cam.tt.set(0,0,0);cam.target.set(0,0,0);cam.phi=1.0;cam.tr=fitDistance();toast('Map recentered',1000)}
 
 // Camera input: one finger / left mouse = pan, pinch / wheel = zoom,
@@ -808,11 +825,11 @@ canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);
   if(ptrs.size===1)tap={x:e.clientX,y:e.clientY,t:performance.now()};else{tap=null;if(ptrs.size===2)g2=Object.assign(twoState(),{r:cam.tr})}});
 canvas.addEventListener('pointermove',e=>{const p=ptrs.get(e.pointerId);if(!p)return;const dx=e.clientX-p.x,dy=e.clientY-p.y;p.x=e.clientX;p.y=e.clientY;
   if(ptrs.size===1){if(tap&&Math.hypot(e.clientX-tap.x,e.clientY-tap.y)<8)return;tap=null;
-    if(mouseRot){cam.track=false;cam.theta+=dx*.006;cam.phi=Math.min(1.45,Math.max(.12,cam.phi-dy*.005))}else panBy(dx,dy)}
+    if(mouseRot){cam.track=false;cam.theta+=dx*.006;cam.phi=Math.min(maxTilt(),Math.max(.12,cam.phi-dy*.005))}else panBy(dx,dy)}
   else if(ptrs.size===2&&g2){const n=twoState();cam.tr=cam.r=clampR(g2.r*g2.d/Math.max(n.d,1));
     let da=n.ang-g2.ang;if(da>Math.PI)da-=2*Math.PI;if(da<-Math.PI)da+=2*Math.PI;
     if(cam.track){g2.acc=(g2.acc||0)+Math.abs(da);g2.tacc=(g2.tacc||0)+Math.abs(n.my-g2.my);if(g2.acc>.25||g2.tacc>40)cam.track=false}
-    if(!cam.track){cam.theta-=da;cam.phi=Math.min(1.45,Math.max(.12,cam.phi-(n.my-g2.my)*.006))}
+    if(!cam.track){cam.theta-=da;cam.phi=Math.min(maxTilt(),Math.max(.12,cam.phi-(n.my-g2.my)*.006))}
     g2.ang=n.ang;g2.my=n.my}});
 function endPtr(e){const wasTap=tap&&ptrs.size===1&&performance.now()-tap.t<350;ptrs.delete(e.pointerId);
   if(wasTap)pick(e.clientX,e.clientY);tap=null;
@@ -1027,7 +1044,7 @@ function viewWarp(){
 let shownSel=-1;
 function chipNav(){const nav=$('pnav'),c=$('pchips');if(!nav||!c)return;const max=c.scrollWidth-c.clientWidth;
   nav.classList.toggle('fits',max<=2);nav.classList.toggle('more-l',c.scrollLeft>2);nav.classList.toggle('more-r',c.scrollLeft<max-2);
-  const [l,r]=nav.querySelectorAll('.cnav');l.disabled=c.scrollLeft<=2;r.disabled=c.scrollLeft>=max-2}
+  const [l,r]=nav.querySelectorAll('.cnav');if(!l||!r)return;l.disabled=c.scrollLeft<=2;r.disabled=c.scrollLeft>=max-2}
 function centerSelChip(){const c=$('pchips');if(!c)return;const on=c.querySelector('.chip.on');if(on)c.scrollLeft=on.offsetLeft-(c.clientWidth-on.offsetWidth)/2}
 let chipDrag=null,chipDragged=false;
 pbody.addEventListener('pointerdown',e=>{const c=e.target.closest('#pchips');if(c&&e.pointerType==='mouse'){chipDrag={x:e.clientX,l:c.scrollLeft,c};chipDragged=false}});
@@ -1117,7 +1134,7 @@ function frame(now){
   if(dt>3){offline(dt,dt>60)}else step(Math.min(dt,.25));
   updateWorld(Math.min(dt,.25));renderer.render(scene,camera);placeLabels();
   uiT+=dt;if(uiT>.25){uiT=0;hud();render(false);
-    W.forEach((w,i)=>{if(S.planets[i].u){const t=planetLabel(i);if(w.label.innerHTML!==t)w.label.innerHTML=t}})}
+    W.forEach((w,i)=>{if(S.planets[i].u){const t=planetLabel(i);if(w.label.innerHTML!==t){w.label.innerHTML=t;w.lw=0}}})}
   saveT+=dt;if(saveT>5){saveT=0;save()}
   requestAnimationFrame(frame)}
 document.addEventListener('visibilitychange',()=>{if(document.hidden){save();Music.hide()}else{lastT=performance.now()-Math.max(0,Date.now()-S.last);if(S.music.on)Music.show()}})
