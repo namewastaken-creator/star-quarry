@@ -1155,7 +1155,7 @@ function viewSmelter(){
   let h=`<div class="head"><h2>Smelter</h2><span class="num" style="color:var(--muted);font-size:12px">${BAR_IN} ore → 1 bar worth ${BAR_MULT}×</span></div>`;
   for(let k=0;k<n;k++){const sl=S.slots[k];
     h+=`<div class="card"><div class="head"><h3>Furnace ${k+1}</h3><span class="num" style="font-size:12px;color:var(--muted)">${sl.r===null?'Idle':sl.a?fmtTime((1-sl.p)*smeltTime(sl.r))+' left':(S.inv[sl.r]||0)<BAR_IN?'Waiting for ore':'Starting'}</span></div>
-      <div class="bar"><i style="width:${(sl.a?sl.p*100:0).toFixed(1)}%"></i></div>
+      <div class="bar"><i data-smelt="${k}" style="width:${(sl.a?sl.p*100:0).toFixed(1)}%"></i></div>
       <div class="chips wrap"><button class="chip${sl.r===null?' on':''}" data-act="slot" data-i="${k}" data-r="-1" type="button">Off</button>${disc.map(o=>`<button class="chip${sl.r===o?' on':''}" data-act="slot" data-i="${k}" data-r="${o}" type="button">${ORES[o].n}</button>`).join('')}</div></div>`}
   h+=`<p>Each bar takes longer for rarer ores. Bars wait in the Market until you sell them.</p>`;
   return h}
@@ -1288,6 +1288,8 @@ function frame(now){
   if(dt>3){offline(dt,dt>60)}else step(Math.min(dt,.25));
   probeTick(Date.now());
   updateWorld(Math.min(dt,.25));renderer.render(scene,camera);placeLabels();
+  // furnace progress bars move every frame, not just when the panel redraws
+  if(tab==='smelter')document.querySelectorAll('[data-smelt]').forEach(el=>{const sl=S.slots[+el.dataset.smelt];if(sl)el.style.width=(sl.a?sl.p*100:0).toFixed(2)+'%'});
   uiT+=dt;if(uiT>.25){uiT=0;hud();render(false);
     W.forEach((w,i)=>{if(S.planets[i].u){const t=planetLabel(i);if(w.label.innerHTML!==t){w.label.innerHTML=t;w.lw=0}}})}
   saveT+=dt;if(saveT>5){saveT=0;save()}
