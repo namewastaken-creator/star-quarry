@@ -449,9 +449,9 @@ const IRIS_Y=.455,IRIS=new THREE.Vector3(0,IRIS_Y,0),DOCK_IN=new THREE.Vector3(0
   for(const y of[-.18,.08]){const band=new THREE.Mesh(new THREE.CylinderGeometry(.385,.385,.05,20,1,true),stWin);band.position.y=y;station.add(band)}
   // deck with a shallow well in the middle for the iris door, so the blades retract under the deck surface
   const deck=new THREE.Mesh(new THREE.CylinderGeometry(.5,.42,.12,24,1,true),trim);deck.position.y=.42;station.add(deck);
-  const deckTop=new THREE.Mesh(new THREE.RingGeometry(.27,.5,32),trim);deckTop.rotation.x=-Math.PI/2;deckTop.position.y=.48;station.add(deckTop);
+  const deckTop=new THREE.Mesh(new THREE.RingGeometry(.3,.5,48),trim);deckTop.rotation.x=-Math.PI/2;deckTop.position.y=.48;station.add(deckTop);
   const deckBot=new THREE.Mesh(new THREE.CircleGeometry(.42,24),trim);deckBot.rotation.x=Math.PI/2;deckBot.position.y=.36;station.add(deckBot);
-  const well=new THREE.Mesh(new THREE.CylinderGeometry(.27,.27,.09,24,1,true),new THREE.MeshStandardMaterial({color:0x2a2f4a,metalness:.6,roughness:.5,side:THREE.DoubleSide}));well.position.y=.435;station.add(well);
+  const well=new THREE.Mesh(new THREE.CylinderGeometry(.27,.27,.09,24,1,true),new THREE.MeshStandardMaterial({color:0x2a2f4a,metalness:.6,roughness:.5,side:THREE.DoubleSide}));well.position.y=.425;station.add(well);
   const low=new THREE.Mesh(new THREE.CylinderGeometry(.42,.28,.16,20),trim);low.position.y=-.44;station.add(low);
   const spire=new THREE.Mesh(new THREE.ConeGeometry(.11,.55,10),metal);spire.rotation.x=Math.PI;spire.position.y=-.8;station.add(spire);
   const mast=new THREE.Mesh(new THREE.CylinderGeometry(.012,.012,.55,6),metal);mast.position.set(-.4,.75,.12);station.add(mast);
@@ -465,8 +465,9 @@ const irisRim=new THREE.Mesh(new THREE.TorusGeometry(.29,.022,12,128),stTeal.clo
 const irisBlades=[];for(let k=0;k<8;k++){const g=new THREE.Group();g.rotation.y=k*Math.PI/4;g.position.y=IRIS_Y;station.add(g);
   const b=new THREE.Mesh(new THREE.BoxGeometry(.2,.018,.13),trim);b.rotation.y=.35;g.add(b);irisBlades.push(b)}
 // dark collar over the blades' outer edges, so the door reads as a clean circle (blades retract under it)
-const irisCollar=new THREE.Mesh(new THREE.RingGeometry(.165,.275,48),new THREE.MeshStandardMaterial({color:0x1a1e33,metalness:.5,roughness:.6,side:THREE.DoubleSide}));
-irisCollar.rotation.x=-Math.PI/2;irisCollar.position.y=IRIS_Y+.013;station.add(irisCollar);
+// its outer edge tucks under the blue rim and meets the deck there, so no seam shows between them
+const irisCollar=new THREE.Mesh(new THREE.RingGeometry(.2,.305,64),new THREE.MeshStandardMaterial({color:0x1a1e33,metalness:.5,roughness:.6,side:THREE.DoubleSide}));
+irisCollar.rotation.x=-Math.PI/2;irisCollar.position.y=.477;station.add(irisCollar);
 let irisOpen=0;const IRIS_T=2.5;
 // habitat ring with lit windows, modules and spokes
 const habRing=new THREE.Group();station.add(habRing);
@@ -848,7 +849,7 @@ function updateWorld(dt){
    if(pr&&!pr.out&&pr.nextAt-nw<IRIS_T*1000)want=true;                         // about to launch
    if(pr&&pr.out){const el=nw-pr.out.at;if(el<fly*.035||el>fly*.95-IRIS_T*1000)want=true} // leaving, or on final approach
    irisOpen=Math.max(0,Math.min(1,irisOpen+(want?1:-1)*dt/IRIS_T));
-   const e=ss(irisOpen);irisBlades.forEach(b=>{b.position.x=.1+.17*e;b.scale.x=1-.55*e});
+   const e=ss(irisOpen);irisBlades.forEach(b=>{b.position.x=.1+.19*e;b.scale.x=1-.55*e});
    irisRim.material.emissiveIntensity=.9+e*1.2}
   
   W.forEach((w,i)=>{if(!w.mesh.visible)return;const P=PLANETS[i];
