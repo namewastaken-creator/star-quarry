@@ -471,19 +471,20 @@ let irisOpen=0;const IRIS_T=2.5;
 // habitat ring with lit windows, modules and spokes
 const habRing=new THREE.Group();station.add(habRing);
 { const ring=new THREE.Mesh(new THREE.TorusGeometry(1.25,.1,12,64),metal);ring.rotation.x=Math.PI/2;habRing.add(ring);
-  for(let k=0;k<20;k++){const a=k/20*Math.PI*2,win=new THREE.Mesh(new THREE.BoxGeometry(.03,.05,.12),stWin);win.position.set(Math.cos(a)*1.145,0,Math.sin(a)*1.145);win.rotation.y=-a;habRing.add(win)}
   for(let k=0;k<4;k++){const a=k/4*Math.PI*2+Math.PI/4,sp=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,.8,8),trim);sp.rotation.z=Math.PI/2;sp.rotation.y=-a;sp.position.set(Math.cos(a)*.78,0,Math.sin(a)*.78);habRing.add(sp);
   }}
 // Docking ports on the habitat ring: 24 slots; each claimed planet gets its own port (at least 4 are always built).
 // Slot order spreads the first ports evenly round the ring.
-const DOCK_SLOTS=24,DOCK_ORDER=[0,12,6,18,3,15,9,21,1,13,7,19,4,16,10,22,2,14,8,20,5,17,11,23];
-const slotAngle=k=>(k+.5)/DOCK_SLOTS*Math.PI*2;
+// Docks are spread evenly round the ring and re-spaced whenever one is added: planet i uses dock i,
+// and there is one dock per claimed planet (at least 4).
+const DOCK_SLOTS=24;let DOCK_N=4;
+const slotAngle=k=>(k+.5)/DOCK_N*Math.PI*2;
 const dockMats={clamp:new THREE.MeshStandardMaterial({color:0xf0c040,metalness:.4,roughness:.5}),
   hatch:new THREE.MeshStandardMaterial({color:0x10131f,roughness:.6}),
   free:new THREE.MeshStandardMaterial({color:0xf0a33c,emissive:0xf0a33c,emissiveIntensity:1.2}),
   busy:new THREE.MeshStandardMaterial({color:0x7cf0a0,emissive:0x2fd36a,emissiveIntensity:1.8})};
 const docks=[];
-for(let k=0;k<DOCK_SLOTS;k++){const a=slotAngle(k),g=new THREE.Group();g.position.set(Math.cos(a)*1.25,0,Math.sin(a)*1.25);g.rotation.y=-a;habRing.add(g); // local +x points out from the ring
+for(let k=0;k<DOCK_SLOTS;k++){const g=new THREE.Group();habRing.add(g); // local +x points out from the ring (placed in syncDocks)
   const base=new THREE.Mesh(new THREE.BoxGeometry(.22,.21,.26),hubMat);base.position.x=.02;g.add(base);
   const plate=new THREE.Mesh(new THREE.BoxGeometry(.02,.17,.2),trim);plate.position.x=.135;g.add(plate);
   const collar=new THREE.Mesh(new THREE.TorusGeometry(.065,.018,8,20),trim);collar.rotation.y=Math.PI/2;collar.position.x=.15;g.add(collar);
@@ -493,8 +494,17 @@ for(let k=0;k<DOCK_SLOTS;k++){const a=slotAngle(k),g=new THREE.Group();g.positio
   for(const y of[-.075,.075]){const gl=new THREE.Mesh(new THREE.SphereGeometry(.014,6,4),stTeal);gl.position.set(.15,y,0);g.add(gl)}
   const status=new THREE.Mesh(new THREE.SphereGeometry(.022,8,6),dockMats.free);status.position.set(.05,.12,0);g.add(status);
   g.visible=false;docks.push({g,status})}
-const planetSlot=i=>DOCK_ORDER[i%DOCK_SLOTS];
-function syncDocks(){const used=new Set();S.planets.forEach((p,i)=>{if(p.u||i<4)used.add(planetSlot(i))});docks.forEach((d,k)=>d.g.visible=used.has(k))}
+const planetSlot=i=>Math.min(i,DOCK_SLOTS-1);
+// lights on the ring's outer face: the same even number between every pair of neighbouring docks
+let ringLights=null;
+function syncDocks(){let last=3;S.planets.forEach((p,i)=>{if(p.u)last=Math.max(last,i)});const n=Math.min(DOCK_SLOTS,last+1);
+  if(n===DOCK_N&&ringLights)return;DOCK_N=n;
+  docks.forEach((d,k)=>{d.g.visible=k<n;if(k<n){const a=slotAngle(k);d.g.position.set(Math.cos(a)*1.25,0,Math.sin(a)*1.25);d.g.rotation.y=-a}});
+  if(ringLights){habRing.remove(ringLights);ringLights.children.forEach(m=>m.geometry.dispose())}
+  ringLights=new THREE.Group();habRing.add(ringLights);
+  const gap=Math.PI*2/n,per=n<=6?4:2,len=Math.min(.1,(gap*1.355-.3)/(per*1.6));
+  for(let k=0;k<n;k++)for(let j=1;j<=per;j++){const a=slotAngle(k)+gap*j/(per+1),win=new THREE.Mesh(new THREE.BoxGeometry(.03,.05,len),stWin);
+    win.position.set(Math.cos(a)*1.355,0,Math.sin(a)*1.355);win.rotation.y=-a;ringLights.add(win)}}
 const ring2=new THREE.Mesh(new THREE.TorusGeometry(.95,.022,8,48),stTeal);ring2.rotation.x=Math.PI/2.6;station.add(ring2);
 // solar wings below the ring plane
 const stLights=[];
