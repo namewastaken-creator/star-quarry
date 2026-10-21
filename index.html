@@ -231,7 +231,7 @@ const GALAXY_SPIN=.012;
 PLANETS.forEach((p,i)=>{p.r=ORBIT_R[i];p.speed=GALAXY_SPIN;p.a0=ORBIT_A[i];});
 /* Economy. Planet output comes only from its mining teams (and research / star dust).
    Each planet's base output is scaled to its claim price so every new planet is worth claiming. */
-const ECON={DUST_A:2,DUST_K:.2,EXP:.7,PAY:3.55,SCALE_MIN:100,HIRE:[1,4,30],UP_BASE:.12,UP_GROW:1.32,TEAM_X:[1,6,40],SHIP_BASE:.8,SHIP_OVH:16,DOCK_T:3,PROBE_EVERY:300,PROBE_FLY:180,PROBE_FIRST:60,PROBE_SEC:90,CARGO_FIT:.9};
+const ECON={DUST_A:2,DUST_K:.2,EXP:.7,PAY:3.9,SCALE_MIN:100,HIRE:[1,4,30],UP_BASE:.12,UP_GROW:1.32,TEAM_X:[1,6,40],SHIP_BASE:.8,SHIP_OVH:16,DOCK_T:3,PROBE_EVERY:300,PROBE_FLY:180,PROBE_FIRST:60,PROBE_SEC:90,CARGO_FIT:.9};
 PLANETS.forEach((p,i)=>{const avg=p.mix.reduce((a,[o,f])=>a+ORES[o].v*f,0);
   p.scale=Math.max(ECON.SCALE_MIN,p.cost);
   p.rate=i===0?.8:Math.pow(p.cost,ECON.EXP)/(ECON.PAY*avg);
@@ -270,6 +270,40 @@ const RESEARCH=[
  {id:'drill5',n:'Planet Crackers',d:'All mines dig three times as fast.',cost:1e16,mine:3},
  {id:'ion5',n:'Wormhole Gates',d:'All ships fly three times as fast.',cost:3e16,ship:3},
  {id:'trade5',n:'Galactic Reserve',d:'Everything sells for twice as much.',cost:5e17,value:2}];
+/* Settlements: once a planet has all 3 mining teams it can found a settlement, upgraded in 3 levels
+   (Outpost, Town, City). Each planet has its own settlement and upgrades:
+   level 1 and 2 boost that planet (or the sale value of its newest ore), level 3 gives a small galaxy-wide perk.
+   Kinds: m/s/c = this planet's mining / ship speed / cargo x1.5, ore = its newest ore sells for x1.5,
+   gm/gs/gc = all mining / ship speed / cargo x1.1, gv = all sale prices x1.05, smelt = smelting x1.25, probe = probe hauls x1.25. */
+const SETTLE_COST=[600,3000,15000],SETTLE_LV=['Outpost','Town','City'];
+const SETTLE_VAL={m:1.5,s:1.5,c:1.5,ore:1.5,gm:1.1,gs:1.1,gc:1.1,gv:1.05,smelt:1.25,probe:1.25};
+const SETTLE=[
+ ['Ashfall',[['Lava Vents','m'],['Magma Foundry','ore'],['Forge Heart','smelt']]],
+ ['Rustline Camp',[['Scrap Haulers','c'],['Rail Spur','s'],['Iron Guild','gm']]],
+ ['Tidewatch',[['Brine Pumps','m'],['Harbor Locks','c'],['Tide Charts','gs']]],
+ ['Dune Spire',[['Wind Skimmers','m'],['Glassworks','ore'],['Sky Bazaar','gv']]],
+ ['Frosthold',[['Thaw Drills','m'],['Ice Runners','s'],['Aurora Beacons','probe']]],
+ ['Duskhaven',[['Crystal Seers','m'],['Quartz Lenses','ore'],['Night Caravans','gc']]],
+ ['Sunpearl Terrace',[['Light Sails','s'],['Pearl Divers','m'],['Golden Exchange','gv']]],
+ ['Verdant Rings',[['Spore Farms','m'],['Ring Docks','c'],['Greenhouse Network','gm']]],
+ ['Nightfall Bastion',[['Blacklight Rigs','m'],['Silent Engines','s'],['Shadow Couriers','gs']]],
+ ['Flare Station',[['Flare Scoops','m'],['Solar Kilns','ore'],['Heat Exchangers','smelt']]],
+ ['Redstone Keep',[['Crimson Shafts','m'],['Ring Shuttles','s'],['Harrow Mint','gv']]],
+ ['Eon Vault',[['Deep Siphons','m'],['Pressure Holds','c'],['Long-Range Arrays','probe']]],
+ ['Gloomhold',[['Deep Shafts','m'],['Storm Barges','c'],['Haulers’ Guild','gc']]],
+ ['Ivory Citadel',[['Bone Cutters','m'],['Ivory Carvers','ore'],['Collectors’ Guild','gv']]],
+ ['Moss Harbor',[['Moss Trawlers','m'],['Gold Panners','ore'],['Trade Winds','gs']]],
+ ['Jade Lagoon',[['Tide Mills','m'],['Jade Carvers','ore'],['Reef Network','gc']]],
+ ['Violet Crown',[['Lux Siphons','m'],['Prism Docks','s'],['Crown Treasury','gv']]],
+ ['Abyssal Deep',[['Pressure Bores','m'],['Abyss Lifts','c'],['Deep Engines','gm']]],
+ ['Skyreach',[['Shard Kites','m'],['Jetstream Port','s'],['Sky Observatory','probe']]],
+ ['Obelisk Gate',[['Magenta Quarries','m'],['Ring Elevators','c'],['Gate Relay','gs']]],
+ ['Veilspire',[['Mist Collectors','m'],['Halo Refinery','ore'],['Veil Forges','smelt']]],
+ ['Zenith Throne',[['Crown Scoops','m'],['Halo Docks','c'],['Zenith Accord','gm']]]];
+const newestOre=i=>Math.max(...PLANETS[i].mix.map(([o])=>o));
+function settleDesc(i,k){const P=PLANETS[i];return{m:`Mining ×1.5 on ${P.n}`,s:`Ship speed ×1.5 on ${P.n}`,c:`Cargo ×1.5 on ${P.n}`,
+  ore:`${ORES[newestOre(i)].n} and its bars sell for ×1.5`,gm:'All planets mine 10% faster',gs:'All ships fly 10% faster',gc:'All ships carry 10% more',
+  gv:'Everything sells for 5% more',smelt:'Smelting runs 25% faster',probe:'Probes bring back 25% more'}[k]}
 const BAR_IN=8, BAR_MULT=12, OD_LEN=120, OD_CD=600, WARP_AT=5;
 /* Research costs credits plus ore: 60% of each project's old price in credits plus ore worth about 30% of it.
    Ore is the newest types mined by planets costing up to 2/3 of the project, so you're already mining it; bigger projects need more ore types:
@@ -319,7 +353,7 @@ function save(){S.last=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S)
 const has=id=>!!S.research[id];
 function rmult(k){let m=1;for(const r of RESEARCH)if(r[k]&&has(r.id))m*=r[k];return m}
 const odOn=()=>Date.now()<S.od.until;
-const valueMult=()=>rmult('value')*(1+.01*S.dm);
+const valueMult=()=>rmult('value')*(1+.01*S.dm)*setG('gv');
 /* Mining teams: one per planet, up to 20 upgrades, each worth +0.25x on the trait it is assigned to. */
 const MINER_MAX=20,MINER_STEP=.25,TEAM_MAX=3;
 const TRAITS=[['m','Mining'],['s','Ship speed'],['c','Cargo']];
@@ -336,16 +370,30 @@ function hireTeam(i){const p=S.planets[i],j=p.teams.length;if(j>=TEAM_MAX)return
 function teamBuy(i,j,k){const tm=S.planets[i].teams[j];if(!tm||tm.n>=MINER_MAX||minerFree(tm)>0||!TRAITS.some(t=>t[0]===k))return false;
   const c=teamUpCost(i,j);if(S.cash<c)return false;S.cash-=c;tm.n++;tm.t[k]=(tm.t[k]||0)+1;return true}
 const minerFree=mn=>mn.n-TRAITS.reduce((a,[k])=>a+(mn.t[k]||0),0);
-function mineRate(i){return PLANETS[i].rate*rmult('mine')*minerT(i,'m')*(odOn()?2:1)}
-function shipSpeed(i){return ECON.SHIP_BASE*rmult('ship')*minerT(i,'s')*(odOn()?2:1)}
-function cargo(i){return PLANETS[i].cargo*rmult('cargo')*minerT(i,'c')}
+const settleLv=i=>(S.planets[i]&&S.planets[i].set)||0;
+const settleCost=i=>PLANETS[i].scale*SETTLE_COST[settleLv(i)];
+// settlement bonuses, cached until a settlement is bought or the game state is replaced
+let settleVer=0,SM=null;
+function settleMults(){if(SM&&SM.S===S&&SM.v===settleVer)return SM;
+  const m={S,v:settleVer,g:{gm:1,gs:1,gc:1,gv:1,smelt:1,probe:1},loc:{},ore:{}};
+  S.planets.forEach((p,i)=>{const lv=p.set||0;for(let k=0;k<lv;k++){const kind=SETTLE[i][1][k][1],val=SETTLE_VAL[kind];
+    if(kind==='m'||kind==='s'||kind==='c'){(m.loc[i]=m.loc[i]||{m:1,s:1,c:1})[kind]*=val}
+    else if(kind==='ore'){const o=newestOre(i);m.ore[o]=(m.ore[o]||1)*val}else m.g[kind]*=val}});
+  return SM=m}
+const setLoc=(i,k)=>{const l=settleMults().loc[i];return l?l[k]:1};
+const setG=k=>settleMults().g[k];
+function buySettle(i){const p=S.planets[i];if(p.teams.length<TEAM_MAX||settleLv(i)>=3)return false;const c=settleCost(i);if(S.cash<c)return false;
+  S.cash-=c;p.set=settleLv(i)+1;settleVer++;return true}
+function mineRate(i){return PLANETS[i].rate*rmult('mine')*minerT(i,'m')*setLoc(i,'m')*setG('gm')*(odOn()?2:1)}
+function shipSpeed(i){return ECON.SHIP_BASE*rmult('ship')*minerT(i,'s')*setLoc(i,'s')*setG('gs')*(odOn()?2:1)}
+function cargo(i){return PLANETS[i].cargo*rmult('cargo')*minerT(i,'c')*setLoc(i,'c')*setG('gc')}
 const tripTime=i=>(2*PLANETS[i].r+ECON.SHIP_OVH*ECON.SHIP_BASE)/shipSpeed(i);
 const haul=i=>Math.min(mineRate(i),cargo(i)/tripTime(i));
 const avgValue=i=>PLANETS[i].mix.reduce((a,[o,f])=>a+ORES[o].v*f,0);
 const smeltSlots=()=>has('smelt')?1+(has('slot2')?1:0)+(has('slot3')?1:0):0;
-const smeltTime=o=>5*(1+o*.35)/rmult('smelt');
+const smeltTime=o=>5*(1+o*.35)/(rmult('smelt')*setG('smelt'));
 const reserve=o=>S.slots.slice(0,smeltSlots()).filter(s=>s.r===o).length*BAR_IN*2;
-function itemValue(key){const o=+key.slice(1);return (key[0]==='b'?ORES[o].v*BAR_MULT:ORES[o].v)*valueMult()}
+function itemValue(key){const o=+key.slice(1);return (key[0]==='b'?ORES[o].v*BAR_MULT:ORES[o].v)*valueMult()*(settleMults().ore[o]||1)}
 function earn(x){S.cash+=x;S.runEarned+=x;S.lifetime+=x}
 function sellItem(key,keep){const store=key[0]==='b'?S.bars:S.inv,o=+key.slice(1),amt=Math.max(0,(store[o]||0)-(keep||0));if(amt<=0)return 0;store[o]-=amt;const v=amt*itemValue(key);earn(v);return v}
 function autoSell(){if(!has('auto'))return;for(const k in S.auto){if(!S.auto[k])continue;sellItem(k,k[0]==='o'?Math.max(reserve(+k.slice(1)),researchReserve(+k.slice(1))):researchBarReserve(+k.slice(1)))}}
@@ -376,7 +424,7 @@ function step(dt){
    Its haul is worth PROBE_SEC seconds of the combined mining of every claimed planet. Timed by the real clock,
    so probes keep flying while the game is closed (up to the offline earnings limit). */
 function totalMineValue(){let t=0;S.planets.forEach((p,i)=>{if(p.u)t+=mineRate(i)*avgValue(i)});return t}
-function probeReturn(){const pr=S.probe,o=pr.out.ore,qty=ECON.PROBE_SEC*totalMineValue()/ORES[o].v*(.85+Math.random()*.3);
+function probeReturn(){const pr=S.probe,o=pr.out.ore,qty=ECON.PROBE_SEC*totalMineValue()*setG('probe')/ORES[o].v*(.85+Math.random()*.3);
   {const st=pr.st,val=qty*ORES[o].v*valueMult(),at=pr.out.at+ECON.PROBE_FLY*1000;st.returned++;st.value+=val;st.byOre[o]=(st.byOre[o]||0)+qty;
    if(!st.best||val>st.best.v)st.best={o,q:qty,v:val};st.log.unshift({o,q:qty,v:val,t:at});st.log.length=Math.min(st.log.length,6);S.probeLife.returned++;S.probeLife.value+=val}
   S.inv[o]=(S.inv[o]||0)+qty;pr.out=null;autoSell();return[o,qty]}
@@ -810,20 +858,78 @@ function addSolarBlock(parent,R,s,k){const sol=placeLocal(parent,R,SOLAR[k][0],S
     const pn=new THREE.Mesh(new THREE.BoxGeometry(.32*s,.02*s,.28*s),DM.solar);pn.position.set((c-1)*.36*s,.24*s,(r-.5)*.42*s);pn.rotation.x=-.45;sol.add(pn)}
   const A=k?SOLAR[k-1]:[.2,-.38],B=SOLAR[k],L=Math.hypot(B[0]-A[0],B[1]-A[1]),ua=(k?.5:0)/L,ub=.5/L;
   parent.add(surfaceTube([A[0]+(B[0]-A[0])*ua,A[1]+(B[1]-A[1])*ua],[B[0]-(B[0]-A[0])*ub,B[1]-(B[1]-A[1])*ub],R,s,.02,.022,DM.dark))}
+// Settlement south-west of the hall, clear of the launch pad, domes and solar panels (positions checked against them).
+// Level 1 Outpost: plaza, five houses, lamps and a walkway from the processing dome. Level 2 Town: three towers,
+// three more houses, a park dome and a ring road. Level 3 City: a glowing central spire and five tall towers.
+// Roofs and trim use the planet's own colour.
+const SET_C=[-3.5,-4.1],SET_AT=(r,deg)=>[SET_C[0]+r*Math.cos(deg*Math.PI/180),SET_C[1]+r*Math.sin(deg*Math.PI/180)];
+function setHouse(g,R,s,[e,n],acc,k){const h=placeLocal(g,R,e,n,s);h.rotation.y+=k*1.3;
+  const body=new THREE.Mesh(new THREE.BoxGeometry(.36*s,.24*s,.3*s),DM.hull);body.position.y=.12*s;h.add(body);
+  const roof=k%2?new THREE.Mesh(new THREE.ConeGeometry(.29*s,.2*s,4),acc):new THREE.Mesh(new THREE.CylinderGeometry(.16*s,.16*s,.38*s,10,1,false,0,Math.PI),acc);
+  if(k%2){roof.rotation.y=Math.PI/4;roof.position.y=.34*s}else{roof.rotation.z=Math.PI/2;roof.position.y=.24*s}h.add(roof);
+  for(const z of[-.152,.152]){const win=new THREE.Mesh(new THREE.BoxGeometry(.2*s,.06*s,.01*s),DM.window);win.position.set(0,.14*s,z*s);h.add(win)}
+  const door=new THREE.Mesh(new THREE.BoxGeometry(.01*s,.13*s,.08*s),DM.door);door.position.set(.181*s,.065*s,0);h.add(door)}
+function setTower(g,R,s,[e,n],hgt,acc,rad){const t=placeLocal(g,R,e,n,s),r=(rad||.2)*s;
+  const body=new THREE.Mesh(new THREE.CylinderGeometry(r*.85,r,hgt*s,14),DM.hull);body.position.y=hgt*s/2;t.add(body);
+  for(let y=.25;y<hgt-.1;y+=.22){const band=new THREE.Mesh(new THREE.CylinderGeometry(r*(1-.15*y/hgt)+.004*s,r*(1-.15*y/hgt)+.004*s,.05*s,14,1,true),DM.window);band.position.y=y*s;t.add(band)}
+  const cap=new THREE.Mesh(new THREE.ConeGeometry(r*.95,.28*s,14),acc);cap.position.y=(hgt+.14)*s;t.add(cap);
+  const tip=new THREE.Mesh(new THREE.SphereGeometry(.035*s,8,6),DM.red);tip.position.y=(hgt+.3)*s;t.add(tip);return t}
+function setLamp(g,R,s,[e,n]){const l=placeLocal(g,R,e,n,s);const post=new THREE.Mesh(new THREE.CylinderGeometry(.012*s,.012*s,.3*s,5),DM.hull);post.position.y=.15*s;l.add(post);
+  const bulb=new THREE.Mesh(new THREE.SphereGeometry(.03*s,8,6),DM.teal);bulb.position.y=.31*s;l.add(bulb)}
+function buildSettleLevel(w,i,k){const P=PLANETS[i],s=w.facS,R=w.facR,g=new THREE.Group();w.fac.add(g);w.settle[k]=g;
+  if(!w.setAcc){w.setAcc=new THREE.MeshStandardMaterial({color:P.c2,metalness:.35,roughness:.45});
+    w.setGlow=new THREE.MeshStandardMaterial({color:P.c2,emissive:P.c2,emissiveIntensity:1.1})}
+  const acc=w.setAcc,glow=w.setGlow;
+  if(k===0){
+    const plaza=placeLocal(g,R,SET_C[0],SET_C[1],s);
+    const deck=new THREE.Mesh(new THREE.CylinderGeometry(.6*s,.64*s,.06*s,32),DM.pad);deck.position.y=.03*s;plaza.add(deck);
+    const rim=new THREE.Mesh(new THREE.TorusGeometry(.6*s,.025*s,6,40),glow);rim.rotation.x=Math.PI/2;rim.position.y=.065*s;plaza.add(rim);
+    const pole=new THREE.Mesh(new THREE.CylinderGeometry(.015*s,.015*s,.7*s,6),DM.hull);pole.position.y=.35*s;plaza.add(pole);
+    const flag=new THREE.Mesh(new THREE.BoxGeometry(.2*s,.12*s,.01*s),acc);flag.position.set(.1*s,.62*s,0);plaza.add(flag);
+    [126,198,270,342,54].forEach((a,j)=>setHouse(g,R,s,SET_AT(1.0,a),acc,j));
+    [90,162,234,306,18].forEach(a=>setLamp(g,R,s,SET_AT(.72,a)));
+    // walkway from the processing dome to the nearest house
+    g.add(surfaceTube([-1.45,-2.5],[-2.7,-3.15],R,s,.14,.06,DM.tube));
+    w.setFlag=flag}
+  else if(k===1){
+    [180,250,320].forEach((a,j)=>setTower(g,R,s,SET_AT(1.65,a),.9+j*.2,acc));
+    [215,285,355].forEach((a,j)=>setHouse(g,R,s,SET_AT(1.9,a),acc,j+5));
+    const park=placeLocal(g,R,-4.95,-2.95,s);
+    const pb=new THREE.Mesh(new THREE.CylinderGeometry(.42*s,.44*s,.06*s,24),DM.pad);pb.position.y=.03*s;park.add(pb);
+    const pd=new THREE.Mesh(new THREE.SphereGeometry(.4*s,20,10,0,Math.PI*2,0,Math.PI/2),DM.green);pd.position.y=.06*s;park.add(pd);
+    const ring=[];for(let a=0;a<=360;a+=12)ring.push(SET_AT(1.35,a));g.add(trackMesh(ring,R,s))}
+  else{
+    const sp=placeLocal(g,R,SET_C[0],SET_C[1],s);
+    const base=new THREE.Mesh(new THREE.CylinderGeometry(.34*s,.42*s,.3*s,20),DM.dark);base.position.y=.15*s;sp.add(base);
+    const shaft=new THREE.Mesh(new THREE.CylinderGeometry(.07*s,.22*s,2.5*s,16),DM.hull);shaft.position.y=1.55*s;sp.add(shaft);
+    for(const [y,r] of[[.7,.24],[1.3,.2],[1.9,.15]]){const band=new THREE.Mesh(new THREE.TorusGeometry(r*s,.025*s,6,28),glow);band.rotation.x=Math.PI/2;band.position.y=y*s;sp.add(band)}
+    const halo=new THREE.Group();halo.position.y=2.2*s;sp.add(halo);
+    const hr=new THREE.Mesh(new THREE.TorusGeometry(.32*s,.02*s,6,36),glow);hr.rotation.x=Math.PI/2;halo.add(hr);
+    for(let j=0;j<3;j++){const pod=new THREE.Mesh(new THREE.SphereGeometry(.045*s,8,6),DM.window);const a=j/3*Math.PI*2;pod.position.set(Math.cos(a)*.32*s,0,Math.sin(a)*.32*s);halo.add(pod)}
+    const beacon=new THREE.Mesh(new THREE.SphereGeometry(.07*s,10,8),glow.clone());beacon.position.y=2.85*s;sp.add(beacon);
+    [195,235,270,305,340].forEach((a,j)=>setTower(g,R,s,SET_AT(2.45,a),1.3+((j*3)%5)*.12,acc,.18));
+    w.setHalo=halo;w.setBeacon=beacon}}
+function syncSettlement(w,i){const lv=settleLv(i);if(!w.settle)w.settle=[];
+  for(let k=0;k<3;k++){if(lv>k&&!w.settle[k])buildSettleLevel(w,i,k);if(w.settle[k])w.settle[k].visible=lv>k}}
+function animateSettlement(w,dt){if(!w.settle)return;
+  if(w.setFlag&&w.settle[0]&&w.settle[0].visible)w.setFlag.rotation.y=Math.sin(simTime*2)*.25;
+  if(w.setHalo&&w.settle[2]&&w.settle[2].visible){w.setHalo.rotation.y+=dt*.6;w.setBeacon.material.emissiveIntensity=1+Math.sin(simTime*2.2)}}
 // Show the base tiers and rovers that match the number of teams hired.
 function syncBase(w,i){const n=S.planets[i].teams.length;if(!S.planets[i].u||!n)return;
   if(!w.fac)buildFacility(w,i);
   for(let k=1;k<TEAM_MAX;k++){if(n>k&&!w.tiers[k])buildTier(w,k);if(w.tiers[k])w.tiers[k].visible=n>k}
-}
-const COLONY_DIR=PORT_DIR.clone(),COLONY_TEAM_DIR=locDir(-.5,1.6);
+  syncSettlement(w,i)}
+const COLONY_DIR=PORT_DIR.clone(),COLONY_TEAM_DIR=locDir(-.5,1.6),COLONY_SET_DIR=locDir(-1.9,-1.4);
 const _cd=new THREE.Vector3(),_cv=new THREE.Vector3();
-function colonyDir(i){return _cd.copy(S.planets[i].u?COLONY_TEAM_DIR:COLONY_DIR).applyQuaternion(W[i].mesh.quaternion)}
+// with a settlement, the close-up looks between the base and the settlement
+function colonyDir(i){return _cd.copy(S.planets[i].u?(S.planets[i].set?COLONY_SET_DIR:COLONY_TEAM_DIR):COLONY_DIR).applyQuaternion(W[i].mesh.quaternion)}
 function animateSurface(w,i,dt){
   if(w.portBeacon){const on=(simTime*1.2+i)%1<.5;w.portBeacon.material.emissiveIntensity=on?2:.2;w.portLights.forEach((l,k)=>l.material.emissiveIntensity=.4+1.2*Math.max(0,Math.sin(simTime*4-k)))}
   if(!w.fac||!w.fac.visible)return;const R=w.facR,s=w.facS,n=S.planets[i].teams.length;
   w.drill.rotation.y+=dt*6;w.facBeacon.material.emissiveIntensity=(simTime*.9)%1<.5?1.8:.3;
   w.pods.forEach((pod,k)=>{const t=(simTime*.12+k/4)%1;slerpDir(FAC_DIR,CONV_END,t,_b);pod.position.copy(_b).multiplyScalar(R+.12*s+Math.sin(t*Math.PI)*.06*s)});
   w.anim.forEach((f,k)=>{if(w.tiers[k+1]&&w.tiers[k+1].visible)f(dt)});
+  animateSettlement(w,dt);
   // all rovers share one cycle and are spread evenly around it, so departures and returns are staggered
   const active=n*3,CYCLE=18;
   w.rovers.forEach((rv,j)=>{if(rv.tier>=n)return;const ph=((simTime/CYCLE)+j/active+i*.137)%1;let u,carrying=false,mining=false,inside=false;
@@ -849,7 +955,7 @@ const W=PLANETS.map((P,i)=>{
   const label=document.createElement('div');label.className='plabel';document.getElementById('labels').appendChild(label);
   return{mesh,mat,ringM,orbit,ship,flame,label,pos:new THREE.Vector3(),angle:P.a0,port:null,fac:null}});
 let simTime=0;
-function planetLabel(i){const p=S.planets[i];return p.u?`<b>${PLANETS[i].n}</b><span class="st">${'★'.repeat(p.teams.length)}</span>${'☆'.repeat(TEAM_MAX-p.teams.length)}`:`<b>${PLANETS[i].n}</b>${fmt(PLANETS[i].cost)} cr`}
+function planetLabel(i){const p=S.planets[i];return p.u?`<b>${PLANETS[i].n}</b><span class="st">${'★'.repeat(p.teams.length)}</span>${'☆'.repeat(TEAM_MAX-p.teams.length)}${p.set?`<span class="st" style="color:var(--ship)"> ${'◆'.repeat(p.set)}</span>`:''}`:`<b>${PLANETS[i].n}</b>${fmt(PLANETS[i].cost)} cr`}
 function refreshWorld(){
   syncDocks();
   const firstLocked=S.planets.findIndex(p=>!p.u);
@@ -988,7 +1094,7 @@ function focusProbe(){cam.focus=-1;cam.track=false;cam.station=false;
   if(S.probe.out){cam.probe=true;cam.tr=3.4}else{cam.probe=false;cam.station=true;cam.tt.set(0,.5,0);cam.tr=4.2}
   cam.phi=Math.min(cam.phi,1.0);setTab('probe');if(sheet.classList.contains('collapsed'))toggleSheet()}
 function focusStation(){cam.probe=false;cam.focus=-1;cam.track=false;cam.station=true;cam.tt.set(0,.1,0);cam.tr=5.4;cam.phi=.9;setTab('research');if(sheet.classList.contains('collapsed'))toggleSheet()}
-function focusPlanet(i){cam.station=false;cam.probe=false;cam.focus=i;cam.track=true;S.sel=i;cam.tr=PLANETS[i].size*(S.planets[i].u?2.5+.25*Math.max(1,S.planets[i].teams.length):3.6);refreshWorld();
+function focusPlanet(i){cam.station=false;cam.probe=false;cam.focus=i;cam.track=true;S.sel=i;cam.tr=PLANETS[i].size*(S.planets[i].u?2.5+.25*Math.max(1,S.planets[i].teams.length)+(S.planets[i].set?.5:0):3.6);refreshWorld();
   if(!S.tipClose){S.tipClose=1;toast('Pinch to zoom. Drag to leave the close-up.',2600)}}
 function unfocus(){if(cam.focus<0)return;const i=cam.focus;cam.focus=-1;cam.track=false;cam.phi=Math.min(cam.phi,1.2);cam.tt.copy(W[i].pos);cam.target.copy(W[i].pos);if(cam.tr<8)cam.tr=Math.max(14,PLANETS[i].size*10)}
 function recenter(){cam.station=false;cam.probe=false;cam.focus=-1;cam.track=false;resize();cam.tt.set(0,0,0);cam.target.set(0,0,0);cam.phi=1.0;cam.tr=fitDistance();toast('Map recentered',1000)}
@@ -1149,16 +1255,26 @@ function viewPlanet(){
   if(!p.u){const c=teamHireCost(i,0);h+=`<p>A survey drone has mapped ${P.n}. Hire a mining team to claim it and start mining ${P.mix.map(([o])=>ORES[o].n.toLowerCase()).join(' and ')}.</p>
     <button class="btn wide" data-act="hire" data-p="${i}" ${S.cash>=c?'':'disabled'} type="button">Hire the ${teamName(i,0)} and claim ${P.n}<small>${fmt(c)} credits</small></button>`;return h}
   const rate=mineRate(i),hl=haul(i),T=tripTime(i),shipsBN=hl<rate*.97,BN='<span class="bn">Bottleneck</span>';
-  const mult=k=>`×${minerT(i,k).toFixed(2)} from teams`;
+  const mult=k=>`×${minerT(i,k).toFixed(2)} from teams`+(setLoc(i,k)!==1?` · ×${setLoc(i,k).toFixed(1)} settlement`:'');
   // the hire button stays at the top, where the claim button was
-  {const n=p.teams.length;if(n<TEAM_MAX){const c=teamHireCost(i,n);h+=`<button class="btn wide" data-act="hire" data-p="${i}" ${S.cash>=c?'':'disabled'} type="button">Hire a ${n===1?'second':'third'} team: the ${teamName(i,n)}<small>${fmt(c)} credits</small></button>`}}
+  {const n=p.teams.length;if(n<TEAM_MAX){const c=teamHireCost(i,n);h+=`<button class="btn wide" data-act="hire" data-p="${i}" ${S.cash>=c?'':'disabled'} type="button">Hire a ${n===1?'second':'third'} team: the ${teamName(i,n)}<small>${fmt(c)} credits</small></button>`}
+   else if(settleLv(i)<3){const lv=settleLv(i),c=settleCost(i),[nm,ups]=SETTLE[i];
+     h+=`<button class="btn wide" data-act="settle" data-p="${i}" ${S.cash>=c?'':'disabled'} type="button">${lv?'Grow '+nm+' into a '+SETTLE_LV[lv]:'Found '+nm}: ${ups[lv][0]}<small>${fmt(c)} credits · ${settleDesc(i,ups[lv][1])}</small></button>`}}
   h+=`<div class="rows">
    <div class="row"><div class="txt"><span class="t">Mine rate${shipsBN?'':BN}</span><span class="s">${fmt(rate)} ore/s · ${mult('m')}</span></div></div>
    <div class="row"><div class="txt"><span class="t">Ship speed${shipsBN?BN:''}</span><span class="s">${shipSpeed(i).toFixed(1)} AU/s · trip ${T.toFixed(1)}s · ${mult('s')}</span></div></div>
    <div class="row"><div class="txt"><span class="t">Cargo hold${shipsBN?BN:''}</span><span class="s">${fmt(cargo(i))} ore/trip · ${mult('c')}</span></div></div></div>
   <div class="note"><span>Hauling <b class="num">${fmt(hl)}/s</b> of ${fmt(rate)}/s mined.</span><span>Stockpile <b class="num">${fmt(p.stock)}</b></span></div>`
-   +viewTeams(i,shipsBN);
+   +viewTeams(i,shipsBN)+viewSettlement(i);
   return h}
+// settlement card: its three upgrades, what each does, and which are built
+function viewSettlement(i){const p=S.planets[i],[nm,ups]=SETTLE[i],lv=settleLv(i),ready=p.teams.length>=TEAM_MAX;
+  let h=`<div class="card"><div class="head"><h3>Settlement</h3><span class="num" style="font-size:12px;color:var(--muted)">${lv?nm+' · '+SETTLE_LV[lv-1]:ready?'Not founded':'Locked'}</span></div>`;
+  if(!ready)h+=`<p style="font-size:12px">Hire all ${TEAM_MAX} mining teams to found ${nm} here.</p>`;
+  h+='<div class="rows">';
+  ups.forEach(([un,kind],k)=>{const done=k<lv;
+    h+=`<div class="row"><div class="txt"><span class="t">${done?'<span style="color:var(--ship)">✓</span> ':''}${un}<span style="color:var(--muted);font:500 11px var(--f-body);margin-left:6px">${SETTLE_LV[k]}</span></span><span class="s">${settleDesc(i,kind)}</span></div>${!done&&k===lv&&ready?`<span class="num" style="font-size:12px;color:var(--muted);white-space:nowrap">${fmt(settleCost(i))} cr</span>`:''}</div>`});
+  return h+'</div></div>'}
 
 const teamSel={};
 function viewTeams(i,shipsBN){
@@ -1178,7 +1294,7 @@ function viewTeams(i,shipsBN){
   h+=`</div><div class="note" style="justify-content:space-between"><span>${full?'<b>Fully upgraded.</b>':'Red buttons fix the bottleneck.'}</span>
     <button class="btn ghost${armed('respec'+i+'_'+j)?' warn':''}" data-act="respec" data-p="${i}" data-j="${j}" ${tm.n-free>0?'':'disabled'} type="button" style="min-width:0">${armed('respec'+i+'_'+j)?'Tap to confirm':'Reassign points'}</button></div>`;
   return h+'</div>'}
-function viewProbe(){const pr=S.probe,st=pr.st,nw=Date.now(),est=ECON.PROBE_SEC*totalMineValue()*valueMult();
+function viewProbe(){const pr=S.probe,st=pr.st,nw=Date.now(),est=ECON.PROBE_SEC*totalMineValue()*setG('probe')*valueMult();
   const ago=t=>{const s=Math.max(0,(nw-t)/1000);return s<60?'just now':s<3600?Math.floor(s/60)+'m ago':Math.floor(s/3600)+'h '+Math.floor(s%3600/60)+'m ago'};
   let h=`<div class="head"><h2>Space probe</h2>${pr.out?`<button class="tog${cam.probe?' on':''}" data-act="pfollow" type="button">${cam.probe?'Following':'Follow probe'}</button>`:''}</div>`;
   if(pr.out){const f=Math.min(1,(nw-pr.out.at)/(ECON.PROBE_FLY*1000)),o=pr.out.ore,stage=f<.05?'Leaving the station':f>.95?'Docking through the iris':'Surveying the galaxy';
@@ -1338,6 +1454,7 @@ pbody.addEventListener('click',e=>{
   else if(a==='focus'){focusPlanet(+b.dataset.p)}
   else if(a==='unfocus'){cam.focus=-1;recenter()}
   else if(a==='tsel'){teamSel[+b.dataset.p]=+b.dataset.j}
+  else if(a==='settle'){const i=+b.dataset.p,lv=settleLv(i);if(buySettle(i)){refreshWorld();toast(lv?`${SETTLE[i][0]} grew into a ${SETTLE_LV[lv]}.`:`${SETTLE[i][0]} founded on ${PLANETS[i].n}.`);save()}}
   else if(a==='hire'){const i=+b.dataset.p,j=S.planets[i].teams.length;if(hireTeam(i)){teamSel[i]=j;refreshWorld();
       if(j===0){{const f=fitDistance();if(f>cam.tr)cam.tr=f}toast(`The ${teamName(i,0)} claimed ${PLANETS[i].n}. A hauler is on its way.`);if(i===WARP_AT)toast('Galaxy Warp is now available in the Warp tab.',4000);if(cam.focus!==i)focusPlanet(i)}
       else toast(`The ${teamName(i,j)} joined ${PLANETS[i].n}.`);save()}}
