@@ -135,6 +135,13 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
 #modal .tag{font:600 11px var(--f-display);letter-spacing:.16em;text-transform:uppercase;color:var(--good)}
 #modal .eff{display:flex;justify-content:space-between;gap:10px;font:500 13px var(--f-body);color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
 #modal .eff span:last-child{color:var(--ink);font-family:var(--f-data)}
+.needs{display:flex;flex-direction:column;gap:5px}
+.need{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:8px;row-gap:3px;align-items:center;font-size:12px}
+.need .num{text-align:right;color:var(--bad)}
+.need.ok .num{color:var(--good)}
+.need .nbar{grid-column:1/3;height:3px;background:#1a1f3c;border-radius:2px;overflow:hidden}
+.need .nbar i{display:block;height:100%;background:var(--bad)}
+.need.ok .nbar i{background:var(--good)}
 .ore.res{cursor:pointer;font:inherit;font-size:12px;font-weight:500}
 .ore.res::after{content:"i";font:600 10px var(--f-data);color:var(--muted);border:1px solid var(--line);border-radius:50%;width:14px;height:14px;display:inline-grid;place-items:center;margin-left:2px}
 @media (min-width:760px){#sheet{left:auto;width:430px;right:16px;bottom:16px;border:1px solid var(--line);border-radius:12px;height:min(640px,calc(100% - 120px))}}
@@ -223,7 +230,7 @@ const GALAXY_SPIN=.012;
 PLANETS.forEach((p,i)=>{p.r=ORBIT_R[i];p.speed=GALAXY_SPIN;p.a0=ORBIT_A[i];});
 /* Economy. Planet output comes only from its mining teams (and research / star dust).
    Each planet's base output is scaled to its claim price so every new planet is worth claiming. */
-const ECON={DUST_A:2,DUST_K:.2,EXP:.7,PAY:3.9,SCALE_MIN:100,HIRE:[1,4,30],UP_BASE:.12,UP_GROW:1.32,TEAM_X:[1,6,40],SHIP_BASE:.8,SHIP_OVH:16,DOCK_T:3,PROBE_EVERY:300,PROBE_FLY:180,PROBE_FIRST:60,PROBE_SEC:90,CARGO_FIT:.9};
+const ECON={DUST_A:2,DUST_K:.2,EXP:.7,PAY:3.55,SCALE_MIN:100,HIRE:[1,4,30],UP_BASE:.12,UP_GROW:1.32,TEAM_X:[1,6,40],SHIP_BASE:.8,SHIP_OVH:16,DOCK_T:3,PROBE_EVERY:300,PROBE_FLY:180,PROBE_FIRST:60,PROBE_SEC:90,CARGO_FIT:.9};
 PLANETS.forEach((p,i)=>{const avg=p.mix.reduce((a,[o,f])=>a+ORES[o].v*f,0);
   p.scale=Math.max(ECON.SCALE_MIN,p.cost);
   p.rate=i===0?.8:Math.pow(p.cost,ECON.EXP)/(ECON.PAY*avg);
@@ -263,6 +270,20 @@ const RESEARCH=[
  {id:'ion5',n:'Wormhole Gates',d:'All ships fly three times as fast.',cost:3e16,ship:3},
  {id:'trade5',n:'Galactic Reserve',d:'Everything sells for twice as much.',cost:5e17,value:2}];
 const BAR_IN=8, BAR_MULT=12, OD_LEN=120, OD_CD=600, WARP_AT=5;
+/* Research costs credits plus ore: 60% of each project's old price in credits plus ore worth about 30% of it.
+   Ore is the newest types mined by planets costing up to 2/3 of the project, so you're already mining it; bigger projects need more ore types:
+   under 10K credits: 1 type, under 100M: 2 types, 100M and up: 3 types. */
+const RES_ORE_SHARE=.3,RES_CREDIT_SHARE=.6;
+(function(){const nice=x=>{const p=Math.pow(10,Math.max(0,Math.floor(Math.log10(x))-1));return Math.ceil(x/p)*p};
+  RESEARCH.forEach(r=>{const old=r.cost;let k=0;PLANETS.forEach((P,i)=>{if(P.cost<=old/1.5)k=i}); // ore from planets already within reach
+    const top=Math.max(...PLANETS.slice(0,k+1).flatMap(P=>P.mix.map(([o])=>o)));
+    const n=old<1e4?1:old<1e8?2:3,types=[...new Set([top,top-1,top-2].map(o=>Math.max(0,o)))].slice(0,n),w=[[1],[.6,.4],[.5,.35,.15]][types.length-1];
+    r.ore=types.map((o,j)=>[o,nice(old*RES_ORE_SHARE*w[j]/ORES[o].v)]);r.cost=nice(old*RES_CREDIT_SHARE)})})();
+const openResearch=()=>RESEARCH.filter(r=>!S.research[r.id]&&(!r.req||S.research[r.req]));
+// ore kept back from selling: the most of that ore any open research project needs
+const researchReserve=o=>openResearch().reduce((m,r)=>Math.max(m,(r.ore.find(x=>x[0]===o)||[0,0])[1]),0);
+const canResearch=r=>S.cash>=r.cost&&r.ore.every(([o,q])=>(S.inv[o]||0)>=q);
+function buyResearch(r){if(!canResearch(r))return false;S.cash-=r.cost;r.ore.forEach(([o,q])=>S.inv[o]-=q);S.research[r.id]=1;return true}
 
 /* ===================== STATE ===================== */
 const KEY='starquarry_save_v1';
@@ -319,7 +340,7 @@ const reserve=o=>S.slots.slice(0,smeltSlots()).filter(s=>s.r===o).length*BAR_IN*
 function itemValue(key){const o=+key.slice(1);return (key[0]==='b'?ORES[o].v*BAR_MULT:ORES[o].v)*valueMult()}
 function earn(x){S.cash+=x;S.runEarned+=x;S.lifetime+=x}
 function sellItem(key,keep){const store=key[0]==='b'?S.bars:S.inv,o=+key.slice(1),amt=Math.max(0,(store[o]||0)-(keep||0));if(amt<=0)return 0;store[o]-=amt;const v=amt*itemValue(key);earn(v);return v}
-function autoSell(){if(!has('auto'))return;for(const k in S.auto){if(!S.auto[k])continue;sellItem(k,k[0]==='o'?reserve(+k.slice(1)):0)}}
+function autoSell(){if(!has('auto'))return;for(const k in S.auto){if(!S.auto[k])continue;sellItem(k,k[0]==='o'?Math.max(reserve(+k.slice(1)),researchReserve(+k.slice(1))):0)}}
 function deliver(i,units){for(const [o,f] of PLANETS[i].mix)S.inv[o]=(S.inv[o]||0)+units*f}
 function discovered(){const set=new Set();S.planets.forEach((p,i)=>{if(p.u)PLANETS[i].mix.forEach(([o])=>set.add(o))});return [...set].sort((a,b)=>a-b)}
 
@@ -422,11 +443,15 @@ const trim=new THREE.MeshStandardMaterial({color:0xc9cfdf,metalness:.7,roughness
 const hubMat=new THREE.MeshStandardMaterial({color:0x2a2f4a,metalness:.6,roughness:.4,emissive:0xf0a33c,emissiveIntensity:.15});
 const stWin=new THREE.MeshStandardMaterial({color:0xffd59a,emissive:0xffb85c,emissiveIntensity:1.1});
 const stTeal=new THREE.MeshStandardMaterial({color:0x5fd4c4,emissive:0x5fd4c4,emissiveIntensity:.9});
-const IRIS_Y=.5,IRIS=new THREE.Vector3(0,IRIS_Y,0),DOCK_IN=new THREE.Vector3(0,.15,0),DOCK_UP=new THREE.Vector3(0,1.3,0);
+const IRIS_Y=.455,IRIS=new THREE.Vector3(0,IRIS_Y,0),DOCK_IN=new THREE.Vector3(0,.15,0),DOCK_UP=new THREE.Vector3(0,1.3,0);
 { // core
   const core=new THREE.Mesh(new THREE.CylinderGeometry(.38,.38,.72,20),hubMat);station.add(core);
   for(const y of[-.18,.08]){const band=new THREE.Mesh(new THREE.CylinderGeometry(.385,.385,.05,20,1,true),stWin);band.position.y=y;station.add(band)}
-  const deck=new THREE.Mesh(new THREE.CylinderGeometry(.5,.42,.12,24),trim);deck.position.y=.42;station.add(deck);
+  // deck with a shallow well in the middle for the iris door, so the blades retract under the deck surface
+  const deck=new THREE.Mesh(new THREE.CylinderGeometry(.5,.42,.12,24,1,true),trim);deck.position.y=.42;station.add(deck);
+  const deckTop=new THREE.Mesh(new THREE.RingGeometry(.27,.5,32),trim);deckTop.rotation.x=-Math.PI/2;deckTop.position.y=.48;station.add(deckTop);
+  const deckBot=new THREE.Mesh(new THREE.CircleGeometry(.42,24),trim);deckBot.rotation.x=Math.PI/2;deckBot.position.y=.36;station.add(deckBot);
+  const well=new THREE.Mesh(new THREE.CylinderGeometry(.27,.27,.09,24,1,true),new THREE.MeshStandardMaterial({color:0x2a2f4a,metalness:.6,roughness:.5,side:THREE.DoubleSide}));well.position.y=.435;station.add(well);
   const low=new THREE.Mesh(new THREE.CylinderGeometry(.42,.28,.16,20),trim);low.position.y=-.44;station.add(low);
   const spire=new THREE.Mesh(new THREE.ConeGeometry(.11,.55,10),metal);spire.rotation.x=Math.PI;spire.position.y=-.8;station.add(spire);
   const mast=new THREE.Mesh(new THREE.CylinderGeometry(.012,.012,.55,6),metal);mast.position.set(-.4,.75,.12);station.add(mast);
@@ -434,8 +459,8 @@ const IRIS_Y=.5,IRIS=new THREE.Vector3(0,IRIS_Y,0),DOCK_IN=new THREE.Vector3(0,.
   dish.rotation.z=-Math.PI/2.2;dish.position.set(.47,.15,0);station.add(dish);
 }
 // iris door: eight blades that slide back into the rim when the space probe launches or returns
-const irisHole=new THREE.Mesh(new THREE.CircleGeometry(.27,24),new THREE.MeshBasicMaterial({color:0x07080f}));irisHole.rotation.x=-Math.PI/2;irisHole.position.y=IRIS_Y-.015;station.add(irisHole);
-const irisRim=new THREE.Mesh(new THREE.TorusGeometry(.29,.035,8,32),stTeal);irisRim.rotation.x=Math.PI/2;irisRim.position.y=IRIS_Y;station.add(irisRim);
+const irisHole=new THREE.Mesh(new THREE.CircleGeometry(.27,24),new THREE.MeshBasicMaterial({color:0x07080f}));irisHole.rotation.x=-Math.PI/2;irisHole.position.y=IRIS_Y-.05;station.add(irisHole);
+const irisRim=new THREE.Mesh(new THREE.TorusGeometry(.29,.025,8,32),stTeal);irisRim.rotation.x=Math.PI/2;irisRim.position.y=.485;station.add(irisRim);
 const irisBlades=[];for(let k=0;k<8;k++){const g=new THREE.Group();g.rotation.y=k*Math.PI/4;g.position.y=IRIS_Y;station.add(g);
   const b=new THREE.Mesh(new THREE.BoxGeometry(.2,.018,.13),trim);b.rotation.y=.35;g.add(b);irisBlades.push(b)}
 let irisOpen=0;
@@ -1079,11 +1104,11 @@ function viewProbe(){const pr=S.probe,st=pr.st,nw=Date.now(),est=ECON.PROBE_SEC*
 function viewMarket(){
   const items=[];discovered().forEach(o=>{items.push('o'+o);if(has('smelt'))items.push('b'+o)});
   const list=items.filter(k=>k[0]==='o'||(S.bars[+k.slice(1)]||0)>0||S.auto[k]);
-  let total=0;list.forEach(k=>{const st=k[0]==='b'?S.bars:S.inv;total+=(st[+k.slice(1)]||0)*itemValue(k)});
+  let total=0;list.forEach(k=>{const bar=k[0]==='b',st=bar?S.bars:S.inv,o=+k.slice(1);total+=Math.max(0,(st[o]||0)-(bar?0:researchReserve(o)))*itemValue(k)});
   let h=`<div class="head"><h2>Market</h2><span class="num" style="color:var(--muted);font-size:12px">Value ×${valueMult().toFixed(2)}</span></div>
    <button class="btn wide" data-act="sellall" ${total>0?'':'disabled'} type="button">Sell everything<small>+${fmt(total)} credits</small></button><div class="rows">`;
   list.forEach(k=>{const o=+k.slice(1),bar=k[0]==='b',amt=(bar?S.bars:S.inv)[o]||0;
-    h+=`<div class="row"><div class="txt"><span class="t">${oreChip(o)}${bar?' <span style="color:var(--ore);font:600 11px var(--f-display);letter-spacing:.1em">BAR</span>':''}</span><span class="s">${fmt(amt)} × ${fmt(itemValue(k))} = ${fmt(amt*itemValue(k))}</span></div>
+    h+=`<div class="row"><div class="txt"><span class="t">${oreChip(o)}${bar?' <span style="color:var(--ore);font:600 11px var(--f-display);letter-spacing:.1em">BAR</span>':''}</span><span class="s">${fmt(amt)} × ${fmt(itemValue(k))} = ${fmt(amt*itemValue(k))}${!bar&&researchReserve(o)>0?` · <span style="color:var(--ship)">${fmt(Math.min(amt,researchReserve(o)))} kept for research</span>`:''}</span></div>
     ${has('auto')?`<button class="tog${S.auto[k]?' on':''}" data-act="auto" data-k="${k}" type="button">Auto</button>`:''}
     <button class="btn ghost" data-act="sell" data-k="${k}" ${amt>=1?'':'disabled'} style="min-width:70px" type="button">Sell</button></div>`});
   h+='</div>';
@@ -1102,8 +1127,12 @@ function viewSmelter(){
 
 function viewResearch(){
   const open=RESEARCH.filter(r=>!has(r.id)&&(!r.req||has(r.req))),own=RESEARCH.filter(r=>has(r.id));
-  let h='<div class="head"><h2>Research</h2></div><div class="grid">';
-  open.slice(0,6).forEach(r=>{h+=`<div class="card"><div class="t" style="font:600 15px var(--f-body)">${r.n}</div><p>${r.d}</p><button class="btn" data-act="res" data-id="${r.id}" ${S.cash>=r.cost?'':'disabled'} type="button">Research<small>${fmt(r.cost)}</small></button></div>`});
+  let h='<div class="head"><h2>Research</h2></div><p style="font-size:12px">Projects cost credits and ore. Sell everything and auto-sell keep back the ore your projects need.</p><div class="grid">';
+  open.slice(0,6).forEach(r=>{
+    const need=r.ore.map(([o,q])=>{const have=S.inv[o]||0,ok=have>=q;return`<div class="need${ok?' ok':''}"><span class="ore"><i style="background:${ORES[o].c}"></i>${ORES[o].n}</span><span class="num">${fmt(Math.min(have,q))} / ${fmt(q)}</span><span class="nbar"><i style="width:${Math.min(100,have/q*100).toFixed(0)}%"></i></span></div>`}).join('');
+    h+=`<div class="card"><div class="t" style="font:600 15px var(--f-body)">${r.n}</div><p>${r.d}</p>
+      <div class="needs"><div class="need${S.cash>=r.cost?' ok':''}"><span class="ore"><i style="background:var(--ore)"></i>Credits</span><span class="num">${fmt(Math.min(S.cash,r.cost))} / ${fmt(r.cost)}</span><span class="nbar"><i style="width:${Math.min(100,S.cash/r.cost*100).toFixed(0)}%"></i></span></div>${need}</div>
+      <button class="btn" data-act="res" data-id="${r.id}" ${canResearch(r)?'':'disabled'} type="button">Research</button></div>`});
   h+='</div>';
   if(!open.length)h+='<div class="empty">Every project is complete.</div>';
   if(own.length)h+=`<h3>Completed</h3><div class="ores">${own.map(r=>`<button class="ore res" data-act="resinfo" data-id="${r.id}" type="button">${r.n}</button>`).join('')}</div>`;
@@ -1163,7 +1192,7 @@ function showResearch(id){const r=RESEARCH.find(x=>x.id===id);if(!r)return;
   if(r.id==='slot2'||r.id==='slot3'||r.id==='smelt')eff+=`<div class="eff"><span>Furnaces</span><span>${smeltSlots()}</span></div>`;
   if(r.id==='night')eff+=`<div class="eff"><span>Offline limit</span><span>24h</span></div>`;
   if(r.id==='auto')eff+=`<div class="eff"><span>Auto-sell items on</span><span>${Object.values(S.auto).filter(Boolean).length}</span></div>`;
-  $('meff').innerHTML=eff;$('mcost').textContent='Cost '+fmt(r.cost)+' credits';
+  $('meff').innerHTML=eff;$('mcost').textContent='Cost '+fmt(r.cost)+' credits + '+r.ore.map(([o,q])=>fmt(q)+' '+ORES[o].n).join(' + ');
   $('modal').hidden=false;$('mclose').focus()}
 function closeModal(){$('modal').hidden=true}
 $('mclose').addEventListener('click',closeModal);
@@ -1197,7 +1226,7 @@ pbody.addEventListener('click',e=>{
   if(a==='sel'&&chipDragged)return;
   if(a==='sel'){focusPlanet(+b.dataset.p)} // picking a planet in the Planet tab flies the camera to it
   else if(a==='sell'){const v=sellItem(b.dataset.k);if(v)toast('+'+fmt(v)+' credits',1200)}
-  else if(a==='sellall'){let v=0;for(const o in S.inv)v+=sellItem('o'+o);for(const o in S.bars)v+=sellItem('b'+o);if(v)toast('+'+fmt(v)+' credits',1400);if(S.tut===1){S.tut=2;setTimeout(()=>toast('Spend credits on your mining team\u2019s upgrades with the green buttons. Tap planets in the sky to switch.',5000),1500)}}
+  else if(a==='sellall'){let v=0;for(const o in S.inv)v+=sellItem('o'+o,researchReserve(+o));for(const o in S.bars)v+=sellItem('b'+o);if(v)toast('+'+fmt(v)+' credits',1400);if(S.tut===1){S.tut=2;setTimeout(()=>toast('Spend credits on your mining team\u2019s upgrades with the green buttons. Tap planets in the sky to switch.',5000),1500)}}
   else if(a==='resinfo'){showResearch(b.dataset.id);return}
   else if(a==='pfollow'){focusProbe()}
   else if(a==='focus'){focusPlanet(+b.dataset.p)}
@@ -1211,7 +1240,7 @@ pbody.addEventListener('click',e=>{
   else if(a==='respec'){const i=+b.dataset.p,j=+b.dataset.j,key='respec'+i+'_'+j;if(!armed(key)){arm={k:key,until:Date.now()+4000}}else{S.planets[i].teams[j].t={};arm=null;toast('Points returned. Place them again.');save()}}
   else if(a==='auto'){S.auto[b.dataset.k]=!S.auto[b.dataset.k]}
   else if(a==='slot'){const sl=S.slots[+b.dataset.i],r=+b.dataset.r;if(sl.a&&sl.r!==null)S.inv[sl.r]=(S.inv[sl.r]||0)+BAR_IN;sl.r=r<0?null:r;sl.a=false;sl.p=0}
-  else if(a==='res'){const r=RESEARCH.find(x=>x.id===b.dataset.id);if(S.cash>=r.cost){S.cash-=r.cost;S.research[r.id]=1;toast(r.n+' complete.');if(r.id==='smelt')toast('The Smelter tab is open. Pick an ore for your furnace.',4000);save()}}
+  else if(a==='res'){const r=RESEARCH.find(x=>x.id===b.dataset.id);if(buyResearch(r)){toast(r.n+' complete.');if(r.id==='smelt')toast('The Smelter tab is open. Pick an ore for your furnace.',4000);save()}}
   else if(a==='warp'){if(!armed('warp')){arm={k:'warp',until:Date.now()+4000}}else{const g=pendingDM();S=newRun({dm:S.dm+g,lifetime:S.lifetime,warps:S.warps+1,music:S.music,probeLife:S.probeLife});arm=null;refreshWorld();recenter();save();toast(`Warped. +${fmt(g)} star dust. Everything now sells for +${fmt(S.dm*10)}%.`,4500);setTab('planet')}}
   else if(a==='reset'){if(!armed('reset')){arm={k:'reset',until:Date.now()+4000}}else{S=newRun({music:S.music});arm=null;refreshWorld();save();toast('Save erased. Fresh start.');setTab('planet')}}
   pressing=false;render(true);hud();
