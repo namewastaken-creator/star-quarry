@@ -32,6 +32,7 @@ body{background:radial-gradient(120% 80% at 70% 10%,#151a3a 0%,#090b1a 45%,var(-
 .cash .lbl{font:600 10px var(--f-display);letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
 .cash .val{font:700 30px/1 var(--f-display);color:var(--ore);font-variant-numeric:tabular-nums;letter-spacing:.01em}
 .cash .rate{font:500 12px var(--f-data);color:var(--muted);font-variant-numeric:tabular-nums}
+.cash .probe{color:var(--ship);font-size:11px}
 .hudr{display:flex;flex-direction:column;align-items:flex-end;gap:6px;pointer-events:auto}
 .dm{font:500 12px var(--f-data);color:#c9b8ff}
 #od{font:700 13px var(--f-display);letter-spacing:.12em;text-transform:uppercase;background:var(--panel2);color:var(--ship);border:1px solid #2d6b66;border-radius:6px;padding:7px 11px;min-width:118px;cursor:pointer}
@@ -144,6 +145,7 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
     <span class="lbl">Credits</span>
     <span class="val" id="cash">0</span>
     <span class="rate" id="rate">≈ 0 /s</span>
+    <span class="rate probe" id="probeInfo"></span>
   </div>
   <div class="hudr">
     <span class="dm" id="dm"></span>
@@ -215,7 +217,7 @@ const GALAXY_SPIN=.012;
 PLANETS.forEach((p,i)=>{p.r=ORBIT_R[i];p.speed=GALAXY_SPIN;p.a0=ORBIT_A[i];});
 /* Economy. Planet output comes only from its mining teams (and research / star dust).
    Each planet's base output is scaled to its claim price so every new planet is worth claiming. */
-const ECON={DUST_A:2,DUST_K:.2,EXP:.7,PAY:3,SCALE_MIN:100,HIRE:[1,4,30],UP_BASE:.12,UP_GROW:1.32,TEAM_X:[1,6,40],SHIP_BASE:.8,SHIP_OVH:16,DOCK_T:3,CARGO_FIT:.9};
+const ECON={DUST_A:2,DUST_K:.2,EXP:.7,PAY:3.9,SCALE_MIN:100,HIRE:[1,4,30],UP_BASE:.12,UP_GROW:1.32,TEAM_X:[1,6,40],SHIP_BASE:.8,SHIP_OVH:16,DOCK_T:3,PROBE_EVERY:300,PROBE_FLY:180,PROBE_FIRST:60,PROBE_SEC:90,CARGO_FIT:.9};
 PLANETS.forEach((p,i)=>{const avg=p.mix.reduce((a,[o,f])=>a+ORES[o].v*f,0);
   p.scale=Math.max(ECON.SCALE_MIN,p.cost);
   p.rate=i===0?.8:Math.pow(p.cost,ECON.EXP)/(ECON.PAY*avg);
@@ -258,7 +260,7 @@ const BAR_IN=8, BAR_MULT=12, OD_LEN=120, OD_CD=600, WARP_AT=5;
 
 /* ===================== STATE ===================== */
 const KEY='starquarry_save_v1';
-function newRun(keep){keep=keep||{};return{v:1,econ:2,music:keep.music||{on:true,vol:.6},cash:0,dm:keep.dm||0,runEarned:0,lifetime:keep.lifetime||0,warps:keep.warps||0,
+function newRun(keep){keep=keep||{};return{v:1,econ:2,probe:{nextAt:Date.now()+ECON.PROBE_FIRST*1000,out:null},music:keep.music||{on:true,vol:.6},cash:0,dm:keep.dm||0,runEarned:0,lifetime:keep.lifetime||0,warps:keep.warps||0,
  // Cinder's hauler starts already loaded and on its way home, so the first delivery comes quickly
  planets:PLANETS.map((p,i)=>({u:i===0,teams:i===0?[{n:0,t:{}}]:[],stock:0,t:i===0?.66:Math.random()*.4,load:i===0?8:0})),
  inv:{},bars:{},research:{},auto:{},slots:[{r:null,p:0,a:false},{r:null,p:0,a:false},{r:null,p:0,a:false}],
@@ -273,6 +275,7 @@ if(S.econ!==2){S.planets.forEach((p,i)=>{const mn=p.mn;p.teams=[];
     delete p.m;delete p.s;delete p.c;delete p.mn});S.econ=2}
 S.planets.forEach(p=>{if(!p.teams)p.teams=[]});
 if(!S.music)S.music={on:true,vol:.6};
+if(!S.probe)S.probe={nextAt:Date.now()+ECON.PROBE_FIRST*1000,out:null};
 function save(){S.last=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 
 /* ===================== ECONOMY ===================== */
@@ -331,15 +334,30 @@ function step(dt){
     sl.p+=dt/smeltTime(sl.r);if(sl.p>=1){S.bars[sl.r]=(S.bars[sl.r]||0)+1;sl.a=false;sl.p=0}}
   autoSell();
 }
+/* Space probes: one launches from the station's iris every PROBE_EVERY seconds (the first PROBE_FIRST seconds into
+   a new galaxy), loops the galaxy for PROBE_FLY seconds and returns with one random ore type you have found.
+   Its haul is worth PROBE_SEC seconds of the combined mining of every claimed planet. Timed by the real clock,
+   so probes keep flying while the game is closed (up to the offline earnings limit). */
+function totalMineValue(){let t=0;S.planets.forEach((p,i)=>{if(p.u)t+=mineRate(i)*avgValue(i)});return t}
+function probeReturn(){const pr=S.probe,o=pr.out.ore,qty=ECON.PROBE_SEC*totalMineValue()/ORES[o].v*(.85+Math.random()*.3);
+  S.inv[o]=(S.inv[o]||0)+qty;pr.out=null;pulse=1;autoSell();return[o,qty]}
+function probeTick(now,quiet){const pr=S.probe,cap=(has('night')?24:8)*3600e3,got=[];
+  if(pr.nextAt<now-cap)pr.nextAt=now-cap;
+  for(let guard=0;guard<500;guard++){
+    if(pr.out&&now>=pr.out.at+ECON.PROBE_FLY*1000){got.push(probeReturn());continue}
+    if(!pr.out&&now>=pr.nextAt){const d=discovered();pr.out={at:pr.nextAt,ore:d[Math.floor(Math.random()*d.length)],ang:Math.random()*Math.PI*2};pr.nextAt+=ECON.PROBE_EVERY*1000;continue}
+    break}
+  if(got.length&&!quiet)toast(got.length===1?`Probe returned with ${fmt(got[0][1])} ${ORES[got[0][0]].n} ore.`:`${got.length} probes returned.`,3400);
+  return got}
 function offline(sec,announce){
   const cap=(has('night')?24:8)*3600;sec=Math.min(sec,cap);
-  const before=S.cash;let units=0;
+  const before=S.cash;let units=0;const probes=probeTick(Date.now(),true).length;
   S.planets.forEach((p,i)=>{if(!p.u)return;const u=haul(i)*sec;units+=u;deliver(i,u)});
   const n=smeltSlots();
   for(let k=0;k<n;k++){const sl=S.slots[k];if(sl.r===null)continue;const b=Math.floor(Math.min(sec/smeltTime(sl.r),(S.inv[sl.r]||0)/BAR_IN));S.inv[sl.r]-=b*BAR_IN;S.bars[sl.r]=(S.bars[sl.r]||0)+b}
   autoSell();
   if(announce&&sec>30){const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60);
-    toast(`Welcome back. In ${h?h+'h ':''}${m}m your fleet hauled ${fmt(units)} ore`+(S.cash>before?` and earned ${fmt(S.cash-before)} credits.`:'. Sell it in the Market.'),6000)}
+    toast(`Welcome back. In ${h?h+'h ':''}${m}m your fleet hauled ${fmt(units)} ore`+(probes?` and ${probes} probe${probes>1?'s':''} came home`:'')+(S.cash>before?`, earning ${fmt(S.cash-before)} credits.`:'. Sell it in the Market.'),6000)}
 }
 function incomeEstimate(){let t=0;S.planets.forEach((p,i)=>{if(p.u)t+=haul(i)*avgValue(i)});return t*valueMult()}
 const pendingDM=()=>Math.floor(ECON.DUST_A*Math.pow(Math.max(0,S.runEarned)/1e6,ECON.DUST_K));
@@ -405,7 +423,7 @@ const IRIS_Y=.5,IRIS=new THREE.Vector3(0,IRIS_Y,0),DOCK_IN=new THREE.Vector3(0,.
   const dish=new THREE.Mesh(new THREE.SphereGeometry(.16,14,8,0,Math.PI*2,0,Math.PI/3),new THREE.MeshStandardMaterial({color:0xd6dceb,metalness:.6,roughness:.3,side:THREE.DoubleSide}));
   dish.rotation.z=-Math.PI/2.2;dish.position.set(.47,.15,0);station.add(dish);
 }
-// iris door: eight blades that slide back into the rim when a ship comes near (not used by haulers yet; kept for later)
+// iris door: eight blades that slide back into the rim when the space probe launches or returns
 const irisHole=new THREE.Mesh(new THREE.CircleGeometry(.27,24),new THREE.MeshBasicMaterial({color:0x07080f}));irisHole.rotation.x=-Math.PI/2;irisHole.position.y=IRIS_Y-.015;station.add(irisHole);
 const irisRim=new THREE.Mesh(new THREE.TorusGeometry(.29,.035,8,32),stTeal);irisRim.rotation.x=Math.PI/2;irisRim.position.y=IRIS_Y;station.add(irisRim);
 const irisBlades=[];for(let k=0;k<8;k++){const g=new THREE.Group();g.rotation.y=k*Math.PI/4;g.position.y=IRIS_Y;station.add(g);
@@ -447,6 +465,18 @@ for(const sx of[-1,1]){const truss=new THREE.Mesh(new THREE.BoxGeometry(1.75,.03
   const tip=new THREE.Mesh(new THREE.SphereGeometry(.04,8,6),new THREE.MeshStandardMaterial({color:sx<0?0xff5a5a:0x7cf0a0,emissive:sx<0?0xff3b3b:0x2fd36a,emissiveIntensity:1.5}));tip.position.set(sx*2.15,-.32,0);station.add(tip);stLights.push(tip)}
 {const b=new THREE.Mesh(new THREE.SphereGeometry(.045,8,6),new THREE.MeshStandardMaterial({color:0xff5a5a,emissive:0xff3b3b,emissiveIntensity:1.5}));b.position.y=-1.1;station.add(b);stLights.push(b);
  const t=new THREE.Mesh(new THREE.SphereGeometry(.03,8,6),stTeal.clone());t.position.set(-.4,1.04,.12);station.add(t);stLights.push(t)}
+// space probe: launched from the iris, loops the galaxy, glows in the colour of the ore it is after
+const probeObj=new THREE.Group();probeObj.visible=false;scene.add(probeObj);
+{ const body=new THREE.Mesh(new THREE.OctahedronGeometry(.12),trim);body.scale.set(1,1.4,1);probeObj.add(body);
+  const band=new THREE.Mesh(new THREE.TorusGeometry(.1,.016,6,20),stTeal);band.rotation.x=Math.PI/2;probeObj.add(band);
+  for(const s of[-1,1]){const fin=new THREE.Mesh(new THREE.BoxGeometry(.24,.012,.09),new THREE.MeshStandardMaterial({color:0x1d3a7a,metalness:.4,roughness:.25,emissive:0x0a1a40}));fin.position.x=s*.2;probeObj.add(fin)}
+  const ant=new THREE.Mesh(new THREE.CylinderGeometry(.006,.006,.2,5),metal);ant.rotation.x=Math.PI/2;ant.position.z=.16;probeObj.add(ant)}
+const probeGlow=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex('rgba(255,255,255,1)','rgba(255,255,255,.3)'),blending:THREE.AdditiveBlending,depthWrite:false}));probeGlow.scale.set(.9,.9,1);probeObj.add(probeGlow);
+const probeBlink=new THREE.Mesh(new THREE.SphereGeometry(.03,8,6),new THREE.MeshStandardMaterial({color:0xff5a5a,emissive:0xff3b3b,emissiveIntensity:2}));probeBlink.position.y=.18;probeObj.add(probeBlink);
+function probePos(f,ang,res){const top=2.6,base=.15;let Rmax=8;S.planets.forEach((p,i)=>{if(p.u)Rmax=Math.max(Rmax,PLANETS[i].r*.9+2)});
+  if(f<.05){const k=ss(f/.05);return res.set(0,base+(top-base)*k,0)}
+  if(f>.95){const k=ss((f-.95)/.05);return res.set(0,top-(top-base)*k,0)}
+  const u=(f-.05)/.9,Rr=Rmax*Math.sin(Math.PI*u),th=ang+Math.PI*2*u;return res.set(Math.cos(th)*Rr,top+(1.5+Rmax*.06)*Math.sin(Math.PI*u),Math.sin(th)*Rr)}
 const stGlow=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex('rgba(240,163,60,.9)','rgba(240,163,60,.2)'),blending:THREE.AdditiveBlending,depthWrite:false}));stGlow.scale.set(3.4,3.4,1);station.add(stGlow);
 
 // planets
@@ -746,7 +776,13 @@ function updateWorld(dt){
   simTime+=dt;
   station.rotation.y+=dt*STATION_SPIN;habRing.rotation.y+=dt*RING_SPIN;ring2.rotation.z+=dt*.6;
   stLights.forEach((l,k)=>l.material.emissiveIntensity=((simTime*.8+k*.33)%1)<.25?2.2:.25);
+  {const pr=S.probe;if(pr&&pr.out){const f=(Date.now()-pr.out.at)/(ECON.PROBE_FLY*1000);
+     if(f>=0&&f<1){probeObj.visible=true;probePos(f,pr.out.ang,probeObj.position);
+       if(f<.05||f>.95)tmp2.set(0,50,0).add(probeObj.position);else probePos(Math.min(.999,f+.002),pr.out.ang,tmp2);probeObj.lookAt(tmp2);
+       probeGlow.material.color.set(ORES[pr.out.ore].c);const far=Math.min(4,1+probeObj.position.length()/12);probeObj.scale.setScalar(far);
+       probeBlink.material.emissiveIntensity=(simTime*1.6)%1<.25?2.5:.2}else probeObj.visible=false}else probeObj.visible=false}
   {let target=0;W.forEach(w=>{if(!w.ship.visible)return;const d=w.ship.position.distanceTo(IRIS);if(d<1.4)target=Math.max(target,Math.min(1,1-(d-.35)/1.0))});
+   if(probeObj.visible){const d=probeObj.position.distanceTo(IRIS);if(d<1.6)target=Math.max(target,Math.min(1,1-(d-.35)/1.2))}
    irisOpen+=(target-irisOpen)*Math.min(1,dt*7);irisBlades.forEach(b=>{b.position.x=.1+.17*irisOpen;b.scale.x=1-.55*irisOpen});
    irisRim.material.emissiveIntensity=.9+irisOpen*1.2}
   pulse=Math.max(0,pulse-dt*2.5);hubMat.emissiveIntensity=.15+pulse*.9;stGlow.material.opacity=.35+pulse*.65;
@@ -1071,6 +1107,7 @@ function render(force){
 function hud(){
   $('cash').textContent=fmt(S.cash);$('rate').textContent='≈ '+fmt(incomeEstimate())+' /s';
   $('dm').textContent=S.dm?`✦ ${fmt(S.dm)} star dust`:'';
+  {const pr=S.probe,nw=Date.now();$('probeInfo').textContent=pr.out?`◈ Probe out · back in ${fmtTime(Math.max(0,pr.out.at+ECON.PROBE_FLY*1000-nw)/1000)}`:`◈ Next probe in ${fmtTime(Math.max(0,pr.nextAt-nw)/1000)}`}
   const od=$('od'),now=Date.now();
   if(odOn()){od.className='on';od.disabled=false;od.textContent='2× · '+fmtTime((S.od.until-now)/1000)}
   else if(now<S.od.ready){od.className='';od.disabled=true;od.textContent='Recharge '+fmtTime((S.od.ready-now)/1000)}
@@ -1141,6 +1178,7 @@ let lastT=performance.now(),uiT=0,saveT=0;
 function frame(now){
   let dt=(now-lastT)/1000;lastT=now;
   if(dt>3){offline(dt,dt>60)}else step(Math.min(dt,.25));
+  probeTick(Date.now());
   updateWorld(Math.min(dt,.25));renderer.render(scene,camera);placeLabels();
   uiT+=dt;if(uiT>.25){uiT=0;hud();render(false);
     W.forEach((w,i)=>{if(S.planets[i].u){const t=planetLabel(i);if(w.label.innerHTML!==t){w.label.innerHTML=t;w.lw=0}}})}
