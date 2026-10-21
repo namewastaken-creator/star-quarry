@@ -489,11 +489,13 @@ for(let k=0;k<DOCK_SLOTS;k++){const g=new THREE.Group();habRing.add(g); // local
   const plate=new THREE.Mesh(new THREE.BoxGeometry(.02,.17,.2),trim);plate.position.x=.135;g.add(plate);
   const collar=new THREE.Mesh(new THREE.TorusGeometry(.065,.018,8,20),trim);collar.rotation.y=Math.PI/2;collar.position.x=.15;g.add(collar);
   const hatch=new THREE.Mesh(new THREE.CircleGeometry(.05,16),dockMats.hatch);hatch.rotation.y=Math.PI/2;hatch.position.x=.152;g.add(hatch);
-  for(const z of[-.1,.1]){const arm=new THREE.Mesh(new THREE.BoxGeometry(.11,.025,.025),dockMats.clamp);arm.position.set(.2,0,z);g.add(arm);
-    const tip=new THREE.Mesh(new THREE.BoxGeometry(.025,.025,.04),dockMats.clamp);tip.position.set(.25,0,z*.82);g.add(tip)}
+  const pivots=[];for(const z of[-.1,.1]){const pv=new THREE.Group();pv.position.set(.145,0,z);g.add(pv);pivots.push({pv,side:Math.sign(z)});
+    const hinge=new THREE.Mesh(new THREE.CylinderGeometry(.016,.016,.04,8),trim);pv.add(hinge);
+    const arm=new THREE.Mesh(new THREE.BoxGeometry(.11,.025,.025),dockMats.clamp);arm.position.x=.055;pv.add(arm);
+    const tip=new THREE.Mesh(new THREE.BoxGeometry(.025,.025,.045),dockMats.clamp);tip.position.set(.105,0,-Math.sign(z)*.02);pv.add(tip)}
   for(const y of[-.075,.075]){const gl=new THREE.Mesh(new THREE.SphereGeometry(.014,6,4),stTeal);gl.position.set(.15,y,0);g.add(gl)}
-  const status=new THREE.Mesh(new THREE.SphereGeometry(.022,8,6),dockMats.free);status.position.set(.05,.12,0);g.add(status);
-  g.visible=false;docks.push({g,status})}
+  const status=new THREE.Mesh(new THREE.SphereGeometry(.022,8,6),new THREE.MeshStandardMaterial({color:0xf0a33c,emissive:0xf0a33c,emissiveIntensity:.2}));status.position.set(.05,.12,0);g.add(status);
+  g.visible=false;docks.push({g,status,pivots,clamp:0,state:'free'})}
 const planetSlot=i=>Math.min(i,DOCK_SLOTS-1);
 // lights on the ring's outer face: the same even number between every pair of neighbouring docks
 let ringLights=null;
@@ -825,6 +827,14 @@ function updateWorld(dt){
   simTime+=dt;
   station.rotation.y+=dt*STATION_SPIN;habRing.rotation.y+=dt*RING_SPIN;ring2.rotation.z+=dt*.6;
   stLights.forEach((l,k)=>l.material.emissiveIntensity=((simTime*.8+k*.33)%1)<.25?2.2:.25);
+  // docks: clamps swing shut while a ship is berthed and open otherwise; the status light is dim amber when free,
+  // steady amber while unloading, and flashes green once the ship has finished unloading
+  docks.forEach(d=>{if(!d.g.visible)return;const want=d.state==='free'?0:1;d.clamp=Math.max(0,Math.min(1,d.clamp+(want?1:-1)*dt*2.2));
+    const e=ss(d.clamp);d.pivots.forEach(({pv,side})=>pv.rotation.y=side*(-.75+.83*e));
+    const m=d.status.material;
+    if(d.state==='done'){m.color.setHex(0x7cf0a0);m.emissive.setHex(0x2fd36a);m.emissiveIntensity=(simTime*2.5)%1<.5?2.2:.1}
+    else{m.color.setHex(0xf0a33c);m.emissive.setHex(0xf0a33c);m.emissiveIntensity=d.state==='unloading'?1.4:.2}
+    d.state='free'}); // ships re-mark their own dock every frame
   {const pr=S.probe;if(pr&&pr.out){const f=(Date.now()-pr.out.at)/(ECON.PROBE_FLY*1000);
      if(f>=0&&f<1){probeObj.visible=true;probePos(f,pr.out.ang,probeObj.position);
        if(f<.05||f>.95)tmp2.set(0,50,0).add(probeObj.position);else probePos(Math.min(.999,f+.002),pr.out.ang,tmp2);probeObj.lookAt(tmp2);
@@ -845,7 +855,8 @@ function updateWorld(dt){
     if(w.port)w.port.visible=near;if(w.fac)w.fac.visible=near;
     if(near)animateSurface(w,i,dt);
     if(w.ship.visible){const t=S.planets[i].t;shipPos(w,P,t,w.ship.position,i);const sc=w._sc,mode=w._mode,th=w._th;
-      {const d=docks[planetSlot(i)];if(d)d.status.material=w._docked?dockMats.busy:dockMats.free} // port light: green while berthedw.ship.scale.setScalar(sc);
+      w.ship.scale.setScalar(sc);
+      {const d=docks[planetSlot(i)];if(d)d.state=w._docked?(t<P.lay[0]?'done':'unloading'):'free'} // done = cargo already delivered (trip wrapped)
       if(mode===1)tmp2.copy(PORT_DIR).applyQuaternion(w.mesh.quaternion).multiplyScalar(50).add(w.ship.position); // nose up while landing
       else if(mode===2)tmp2.set(0,50,0).add(w.ship.position); // nose up (iris door, kept for later)
       else if(mode===3)tmp2.set(0,0,0); // docked: nose in the port's collar, turning with the ring
