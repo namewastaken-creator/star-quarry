@@ -199,11 +199,15 @@ const PLANETS=[
 PLANETS.forEach((p,i)=>{p.r=5+i*2.5;p.speed=.11/Math.sqrt(p.r);p.a0=i*2.39996;});
 /* Economy. Planet output comes only from its mining teams (and research / star dust).
    Each planet's base output is scaled to its claim price so every new planet is worth claiming. */
-const ECON={DUST_A:2,DUST_K:.2,EXP:.7,PAY:3,SCALE_MIN:100,HIRE:[1,4,30],UP_BASE:.12,UP_GROW:1.32,TEAM_X:[1,6,40],SHIP_BASE:1.6,CARGO_FIT:.9};
+const ECON={DUST_A:2,DUST_K:.2,EXP:.7,PAY:3,SCALE_MIN:100,HIRE:[1,4,30],UP_BASE:.12,UP_GROW:1.32,TEAM_X:[1,6,40],SHIP_BASE:.8,SHIP_OVH:10,CARGO_FIT:.9};
 PLANETS.forEach((p,i)=>{const avg=p.mix.reduce((a,[o,f])=>a+ORES[o].v*f,0);
   p.scale=Math.max(ECON.SCALE_MIN,p.cost);
   p.rate=i===0?.8:Math.pow(p.cost,ECON.EXP)/(ECON.PAY*avg);
-  p.cargo=p.rate*(2*p.r/ECON.SHIP_BASE)*ECON.CARGO_FIT;});
+  // a round trip = cruise both ways + SHIP_OVH seconds of orbit, landing, loading and lift-off (at base ship speed);
+  // cargo is sized to the whole trip, so slower ships carry more and hauling still keeps up with mining
+  const trip=2*p.r/ECON.SHIP_BASE+ECON.SHIP_OVH;p.cargo=p.rate*trip*ECON.CARGO_FIT;
+  // trip timeline as fractions: cruise out | orbit in | descend | load | ascend | orbit out | cruise back
+  const c=(p.r/ECON.SHIP_BASE)/trip,o=ECON.SHIP_OVH/trip;let acc=c;p.lay=[c];[.25,.15,.2,.15,.25].forEach(f=>{acc+=f*o;p.lay.push(acc)})});
 const RESEARCH=[
  {id:'auto',n:'Trade Contracts',d:'Unlocks auto-sell toggles in the Market.',cost:400},
  {id:'smelt',n:'Smelter',d:'Refine 8 ore into a bar worth 12× one ore.',cost:1200},
@@ -275,7 +279,7 @@ const minerFree=mn=>mn.n-TRAITS.reduce((a,[k])=>a+(mn.t[k]||0),0);
 function mineRate(i){return PLANETS[i].rate*rmult('mine')*minerT(i,'m')*(odOn()?2:1)}
 function shipSpeed(i){return ECON.SHIP_BASE*rmult('ship')*minerT(i,'s')*(odOn()?2:1)}
 function cargo(i){return PLANETS[i].cargo*rmult('cargo')*minerT(i,'c')}
-const tripTime=i=>2*PLANETS[i].r/shipSpeed(i);
+const tripTime=i=>(2*PLANETS[i].r+ECON.SHIP_OVH*ECON.SHIP_BASE)/shipSpeed(i);
 const haul=i=>Math.min(mineRate(i),cargo(i)/tripTime(i));
 const avgValue=i=>PLANETS[i].mix.reduce((a,[o,f])=>a+ORES[o].v*f,0);
 const smeltSlots=()=>has('smelt')?1+(has('slot2')?1:0)+(has('slot3')?1:0):0;
@@ -379,6 +383,7 @@ const selTex=(()=>{const c=document.createElement('canvas');c.width=c.height=128
 const selRing=new THREE.Sprite(new THREE.SpriteMaterial({map:selTex,transparent:true,depthWrite:false}));scene.add(selRing);
 const shipGeo=new THREE.ConeGeometry(.17,.55,6);shipGeo.rotateX(Math.PI/2);
 const shipMat=new THREE.MeshStandardMaterial({color:0xcfe9ff,metalness:.5,roughness:.3,emissive:0x5fd4c4,emissiveIntensity:.5});
+const flameMat=new THREE.SpriteMaterial({map:glowTex('rgba(255,236,190,1)','rgba(255,150,60,.5)'),blending:THREE.AdditiveBlending,depthWrite:false});
 const shipGlowMat=new THREE.SpriteMaterial({map:glowTex('rgba(95,212,196,1)','rgba(95,212,196,.25)'),blending:THREE.AdditiveBlending,depthWrite:false});
 /* ===== Close-up surface detail: space port, mining facility, rover crews ===== */
 const UP=new THREE.Vector3(0,1,0),_m4=new THREE.Matrix4(),_a=new THREE.Vector3(),_b=new THREE.Vector3(),_c=new THREE.Vector3();
@@ -618,8 +623,9 @@ const W=PLANETS.map((P,i)=>{
   const pts=[];for(let k=0;k<=128;k++){const a=k/128*Math.PI*2;pts.push(new THREE.Vector3(Math.cos(a)*P.r,0,Math.sin(a)*P.r))}
   const orbit=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:0x3a4280,transparent:true,opacity:.55}));scene.add(orbit);
   const ship=new THREE.Mesh(shipGeo,shipMat);const sg=new THREE.Sprite(shipGlowMat);sg.scale.set(1.1,1.1,1);ship.add(sg);scene.add(ship);
+  const flame=new THREE.Sprite(flameMat.clone());flame.position.z=-.36;ship.add(flame);
   const label=document.createElement('div');label.className='plabel';document.getElementById('labels').appendChild(label);
-  return{mesh,mat,ringM,orbit,ship,label,pos:new THREE.Vector3(),angle:P.a0,port:null,fac:null}});
+  return{mesh,mat,ringM,orbit,ship,flame,label,pos:new THREE.Vector3(),angle:P.a0,port:null,fac:null}});
 let simTime=0;
 function planetLabel(i){const p=S.planets[i];return p.u?`<b>${PLANETS[i].n}</b><span class="st">${'★'.repeat(p.teams.length)}</span>${'☆'.repeat(TEAM_MAX-p.teams.length)}`:`<b>${PLANETS[i].n}</b>${fmt(PLANETS[i].cost)} cr`}
 function refreshWorld(){
@@ -632,17 +638,22 @@ function refreshWorld(){
     w.label.innerHTML=planetLabel(i)});
 }
 const tmp=new THREE.Vector3(),tmp2=new THREE.Vector3(),_pw=new THREE.Vector3(),_ds=new THREE.Vector3(),_ap=new THREE.Vector3(),_st=new THREE.Vector3(),_sd=new THREE.Vector3();
-// Hauler path: station -> a point in front of the planet -> curve round to land on the space port pad.
-function shipPoint(w,P,f,out,res){
-  _ds.copy(w.pos).negate().normalize();_st.copy(w.pos).normalize().multiplyScalar(2.2);
-  _ap.copy(w.pos).addScaledVector(_ds,P.size*1.9);
-  _sd.set(-_st.z,0,_st.x).normalize().multiplyScalar(out?.45:-.45);
-  if(f<.82){const q=f/.82;res.lerpVectors(_st,_ap,q).addScaledVector(_sd,1-q);res.y+=Math.sin(q*Math.PI)*(.6+P.r*.04);w._sc=1;return res}
-  const g=(f-.82)/.18,e=g*g*(3-2*g);
-  _pw.copy(PORT_DIR).applyQuaternion(w.mesh.quaternion);
-  const d=_c.copy(_ds).multiplyScalar(1-e).addScaledVector(_pw,e).addScaledVector(UP,.7*Math.sin(e*Math.PI));d.normalize();
-  const rad=P.size*1.9*(1-e)+(P.size+(w.padH||0)+P.size*.05)*e;
-  res.copy(w.pos).addScaledVector(d,rad);w._sc=1-.78*e;return res}
+// Hauler flight: cruise from the station, swing into orbit, slow controlled descent onto the pad,
+// pause while ore is loaded, lift off, orbit round and cruise home. Follows the trip timeline in P.lay.
+const _q=new THREE.Quaternion(),_qi=new THREE.Quaternion(),_ai=new THREE.Vector3(),_ao=new THREE.Vector3(),_bp=new THREE.Vector3(),_side=new THREE.Vector3(),_od=new THREE.Vector3();
+const ss=x=>x*x*(3-2*x);
+function orbitDir(a,b,e,out){_q.setFromUnitVectors(a,b);_qi.identity().slerp(_q,e);return out.copy(a).applyQuaternion(_qi)}
+function shipPos(w,P,t,res){const L=P.lay,R0=P.size*2,land=P.size+(w.padH||0)+P.size*.045,bump=.6+P.r*.04;
+  _ds.copy(w.pos).negate().normalize();_st.copy(w.pos).normalize().multiplyScalar(2.2);_side.set(-_ds.z,0,_ds.x).normalize();
+  _ai.copy(_ds).addScaledVector(_side,.55).normalize();_ao.copy(_ds).addScaledVector(_side,-.55).normalize();
+  _bp.copy(PORT_DIR).applyQuaternion(w.mesh.quaternion);
+  if(t<L[0]){const q=t/L[0];_od.copy(w.pos).addScaledVector(_ai,R0);res.lerpVectors(_st,_od,q);res.y+=Math.sin(q*Math.PI)*bump;w._sc=1;w._mode=0;w._th=.7;return res}
+  if(t<L[1]){const e=ss((t-L[0])/(L[1]-L[0]));res.copy(w.pos).addScaledVector(orbitDir(_ai,_bp,e,_od),R0);w._sc=1-.55*e;w._mode=0;w._th=.45;return res}
+  if(t<L[2]){const q=(t-L[1])/(L[2]-L[1]);res.copy(w.pos).addScaledVector(_bp,R0+(land-R0)*(1-(1-q)*(1-q)));w._sc=.45-.23*q;w._mode=1;w._th=1.1-.8*q;return res}
+  if(t<L[3]){res.copy(w.pos).addScaledVector(_bp,land);w._sc=.22;w._mode=1;w._th=0;return res}
+  if(t<L[4]){const q=(t-L[3])/(L[4]-L[3]);res.copy(w.pos).addScaledVector(_bp,land+(R0-land)*q*q);w._sc=.22+.23*q;w._mode=1;w._th=1.3-.5*q;return res}
+  if(t<L[5]){const e=ss((t-L[4])/(L[5]-L[4]));res.copy(w.pos).addScaledVector(orbitDir(_bp,_ao,e,_od),R0);w._sc=.45+.55*e;w._mode=0;w._th=.5;return res}
+  const q=(t-L[5])/(1-L[5]);_od.copy(w.pos).addScaledVector(_ao,R0);res.lerpVectors(_od,_st,q);res.y+=Math.sin(q*Math.PI)*bump;w._sc=1;w._mode=0;w._th=.7;return res}
 function updateWorld(dt){
   simTime+=dt;
   station.rotation.y+=dt*.25;ring2.rotation.z+=dt*.6;
@@ -652,9 +663,11 @@ function updateWorld(dt){
     const camD=camera.position.distanceTo(w.pos),near=camD<P.size*18&&S.planets[i].u;
     if(w.port)w.port.visible=near;if(w.fac)w.fac.visible=near;
     if(near)animateSurface(w,i,dt);
-    if(w.ship.visible){const t=S.planets[i].t,f=t<.5?t*2:2-t*2,out=t<.5;
-      shipPoint(w,P,f,out,w.ship.position);const sc=w._sc;w.ship.scale.setScalar(sc);
-      shipPoint(w,P,Math.min(1,Math.max(0,f+(out?.015:-.015))),out,tmp2);if(out||f<.999)w.ship.lookAt(tmp2)}
+    if(w.ship.visible){const t=S.planets[i].t;shipPos(w,P,t,w.ship.position);const sc=w._sc,mode=w._mode,th=w._th;w.ship.scale.setScalar(sc);
+      if(mode===1)tmp2.copy(PORT_DIR).applyQuaternion(w.mesh.quaternion).multiplyScalar(50).add(w.ship.position); // nose up while landing
+      else shipPos(w,P,Math.min(.9999,t+.003),tmp2);
+      w.ship.lookAt(tmp2);
+      w.flame.material.opacity=th>0?1:0;w.flame.scale.setScalar(.2+.75*th*(.85+.15*Math.sin(simTime*45+i)))}
   });
   if(cam.focus>=0&&W[cam.focus]){const fi=cam.focus,d=colonyDir(fi);
     // look at the colony on the surface, from an angle so buildings read in 3D
