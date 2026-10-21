@@ -855,7 +855,8 @@ function refreshWorld(){
   const firstLocked=S.planets.findIndex(p=>!p.u);
   W.forEach((w,i)=>{const u=S.planets[i].u,vis=u||i===firstLocked;
     w.mesh.visible=w.orbit.visible=vis;w.ship.visible=u;w.label.hidden=!vis;
-    w.mat.opacity=u?1:.35;w.mat.userData.rimK.value=u?.5:.15;w.mat.color.set(u?0xffffff:0x6670a0);if(w.mat.transparent===u){w.mat.transparent=!u;w.mat.needsUpdate=true}w.orbit.material.opacity=u?.55:.22;
+    // unclaimed planets are faint and see-through, except in a close-up
+    const lit=u||cam.focus===i;w.mat.opacity=lit?1:.35;w.mat.userData.rimK.value=lit?.5:.15;w.mat.color.set(lit?0xffffff:0x6670a0);if(w.mat.transparent===lit){w.mat.transparent=!lit;w.mat.needsUpdate=true}w.orbit.material.opacity=u?.55:.22;
     if(u&&!w.port)buildPort(w,i);syncBase(w,i);
     w.label.className='plabel'+(u?'':' locked')+(S.sel===i?' sel':'');
     w.label.innerHTML=planetLabel(i);w.lw=0});
@@ -893,8 +894,11 @@ function shipPos(w,P,t,res,i){const L=P.lay,R0=P.size*2,land=P.size+(w.padH||0)+
     if(r>.7){arc(beta,alpha,ss((r-.7)/.3));w._sc=.45;return res}
     const r2=r/.7;_od.copy(w.pos).addScaledVector(_ao,R0);res.lerpVectors(_od,_near,r2);res.y+=Math.sin(r2*Math.PI)*bump;w._sc=.45+.55*Math.min(1,(1-r2)/.3);return res}
   return dockSeg((t-L[7])/(1-L[7]),false)}
+let seenFocus=-1;
 function updateWorld(dt){
   simTime+=dt;surfaceTick();
+  // close-up starts or ends: redraw the unclaimed planet at full or faint strength
+  if(cam.focus!==seenFocus){seenFocus=cam.focus;refreshWorld()}
   station.rotation.y+=dt*STATION_SPIN;habRing.rotation.y+=dt*RING_SPIN;
   stLights.forEach((l,k)=>l.material.emissiveIntensity=((simTime*.8+k*.33)%1)<.25?2.2:.25);
   // docks: clamps swing shut while a ship is berthed and open otherwise; the dock-face lights are steady green
@@ -1026,7 +1030,7 @@ function pick(x,y){const v=new THREE.Vector2(x/window.innerWidth*2-1,-(y/window.
   const hits=ray.intersectObjects(W.filter(w=>w.mesh.visible).map(w=>w.mesh),false);
   let i=hits.length?hits[0].object.userData.i:-1;
   if(i<0){let best=1e9;W.forEach((w,k)=>{if(!w.mesh.visible)return;tmp.copy(w.pos).project(camera);const sx=(tmp.x+1)/2*window.innerWidth,sy=(1-tmp.y)/2*window.innerHeight,d=Math.hypot(sx-x,sy-y);if(d<40&&d<best){best=d;i=k}})}
-  if(i>=0){const now=performance.now();if(lastPick.i===i&&now-lastPick.t<450&&S.planets[i].u){focusPlanet(i);lastPick.i=-1}else{lastPick={i,t:now};S.sel=i;refreshWorld()}setTab('planet');if(sheet.classList.contains('collapsed'))toggleSheet()}}
+  if(i>=0){const now=performance.now();if(lastPick.i===i&&now-lastPick.t<450){focusPlanet(i);lastPick.i=-1}else{lastPick={i,t:now};S.sel=i;refreshWorld()}setTab('planet');if(sheet.classList.contains('collapsed'))toggleSheet()}}
 
 /* ===================== MUSIC =====================
    Original calm techno, synthesized live with the Web Audio API.
@@ -1140,7 +1144,7 @@ function viewPlanet(){
   let chips='<div class="chipnav" id="pnav"><button class="cnav" data-act="cscroll" data-d="-1" type="button" aria-label="Scroll planets left">‹</button><div class="chips" id="pchips">';
   S.planets.forEach((x,k)=>{if(x.u||k===firstLocked)chips+=`<button class="chip${k===i?' on':''}${x.u?'':' lock'}" data-act="sel" data-p="${k}" type="button">${PLANETS[k].n}</button>`});
   chips+='</div><button class="cnav" data-act="cscroll" data-d="1" type="button" aria-label="Scroll planets right">›</button></div>';
-  let h=chips+`<div class="head"><h2>${P.n}</h2><span class="num" style="color:var(--muted);font-size:12px">Orbit ${i+1} · ${P.r.toFixed(1)} AU</span>${p.u?`<button class="tog${cam.focus!==i||cam.track?' on':''}" data-act="${cam.focus===i&&cam.track?'unfocus':'focus'}" data-p="${i}" type="button">${cam.focus===i?(cam.track?'Back to galaxy':'Center colony'):'Close-up'}</button>`:''}</div>
+  let h=chips+`<div class="head"><h2>${P.n}</h2><span class="num" style="color:var(--muted);font-size:12px">Orbit ${i+1} · ${P.r.toFixed(1)} AU</span><button class="tog${cam.focus!==i||cam.track?' on':''}" data-act="${cam.focus===i&&cam.track?'unfocus':'focus'}" data-p="${i}" type="button">${cam.focus===i?(cam.track?'Back to galaxy':(p.u?'Center colony':'Re-center')):'Close-up'}</button></div>
   <div class="ores">${P.mix.map(([o,f])=>oreChip(o,f)).join('')}</div>`;
   if(!p.u){const c=teamHireCost(i,0);h+=`<p>A survey drone has mapped ${P.n}. Hire a mining team to claim it and start mining ${P.mix.map(([o])=>ORES[o].n.toLowerCase()).join(' and ')}.</p>
     <button class="btn wide" data-act="hire" data-p="${i}" ${S.cash>=c?'':'disabled'} type="button">Hire the ${teamName(i,0)} and claim ${P.n}<small>${fmt(c)} credits</small></button>`;return h}
