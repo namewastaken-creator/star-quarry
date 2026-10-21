@@ -192,13 +192,14 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
 <script>
 "use strict";
 /* ===================== DATA ===================== */
+// Ores are named for the world where each is first mined (Emberite on volcanic Cinder, Frostspar on icy Mirrow, ...)
 const ORES=[
- {n:'Copper',v:1,c:'#d9824a'},{n:'Iron',v:3,c:'#a9adb8'},{n:'Lead',v:8,c:'#6f7894'},{n:'Silica',v:20,c:'#e4e0cf'},
- {n:'Aluminum',v:50,c:'#c7d3e0'},{n:'Silver',v:130,c:'#dfe6ef'},{n:'Gold',v:340,c:'#f2c94c'},{n:'Titanium',v:900,c:'#8fb3c9'},
- {n:'Platinum',v:2400,c:'#e9edf5'},{n:'Iridium',v:6500,c:'#b79cff'},
- {n:'Osmium',v:1.8e4,c:'#6f8fb8'},{n:'Rhodium',v:5e4,c:'#d7c2c8'},{n:'Palladium',v:1.35e5,c:'#cfd6c4'},{n:'Xenite',v:3.7e5,c:'#57e0b0'},
- {n:'Voidstone',v:1e6,c:'#6b4fd1'},{n:'Neutronium',v:2.8e6,c:'#9fb4ff'},{n:'Aetherium',v:7.5e6,c:'#7ff0ff'},{n:'Chronite',v:2e7,c:'#ffb3e6'},
- {n:'Singularite',v:5.5e7,c:'#ffffff'}];
+ {n:'Emberite',v:1,c:'#d9824a'},{n:'Rustcore',v:3,c:'#a8917f'},{n:'Brinestone',v:8,c:'#6f7894'},{n:'Duneglass',v:20,c:'#e4e0cf'},
+ {n:'Frostspar',v:50,c:'#c7d3e0'},{n:'Duskquartz',v:130,c:'#c99ad8'},{n:'Sunpearl',v:340,c:'#f2c94c'},{n:'Verdanite',v:900,c:'#6fd19a'},
+ {n:'Nightsilver',v:2400,c:'#e9edf5'},{n:'Flarecore',v:6500,c:'#ff8a4c'},
+ {n:'Gloomsteel',v:1.8e4,c:'#6f8fb8'},{n:'Ivoryx',v:5e4,c:'#d7c2c8'},{n:'Mossgold',v:1.35e5,c:'#b8c46a'},{n:'Tidejade',v:3.7e5,c:'#57e0b0'},
+ {n:'Violux',v:1e6,c:'#6b4fd1'},{n:'Abyssium',v:2.8e6,c:'#9fb4ff'},{n:'Skyshard',v:7.5e6,c:'#7ff0ff'},{n:'Magentine',v:2e7,c:'#ffb3e6'},
+ {n:'Haloite',v:5.5e7,c:'#ffffff'}];
 const PLANETS=[
  {n:'Cinder', cost:0,     size:.75,c1:'#b5552c',c2:'#e08a4a',mix:[[0,1]]},
  {n:'Vesk',   cost:150,   size:.85,c1:'#6b6f7a',c2:'#a07d5e',mix:[[0,.5],[1,.5]]},
