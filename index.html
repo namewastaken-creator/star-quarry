@@ -22,6 +22,8 @@ body{background:radial-gradient(120% 80% at 70% 10%,#151a3a 0%,#090b1a 45%,var(-
 .plabel b{display:block;color:var(--ink);font-size:12px}
 .plabel.sel b{color:var(--ore)}
 .plabel .st{color:var(--ore)}
+.plabel .sp{display:block;color:var(--ship);font-size:10px;letter-spacing:.25em;margin-bottom:1px}
+.plabel b.bnk,.plabel.sel b.bnk{color:var(--bad)}
 .plabel.locked{opacity:.6}
 .plabel{transition:opacity .25s}
 .plabel.crowd{opacity:0}
@@ -974,7 +976,8 @@ const W=PLANETS.map((P,i)=>{
   const label=document.createElement('div');label.className='plabel';document.getElementById('labels').appendChild(label);
   return{mesh,mat,ringM,orbit,ship,flame,label,pos:new THREE.Vector3(),angle:P.a0,port:null,fac:null}});
 let simTime=0;
-function planetLabel(i){const p=S.planets[i];return p.u?`<b>${PLANETS[i].n}</b><span class="st">${'★'.repeat(p.teams.length)}</span>${'☆'.repeat(TEAM_MAX-p.teams.length)}${p.set?`<span class="st" style="color:var(--ship)"> ${'◆'.repeat(p.set)}</span>`:''}`:`<b>${PLANETS[i].n}</b>${fmt(PLANETS[i].cost)} cr`}
+// settlement marks above the name, mining team stars below it; the name turns red when ships can't keep up with mining
+function planetLabel(i){const p=S.planets[i];return p.u?`${p.set?`<span class="sp">${'◆'.repeat(p.set)}</span>`:''}<b${haul(i)<mineRate(i)*.97?' class="bnk"':''}>${PLANETS[i].n}</b><span class="st">${'★'.repeat(p.teams.length)}</span>${'☆'.repeat(TEAM_MAX-p.teams.length)}`:`<b>${PLANETS[i].n}</b>${fmt(PLANETS[i].cost)} cr`}
 function refreshWorld(){
   syncDocks();
   const firstLocked=S.planets.findIndex(p=>!p.u);
