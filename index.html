@@ -543,6 +543,62 @@ function probePos(f,ang,res){const top=2.6,base=.15;let Rmax=8;S.planets.forEach
 const stGlow=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex('rgba(240,163,60,.9)','rgba(240,163,60,.2)'),blending:THREE.AdditiveBlending,depthWrite:false}));stGlow.material.opacity=.35;stGlow.scale.set(3.4,3.4,1);station.add(stGlow);
 
 // planets
+
+/* Planet surfaces. Seamless: 3D noise is sampled over the sphere itself, so there are no seams or pinched poles.
+   Rocky worlds get warped terrain with lowlands, highlands, craters (and ice caps on icy worlds) plus a bump map;
+   gas giants get turbulent bands and a storm. Each texture is built a few rows per frame, visible planets first,
+   and swapped in for the quick placeholder when done, so loading isn't held up. */
+function makeNoise(seed){const R=rng(seed||1),P=new Uint8Array(512),V=new Float32Array(256);
+  for(let i=0;i<256;i++){P[i]=i;V[i]=R()}for(let i=255;i>0;i--){const j=Math.floor(R()*(i+1)),t=P[i];P[i]=P[j];P[j]=t}for(let i=0;i<256;i++)P[i+256]=P[i];
+  const n=(x,y,z)=>{const X=Math.floor(x),Y=Math.floor(y),Z=Math.floor(z),xi=X&255,yi=Y&255,zi=Z&255;
+    let u=x-X,v=y-Y,w=z-Z;u=u*u*(3-2*u);v=v*v*(3-2*v);w=w*w*(3-2*w);
+    const a=P[xi]+yi,aa=P[a]+zi,ab=P[a+1]+zi,b=P[xi+1]+yi,ba=P[b]+zi,bb=P[b+1]+zi;
+    const x1=V[P[aa]]+(V[P[ba]]-V[P[aa]])*u,x2=V[P[ab]]+(V[P[bb]]-V[P[ab]])*u,x3=V[P[aa+1]]+(V[P[ba+1]]-V[P[aa+1]])*u,x4=V[P[ab+1]]+(V[P[bb+1]]-V[P[ab+1]])*u;
+    const y1=x1+(x2-x1)*v,y2=x3+(x4-x3)*v;return y1+(y2-y1)*w};
+  return(x,y,z,o)=>{let s=0,a=.5,k=1,m=0;for(let i=0;i<o;i++){s+=a*n(x*k+i*17.3,y*k,z*k);m+=a;k*=2.03;a*=.5}return s/m}}
+const hexRGB=h=>{const v=parseInt(h.slice(1),16);return[(v>>16)&255,(v>>8)&255,v&255]};
+const mixRGB=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];
+const sstep=(a,b,x)=>{const t=Math.min(1,Math.max(0,(x-a)/(b-a)));return t*t*(3-2*t)};
+function surfaceJob(P,i,mat){const TW=512,TH=256,f=makeNoise(i*7919+3),R=rng(i*131+7);
+  const c=document.createElement('canvas');c.width=TW;c.height=TH;const g=c.getContext('2d'),img=g.createImageData(TW,TH),d=img.data;
+  let bc=null,bimg=null;if(!P.gas){bc=document.createElement('canvas');bc.width=TW;bc.height=TH;bimg=bc.getContext('2d').createImageData(TW,TH)}
+  const c1=hexRGB(P.c1),c2=hexRGB(P.c2),dark=mixRGB(c1,[8,8,16],.55),peak=mixRGB(c2,[255,255,255],.3);
+  const lum=x=>.3*x[0]+.59*x[1]+.11*x[2],icy=lum(c2)>200;
+  const randDir=()=>{const z=R()*2-1,a=R()*Math.PI*2,r=Math.sqrt(1-z*z);return[r*Math.cos(a),z,r*Math.sin(a)]};
+  const craters=[];if(!P.gas){const n=6+Math.floor(R()*16);for(let k=0;k<n;k++){const r=.04+Math.pow(R(),2)*.2;craters.push({d:randDir(),r,cr:Math.cos(r*1.4),dep:.08+R()*.1})}}
+  const freq=5+R()*7,turb=1.6+R()*1.6,sd=randDir();sd[1]*=.6;const sl=Math.asin(Math.max(-1,Math.min(1,sd[1]/Math.hypot(...sd)))),slo=Math.atan2(sd[2],sd[0]),sr=.17+R()*.1;
+  const sc=mixRGB(mixRGB(c1,c2,.3),[190,80,55],.45),band3=mixRGB(c1,c2,.5);
+  let y=0;
+  return function step(budgetEnd){
+    for(;y<TH;y++){if(performance.now()>budgetEnd)return false;
+      const lat=(.5-(y+.5)/TH)*Math.PI,cl=Math.cos(lat),py=Math.sin(lat);
+      for(let x=0;x<TW;x++){const lo=-(x+.5)/TW*Math.PI*2,px=cl*Math.cos(lo),pz=cl*Math.sin(lo);let col,h=0;
+        if(P.gas){const w=f(px*1.3+3,py*1.3,pz*1.3,4)-.5,t=py*freq+w*turb+(f(px*5,py*5,pz*5,3)-.5)*.5;
+          const b=.5+.5*Math.sin(t*2.2),b2=.5+.5*Math.sin(t*5.1+1.7);col=mixRGB(c1,c2,b);col=mixRGB(col,b2>.5?band3:dark,Math.abs(b2-.5)*.5);
+          const streak=f(px*3,py*38,pz*3,2);col=mixRGB(col,streak>.5?peak:dark,Math.abs(streak-.5)*.35);
+          let dl=lo-slo;dl=Math.atan2(Math.sin(dl),Math.cos(dl));const sdist=Math.hypot(dl*cl/sr,(lat-sl)/(sr*.55));
+          if(sdist<1.3){const sw=f(px*9,py*9,pz*9,2)-.5,k=sstep(1.3,.35,sdist+sw*.25);col=mixRGB(col,sdist>.8?mixRGB(sc,peak,.55):mixRGB(sc,dark,(1-sdist)*.35),k*.9)}}
+        else{const w=f(px*1.4+11,py*1.4,pz*1.4,3)-.5;h=f(px*1.6+w*.9,py*1.6+w*.9,pz*1.6,6);
+          for(const k of craters){const dt=px*k.d[0]+py*k.d[1]+pz*k.d[2];if(dt>k.cr){const a=Math.acos(Math.min(1,dt))/k.r;
+            if(a<1)h-=k.dep*(1-a*a);h+=k.dep*.55*Math.exp(-Math.pow((a-1)/.18,2))}}
+          const s=sstep(.28,.72,h);col=s<.45?mixRGB(dark,c1,s/.45):mixRGB(c1,c2,(s-.45)/.55);if(s>.9)col=mixRGB(col,peak,(s-.9)*6);
+          const det=f(px*14,py*14,pz*14,2);col=mixRGB(col,det>.5?peak:dark,Math.abs(det-.5)*.4);
+          if(icy){const cap=sstep(.86,.91,Math.abs(py)+(f(px*4,py*4,pz*4,3)-.5)*.18);col=mixRGB(col,[236,242,250],cap)}
+          const bi=(y*TW+x)*4,bv=Math.max(0,Math.min(255,s*255));bimg.data[bi]=bimg.data[bi+1]=bimg.data[bi+2]=bv;bimg.data[bi+3]=255}
+        const o=(y*TW+x)*4;d[o]=col[0];d[o+1]=col[1];d[o+2]=col[2];d[o+3]=255}}
+    g.putImageData(img,0,0);const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;t.anisotropy=4;
+    const old=mat.map;mat.map=t;if(bc){bc.getContext('2d').putImageData(bimg,0,0);mat.bumpMap=new THREE.CanvasTexture(bc);mat.bumpScale=.035}
+    mat.needsUpdate=true;if(old)old.dispose();return true}}
+const surfJobs=[];let surfAt=0;
+function surfaceTick(){if(!surfJobs.length)return;const end=performance.now()+6;
+  // visible planets first
+  surfJobs.sort((a,b)=>(W[b.i].mesh.visible?1:0)-(W[a.i].mesh.visible?1:0));
+  while(surfJobs.length&&performance.now()<end){if(surfJobs[0].step(end))surfJobs.shift();else break}}
+// soft atmosphere glow at the planet's edge
+function addRim(mat,P){const rc=new THREE.Color(P.c2).lerp(new THREE.Color(0xbfd8ff),.35);mat.userData.rimK={value:.5};mat.userData.rimC={value:rc};
+  mat.onBeforeCompile=sh=>{sh.uniforms.rimK=mat.userData.rimK;sh.uniforms.rimC=mat.userData.rimC;
+    sh.fragmentShader='uniform float rimK;uniform vec3 rimC;\n'+sh.fragmentShader.replace('gl_FragColor = vec4( outgoingLight, diffuseColor.a );',
+      'float rimF=pow(1.0-clamp(dot(normalize(vNormal),normalize(vViewPosition)),0.0,1.0),3.0);\n\tgl_FragColor = vec4( outgoingLight+rimC*rimF*rimK, diffuseColor.a );')}}
 const selTex=(()=>{const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d');g.strokeStyle='#f0a33c';g.lineWidth=5;g.setLineDash([14,9]);g.beginPath();g.arc(64,64,56,0,7);g.stroke();return new THREE.CanvasTexture(c)})();
 const selRing=new THREE.Sprite(new THREE.SpriteMaterial({map:selTex,transparent:true,depthWrite:false}));scene.add(selRing);
 const shipGeo=new THREE.ConeGeometry(.17,.55,6);shipGeo.rotateX(Math.PI/2);
@@ -782,6 +838,7 @@ function animateSurface(w,i,dt){
 
 const W=PLANETS.map((P,i)=>{
   const mat=new THREE.MeshStandardMaterial({map:planetTex(P,i*977+13),roughness:P.gas?.75:.95,metalness:0,transparent:true});
+  addRim(mat,P);surfJobs.push({i,step:surfaceJob(P,i,mat)});
   const mesh=new THREE.Mesh(new THREE.SphereGeometry(P.size,40,24),mat);mesh.userData.i=i;mesh.rotation.z=.3;scene.add(mesh);
   let ringM=null;if(P.ring){ringM=new THREE.Mesh(new THREE.RingGeometry(P.size*1.4,P.size*2.1,64),new THREE.MeshStandardMaterial({color:P.ring,side:THREE.DoubleSide,transparent:true,opacity:.55,roughness:1}));ringM.rotation.x=-Math.PI/2.3;mesh.add(ringM)}
   const pts=[];for(let k=0;k<=128;k++){const a=k/128*Math.PI*2;pts.push(new THREE.Vector3(Math.cos(a)*P.r,0,Math.sin(a)*P.r))}
@@ -797,7 +854,7 @@ function refreshWorld(){
   const firstLocked=S.planets.findIndex(p=>!p.u);
   W.forEach((w,i)=>{const u=S.planets[i].u,vis=u||i===firstLocked;
     w.mesh.visible=w.orbit.visible=vis;w.ship.visible=u;w.label.hidden=!vis;
-    w.mat.opacity=u?1:.35;w.mat.color.set(u?0xffffff:0x6670a0);if(w.mat.transparent===u){w.mat.transparent=!u;w.mat.needsUpdate=true}w.orbit.material.opacity=u?.55:.22;
+    w.mat.opacity=u?1:.35;w.mat.userData.rimK.value=u?.5:.15;w.mat.color.set(u?0xffffff:0x6670a0);if(w.mat.transparent===u){w.mat.transparent=!u;w.mat.needsUpdate=true}w.orbit.material.opacity=u?.55:.22;
     if(u&&!w.port)buildPort(w,i);syncBase(w,i);
     w.label.className='plabel'+(u?'':' locked')+(S.sel===i?' sel':'');
     w.label.innerHTML=planetLabel(i);w.lw=0});
@@ -836,7 +893,7 @@ function shipPos(w,P,t,res,i){const L=P.lay,R0=P.size*2,land=P.size+(w.padH||0)+
     const r2=r/.7;_od.copy(w.pos).addScaledVector(_ao,R0);res.lerpVectors(_od,_near,r2);res.y+=Math.sin(r2*Math.PI)*bump;w._sc=.45+.55*Math.min(1,(1-r2)/.3);return res}
   return dockSeg((t-L[7])/(1-L[7]),false)}
 function updateWorld(dt){
-  simTime+=dt;
+  simTime+=dt;surfaceTick();
   station.rotation.y+=dt*STATION_SPIN;habRing.rotation.y+=dt*RING_SPIN;
   stLights.forEach((l,k)=>l.material.emissiveIntensity=((simTime*.8+k*.33)%1)<.25?2.2:.25);
   // docks: clamps swing shut while a ship is berthed and open otherwise; the dock-face lights are steady green
