@@ -367,16 +367,46 @@ const dl=new THREE.DirectionalLight(0xfff0d8,1.7);dl.position.copy(SUN);scene.ad
 scene.add(new THREE.AmbientLight(0x3b4380,.6));
 scene.add(new THREE.HemisphereLight(0x6070c0,0x101020,.25));
 
-// station
+// station: compact core with an iris door on top, a turning habitat ring, framed solar wings and lights
 const station=new THREE.Group();scene.add(station);
 const metal=new THREE.MeshStandardMaterial({color:0x8a90a8,metalness:.8,roughness:.35});
+const trim=new THREE.MeshStandardMaterial({color:0xc9cfdf,metalness:.7,roughness:.3});
 const hubMat=new THREE.MeshStandardMaterial({color:0x2a2f4a,metalness:.6,roughness:.4,emissive:0xf0a33c,emissiveIntensity:.15});
-station.add(new THREE.Mesh(new THREE.SphereGeometry(.85,32,16),hubMat));
-const ring1=new THREE.Mesh(new THREE.TorusGeometry(1.8,.13,12,64),metal);ring1.rotation.x=Math.PI/2;station.add(ring1);
-const ring2=new THREE.Mesh(new THREE.TorusGeometry(1.35,.06,8,48),new THREE.MeshStandardMaterial({color:0x5fd4c4,emissive:0x5fd4c4,emissiveIntensity:.8}));ring2.rotation.x=Math.PI/2.6;station.add(ring2);
-for(let k=0;k<4;k++){const sp=new THREE.Mesh(new THREE.BoxGeometry(3.6,.07,.07),metal);sp.rotation.y=k*Math.PI/4;station.add(sp)}
-for(const s of[-1,1]){const pnl=new THREE.Mesh(new THREE.BoxGeometry(.05,1.1,2.2),new THREE.MeshStandardMaterial({color:0x1d3a7a,metalness:.4,roughness:.3,emissive:0x0a1a40}));pnl.position.set(s*2.4,0,0);station.add(pnl)}
-const stGlow=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex('rgba(240,163,60,.9)','rgba(240,163,60,.2)'),blending:THREE.AdditiveBlending,depthWrite:false}));stGlow.scale.set(5,5,1);station.add(stGlow);
+const stWin=new THREE.MeshStandardMaterial({color:0xffd59a,emissive:0xffb85c,emissiveIntensity:1.1});
+const stTeal=new THREE.MeshStandardMaterial({color:0x5fd4c4,emissive:0x5fd4c4,emissiveIntensity:.9});
+const IRIS_Y=.5,IRIS=new THREE.Vector3(0,IRIS_Y,0),DOCK_IN=new THREE.Vector3(0,.15,0),DOCK_UP=new THREE.Vector3(0,1.3,0);
+{ // core
+  const core=new THREE.Mesh(new THREE.CylinderGeometry(.38,.38,.72,20),hubMat);station.add(core);
+  for(const y of[-.18,.08]){const band=new THREE.Mesh(new THREE.CylinderGeometry(.385,.385,.05,20,1,true),stWin);band.position.y=y;station.add(band)}
+  const deck=new THREE.Mesh(new THREE.CylinderGeometry(.5,.42,.12,24),trim);deck.position.y=.42;station.add(deck);
+  const low=new THREE.Mesh(new THREE.CylinderGeometry(.42,.28,.16,20),trim);low.position.y=-.44;station.add(low);
+  const spire=new THREE.Mesh(new THREE.ConeGeometry(.11,.55,10),metal);spire.rotation.x=Math.PI;spire.position.y=-.8;station.add(spire);
+  const mast=new THREE.Mesh(new THREE.CylinderGeometry(.012,.012,.55,6),metal);mast.position.set(-.4,.75,.12);station.add(mast);
+  const dish=new THREE.Mesh(new THREE.SphereGeometry(.16,14,8,0,Math.PI*2,0,Math.PI/3),new THREE.MeshStandardMaterial({color:0xd6dceb,metalness:.6,roughness:.3,side:THREE.DoubleSide}));
+  dish.rotation.z=-Math.PI/2.2;dish.position.set(.47,.15,0);station.add(dish);
+}
+// iris door: eight blades that slide back into the rim when a hauler comes or goes
+const irisHole=new THREE.Mesh(new THREE.CircleGeometry(.27,24),new THREE.MeshBasicMaterial({color:0x07080f}));irisHole.rotation.x=-Math.PI/2;irisHole.position.y=IRIS_Y-.015;station.add(irisHole);
+const irisRim=new THREE.Mesh(new THREE.TorusGeometry(.29,.035,8,32),stTeal);irisRim.rotation.x=Math.PI/2;irisRim.position.y=IRIS_Y;station.add(irisRim);
+const irisBlades=[];for(let k=0;k<8;k++){const g=new THREE.Group();g.rotation.y=k*Math.PI/4;g.position.y=IRIS_Y;station.add(g);
+  const b=new THREE.Mesh(new THREE.BoxGeometry(.2,.018,.13),trim);b.rotation.y=.35;g.add(b);irisBlades.push(b)}
+let irisOpen=0;
+// habitat ring with lit windows, modules and spokes
+const habRing=new THREE.Group();station.add(habRing);
+{ const ring=new THREE.Mesh(new THREE.TorusGeometry(1.25,.1,12,64),metal);ring.rotation.x=Math.PI/2;habRing.add(ring);
+  for(let k=0;k<20;k++){const a=k/20*Math.PI*2,win=new THREE.Mesh(new THREE.BoxGeometry(.03,.05,.12),stWin);win.position.set(Math.cos(a)*1.355,0,Math.sin(a)*1.355);win.rotation.y=-a;habRing.add(win)}
+  for(let k=0;k<4;k++){const a=k/4*Math.PI*2+Math.PI/4,sp=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,.8,8),trim);sp.rotation.z=Math.PI/2;sp.rotation.y=-a;sp.position.set(Math.cos(a)*.78,0,Math.sin(a)*.78);habRing.add(sp);
+    const mod=new THREE.Mesh(new THREE.BoxGeometry(.24,.2,.2),hubMat);mod.position.set(Math.cos(a+Math.PI/4)*1.25,0,Math.sin(a+Math.PI/4)*1.25);mod.rotation.y=-(a+Math.PI/4);habRing.add(mod)}}
+const ring2=new THREE.Mesh(new THREE.TorusGeometry(.95,.022,8,48),stTeal);ring2.rotation.x=Math.PI/2.6;station.add(ring2);
+// solar wings below the ring plane
+const stLights=[];
+for(const sx of[-1,1]){const truss=new THREE.Mesh(new THREE.BoxGeometry(1.75,.035,.035),trim);truss.position.set(sx*1.25,-.32,0);station.add(truss);
+  for(let c=0;c<3;c++)for(const z of[-.17,.17]){const frame=new THREE.Mesh(new THREE.BoxGeometry(.3,.012,.3),metal);frame.position.set(sx*(1.42+c*.32),-.32,z*1.05);station.add(frame);
+    const pnl=new THREE.Mesh(new THREE.BoxGeometry(.27,.016,.27),new THREE.MeshStandardMaterial({color:0x1d3a7a,metalness:.4,roughness:.25,emissive:0x0a1a40}));pnl.position.copy(frame.position);station.add(pnl)}
+  const tip=new THREE.Mesh(new THREE.SphereGeometry(.04,8,6),new THREE.MeshStandardMaterial({color:sx<0?0xff5a5a:0x7cf0a0,emissive:sx<0?0xff3b3b:0x2fd36a,emissiveIntensity:1.5}));tip.position.set(sx*2.15,-.32,0);station.add(tip);stLights.push(tip)}
+{const b=new THREE.Mesh(new THREE.SphereGeometry(.045,8,6),new THREE.MeshStandardMaterial({color:0xff5a5a,emissive:0xff3b3b,emissiveIntensity:1.5}));b.position.y=-1.1;station.add(b);stLights.push(b);
+ const t=new THREE.Mesh(new THREE.SphereGeometry(.03,8,6),stTeal.clone());t.position.set(-.4,1.04,.12);station.add(t);stLights.push(t)}
+const stGlow=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex('rgba(240,163,60,.9)','rgba(240,163,60,.2)'),blending:THREE.AdditiveBlending,depthWrite:false}));stGlow.scale.set(3.4,3.4,1);station.add(stGlow);
 
 // planets
 const selTex=(()=>{const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d');g.strokeStyle='#f0a33c';g.lineWidth=5;g.setLineDash([14,9]);g.beginPath();g.arc(64,64,56,0,7);g.stroke();return new THREE.CanvasTexture(c)})();
@@ -644,19 +674,28 @@ const _q=new THREE.Quaternion(),_qi=new THREE.Quaternion(),_ai=new THREE.Vector3
 const ss=x=>x*x*(3-2*x);
 function orbitDir(a,b,e,out){_q.setFromUnitVectors(a,b);_qi.identity().slerp(_q,e);return out.copy(a).applyQuaternion(_qi)}
 function shipPos(w,P,t,res){const L=P.lay,R0=P.size*2,land=P.size+(w.padH||0)+P.size*.045,bump=.6+P.r*.04;
-  _ds.copy(w.pos).negate().normalize();_st.copy(w.pos).normalize().multiplyScalar(2.2);_side.set(-_ds.z,0,_ds.x).normalize();
+  _ds.copy(w.pos).negate().normalize();_st.copy(DOCK_UP);_side.set(-_ds.z,0,_ds.x).normalize();
   _ai.copy(_ds).addScaledVector(_side,.55).normalize();_ao.copy(_ds).addScaledVector(_side,-.55).normalize();
   _bp.copy(PORT_DIR).applyQuaternion(w.mesh.quaternion);
-  if(t<L[0]){const q=t/L[0];_od.copy(w.pos).addScaledVector(_ai,R0);res.lerpVectors(_st,_od,q);res.y+=Math.sin(q*Math.PI)*bump;w._sc=1;w._mode=0;w._th=.7;return res}
+  const DK=.14; // share of each cruise spent rising out of / sinking into the station's iris door
+  if(t<L[0]){const q=t/L[0];
+    if(q<DK){const r=q/DK;res.lerpVectors(DOCK_IN,DOCK_UP,ss(r));w._sc=.32;w._mode=2;w._th=1.2;return res}
+    const r=(q-DK)/(1-DK);_od.copy(w.pos).addScaledVector(_ai,R0);res.lerpVectors(_st,_od,r);res.y+=Math.sin(r*Math.PI)*bump;w._sc=.32+.68*Math.min(1,r/.3);w._mode=0;w._th=.7;return res}
   if(t<L[1]){const e=ss((t-L[0])/(L[1]-L[0]));res.copy(w.pos).addScaledVector(orbitDir(_ai,_bp,e,_od),R0);w._sc=1-.55*e;w._mode=0;w._th=.45;return res}
   if(t<L[2]){const q=(t-L[1])/(L[2]-L[1]);res.copy(w.pos).addScaledVector(_bp,R0+(land-R0)*(1-(1-q)*(1-q)));w._sc=.45-.23*q;w._mode=1;w._th=1.1-.8*q;return res}
   if(t<L[3]){res.copy(w.pos).addScaledVector(_bp,land);w._sc=.22;w._mode=1;w._th=0;return res}
   if(t<L[4]){const q=(t-L[3])/(L[4]-L[3]);res.copy(w.pos).addScaledVector(_bp,land+(R0-land)*q*q);w._sc=.22+.23*q;w._mode=1;w._th=1.3-.5*q;return res}
   if(t<L[5]){const e=ss((t-L[4])/(L[5]-L[4]));res.copy(w.pos).addScaledVector(orbitDir(_bp,_ao,e,_od),R0);w._sc=.45+.55*e;w._mode=0;w._th=.5;return res}
-  const q=(t-L[5])/(1-L[5]);_od.copy(w.pos).addScaledVector(_ao,R0);res.lerpVectors(_od,_st,q);res.y+=Math.sin(q*Math.PI)*bump;w._sc=1;w._mode=0;w._th=.7;return res}
+  const q=(t-L[5])/(1-L[5]);
+  if(q>1-DK){const r=(q-(1-DK))/DK;res.lerpVectors(DOCK_UP,DOCK_IN,ss(r));w._sc=.32;w._mode=2;w._th=.9-.7*r;return res}
+  const r=q/(1-DK);_od.copy(w.pos).addScaledVector(_ao,R0);res.lerpVectors(_od,_st,r);res.y+=Math.sin(r*Math.PI)*bump;w._sc=.32+.68*Math.min(1,(1-r)/.3);w._mode=0;w._th=.7;return res}
 function updateWorld(dt){
   simTime+=dt;
-  station.rotation.y+=dt*.25;ring2.rotation.z+=dt*.6;
+  station.rotation.y+=dt*.04;habRing.rotation.y+=dt*.22;ring2.rotation.z+=dt*.6;
+  stLights.forEach((l,k)=>l.material.emissiveIntensity=((simTime*.8+k*.33)%1)<.25?2.2:.25);
+  {let target=0;W.forEach(w=>{if(!w.ship.visible)return;const d=w.ship.position.distanceTo(IRIS);if(d<1.4)target=Math.max(target,Math.min(1,1-(d-.35)/1.0))});
+   irisOpen+=(target-irisOpen)*Math.min(1,dt*7);irisBlades.forEach(b=>{b.position.x=.1+.17*irisOpen;b.scale.x=1-.55*irisOpen});
+   irisRim.material.emissiveIntensity=.9+irisOpen*1.2}
   pulse=Math.max(0,pulse-dt*2.5);hubMat.emissiveIntensity=.15+pulse*.9;stGlow.material.opacity=.35+pulse*.65;
   W.forEach((w,i)=>{if(!w.mesh.visible)return;const P=PLANETS[i];
     w.angle+=dt*P.speed;w.pos.set(Math.cos(w.angle)*P.r,0,Math.sin(w.angle)*P.r);w.mesh.position.copy(w.pos);w.mesh.rotation.y+=dt*.05;
@@ -665,6 +704,7 @@ function updateWorld(dt){
     if(near)animateSurface(w,i,dt);
     if(w.ship.visible){const t=S.planets[i].t;shipPos(w,P,t,w.ship.position);const sc=w._sc,mode=w._mode,th=w._th;w.ship.scale.setScalar(sc);
       if(mode===1)tmp2.copy(PORT_DIR).applyQuaternion(w.mesh.quaternion).multiplyScalar(50).add(w.ship.position); // nose up while landing
+      else if(mode===2)tmp2.set(0,50,0).add(w.ship.position); // nose up in the station's iris shaft
       else shipPos(w,P,Math.min(.9999,t+.003),tmp2);
       w.ship.lookAt(tmp2);
       w.flame.material.opacity=th>0?1:0;w.flame.scale.setScalar(.2+.75*th*(.85+.15*Math.sin(simTime*45+i)))}
