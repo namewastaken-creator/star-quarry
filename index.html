@@ -463,7 +463,8 @@ const irisHole=new THREE.Mesh(new THREE.CircleGeometry(.27,24),new THREE.MeshBas
 // iris rim: smooth, and resting on the deck rather than cutting into it
 const irisRim=new THREE.Mesh(new THREE.TorusGeometry(.29,.022,12,128),stTeal.clone());irisRim.rotation.x=Math.PI/2;irisRim.position.y=.503;station.add(irisRim);
 const irisBlades=[];for(let k=0;k<8;k++){const g=new THREE.Group();g.rotation.y=k*Math.PI/4;g.position.y=IRIS_Y;station.add(g);
-  const b=new THREE.Mesh(new THREE.BoxGeometry(.2,.018,.13),trim);b.rotation.y=.35;g.add(b);irisBlades.push(b)}
+  const b=new THREE.Mesh(new THREE.BoxGeometry(.3,.018,.18),trim);b.rotation.y=.35; // closed, the blades fully cover out to r .247, past the collar's inner edge (.2)
+ g.add(b);irisBlades.push(b)}
 // dark collar over the blades' outer edges, so the door reads as a clean circle (blades retract under it)
 // its outer edge tucks under the blue rim and meets the deck there, so no seam shows between them
 const irisCollar=new THREE.Mesh(new THREE.RingGeometry(.2,.305,64),new THREE.MeshStandardMaterial({color:0x1a1e33,metalness:.5,roughness:.6,side:THREE.DoubleSide}));
@@ -849,7 +850,7 @@ function updateWorld(dt){
    if(pr&&!pr.out&&pr.nextAt-nw<IRIS_T*1000)want=true;                         // about to launch
    if(pr&&pr.out){const el=nw-pr.out.at;if(el<fly*.035||el>fly*.95-IRIS_T*1000)want=true} // leaving, or on final approach
    irisOpen=Math.max(0,Math.min(1,irisOpen+(want?1:-1)*dt/IRIS_T));
-   const e=ss(irisOpen);irisBlades.forEach(b=>{b.position.x=.1+.19*e;b.scale.x=1-.55*e});
+   const e=ss(irisOpen);irisBlades.forEach(b=>{b.position.x=.15+.19*e;b.scale.x=1-.55*e});
    irisRim.material.emissiveIntensity=.9+e*1.2}
   
   W.forEach((w,i)=>{if(!w.mesh.visible)return;const P=PLANETS[i];
