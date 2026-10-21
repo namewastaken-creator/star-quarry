@@ -790,7 +790,8 @@ const outerR=()=>{let r=4;W.forEach((w,i)=>{if(w.mesh.visible)r=Math.max(r,PLANE
 function fitDistance(){if(!vb)vb=viewBox();const R=outerR()*1.08,fw=(vb.right-vb.left)/vb.h,fh=(vb.bottom-vb.top)/vb.h;
   const byW=R/(TAN*fw),byH=R*Math.max(Math.cos(cam.phi),.25)/(TAN*fh)+R*Math.sin(cam.phi)*.15,d=Math.max(byW,byH);return isFinite(d)?clampR(d):30}
 const clampR=r=>Math.min(340,Math.max(cam.focus>=0?PLANETS[cam.focus].size*.35:8,r));
-function focusPlanet(i){cam.focus=i;cam.track=true;S.sel=i;cam.tr=PLANETS[i].size*(2.5+.25*Math.max(1,S.planets[i].teams.length));refreshWorld();toast('Pinch to zoom. Drag to leave the close-up.',2200)}
+function focusPlanet(i){cam.focus=i;cam.track=true;S.sel=i;cam.tr=PLANETS[i].size*(S.planets[i].u?2.5+.25*Math.max(1,S.planets[i].teams.length):3.6);refreshWorld();
+  if(!S.tipClose){S.tipClose=1;toast('Pinch to zoom. Drag to leave the close-up.',2600)}}
 function unfocus(){if(cam.focus<0)return;const i=cam.focus;cam.focus=-1;cam.track=false;cam.tt.copy(W[i].pos);cam.target.copy(W[i].pos);if(cam.tr<8)cam.tr=Math.max(14,PLANETS[i].size*10)}
 function recenter(){cam.focus=-1;cam.track=false;resize();cam.tt.set(0,0,0);cam.target.set(0,0,0);cam.phi=1.0;cam.tr=fitDistance();toast('Map recentered',1000)}
 
@@ -1088,7 +1089,7 @@ pbody.addEventListener('click',e=>{
   const b=e.target.closest('[data-act]');if(!b||b.disabled)return;const a=b.dataset.act;
   if(a==='cscroll'){const c=$('pchips');if(c){c.scrollBy({left:+b.dataset.d*c.clientWidth*.7,behavior:'smooth'});lastScroll=performance.now()}return}
   if(a==='sel'&&chipDragged)return;
-  if(a==='sel'){S.sel=+b.dataset.p;refreshWorld()}
+  if(a==='sel'){focusPlanet(+b.dataset.p)} // picking a planet in the Planet tab flies the camera to it
   else if(a==='sell'){const v=sellItem(b.dataset.k);if(v)toast('+'+fmt(v)+' credits',1200)}
   else if(a==='sellall'){let v=0;for(const o in S.inv)v+=sellItem('o'+o);for(const o in S.bars)v+=sellItem('b'+o);if(v)toast('+'+fmt(v)+' credits',1400);if(S.tut===1){S.tut=2;setTimeout(()=>toast('Spend credits on your mining team\u2019s upgrades with the green buttons. Tap planets in the sky to switch.',5000),1500)}}
   else if(a==='resinfo'){showResearch(b.dataset.id);return}
