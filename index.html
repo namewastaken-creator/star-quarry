@@ -230,7 +230,7 @@ const GALAXY_SPIN=.012;
 PLANETS.forEach((p,i)=>{p.r=ORBIT_R[i];p.speed=GALAXY_SPIN;p.a0=ORBIT_A[i];});
 /* Economy. Planet output comes only from its mining teams (and research / star dust).
    Each planet's base output is scaled to its claim price so every new planet is worth claiming. */
-const ECON={DUST_A:2,DUST_K:.2,EXP:.7,PAY:3.55,SCALE_MIN:100,HIRE:[1,4,30],UP_BASE:.12,UP_GROW:1.32,TEAM_X:[1,6,40],SHIP_BASE:.8,SHIP_OVH:16,DOCK_T:3,PROBE_EVERY:300,PROBE_FLY:180,PROBE_FIRST:60,PROBE_SEC:90,CARGO_FIT:.9};
+const ECON={DUST_A:20,DUST_K:.2,EXP:.7,PAY:3.55,SCALE_MIN:100,HIRE:[1,4,30],UP_BASE:.12,UP_GROW:1.32,TEAM_X:[1,6,40],SHIP_BASE:.8,SHIP_OVH:16,DOCK_T:3,PROBE_EVERY:300,PROBE_FLY:180,PROBE_FIRST:60,PROBE_SEC:90,CARGO_FIT:.9};
 PLANETS.forEach((p,i)=>{const avg=p.mix.reduce((a,[o,f])=>a+ORES[o].v*f,0);
   p.scale=Math.max(ECON.SCALE_MIN,p.cost);
   p.rate=i===0?.8:Math.pow(p.cost,ECON.EXP)/(ECON.PAY*avg);
@@ -287,7 +287,7 @@ function buyResearch(r){if(!canResearch(r))return false;S.cash-=r.cost;r.ore.for
 
 /* ===================== STATE ===================== */
 const KEY='starquarry_save_v1';
-function newRun(keep){keep=keep||{};return{v:1,econ:2,probe:{nextAt:Date.now()+ECON.PROBE_FIRST*1000,out:null,st:{launched:0,returned:0,value:0,best:null,byOre:{},log:[]}},probeLife:keep.probeLife||{returned:0,value:0},music:keep.music||{on:true,vol:.6},cash:0,dm:keep.dm||0,runEarned:0,lifetime:keep.lifetime||0,warps:keep.warps||0,
+function newRun(keep){keep=keep||{};return{v:1,econ:2,dust1:1,probe:{nextAt:Date.now()+ECON.PROBE_FIRST*1000,out:null,st:{launched:0,returned:0,value:0,best:null,byOre:{},log:[]}},probeLife:keep.probeLife||{returned:0,value:0},music:keep.music||{on:true,vol:.6},cash:0,dm:keep.dm||0,runEarned:0,lifetime:keep.lifetime||0,warps:keep.warps||0,
  // Cinder's hauler starts already loaded and on its way home, so the first delivery comes quickly
  planets:PLANETS.map((p,i)=>({u:i===0,teams:i===0?[{n:0,t:{}}]:[],stock:0,t:i===0?.66:Math.random()*.4,load:i===0?8:0})),
  inv:{},bars:{},research:{},auto:{},slots:[{r:null,p:0,a:false},{r:null,p:0,a:false},{r:null,p:0,a:false}],
@@ -300,6 +300,8 @@ while(S.planets.length<PLANETS.length)S.planets.push({u:false,teams:[],stock:0,t
 if(S.econ!==2){S.planets.forEach((p,i)=>{const mn=p.mn;p.teams=[];
     if(p.u||i===0){p.u=true;p.teams.push(mn?{n:mn.n,t:{m:mn.t.m||0,s:mn.t.s||0,c:mn.t.c||0}}:{n:0,t:{}})}
     delete p.m;delete p.s;delete p.c;delete p.mn});S.econ=2}
+// star dust went from +10% to +1% per unit, with 10x as much awarded: old saves get 10x their dust so the bonus is unchanged
+if(!S.dust1){S.dm=(S.dm||0)*10;S.dust1=1}
 S.planets.forEach(p=>{if(!p.teams)p.teams=[]});
 if(!S.music)S.music={on:true,vol:.6};
 if(!S.probe)S.probe={nextAt:Date.now()+ECON.PROBE_FIRST*1000,out:null};
@@ -311,7 +313,7 @@ function save(){S.last=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S)
 const has=id=>!!S.research[id];
 function rmult(k){let m=1;for(const r of RESEARCH)if(r[k]&&has(r.id))m*=r[k];return m}
 const odOn=()=>Date.now()<S.od.until;
-const valueMult=()=>rmult('value')*(1+.1*S.dm);
+const valueMult=()=>rmult('value')*(1+.01*S.dm);
 /* Mining teams: one per planet, up to 20 upgrades, each worth +0.25x on the trait it is assigned to. */
 const MINER_MAX=20,MINER_STEP=.25,TEAM_MAX=3;
 const TRAITS=[['m','Mining'],['s','Ship speed'],['c','Cargo']];
@@ -1174,7 +1176,7 @@ function viewResearch(){
 function viewWarp(){
   const ok=S.planets[WARP_AT].u,pd=pendingDM();
   let h=`<div class="head"><h2>Galaxy Warp</h2></div>
-   <div class="card"><h3>Star dust</h3><div class="big num">${fmt(S.dm)}</div><p>Each unit makes everything sell for 10% more, forever. You have +${fmt(S.dm*10)}%.</p></div>
+   <div class="card"><h3>Star dust</h3><div class="big num">${fmt(S.dm)}</div><p>Each unit makes everything sell for 1% more, forever. You have +${fmt(S.dm)}%.</p></div>
    <p>Warping resets planets, mining teams, credits, cargo and research, and starts a fresh galaxy. Star dust earned this run: <b class="num" style="color:var(--ink)">+${fmt(pd)}</b>.</p>`;
   if(!ok)h+=`<button class="btn wide" disabled type="button">Claim ${PLANETS[WARP_AT].n} to unlock warp</button>`;
   else h+=`<button class="btn wide${armed('warp')?' warn':''}" data-act="warp" ${pd>0?'':'disabled'} type="button">${armed('warp')?'Tap again to warp':'Warp for '+fmt(pd)+' star dust'}</button>`;
@@ -1274,7 +1276,7 @@ pbody.addEventListener('click',e=>{
   else if(a==='auto'){S.auto[b.dataset.k]=!S.auto[b.dataset.k]}
   else if(a==='slot'){const sl=S.slots[+b.dataset.i],r=+b.dataset.r;if(sl.a&&sl.r!==null)S.inv[sl.r]=(S.inv[sl.r]||0)+BAR_IN;sl.r=r<0?null:r;sl.a=false;sl.p=0}
   else if(a==='res'){const r=RESEARCH.find(x=>x.id===b.dataset.id);if(buyResearch(r)){toast(r.n+' complete.');if(r.id==='smelt')toast('The Smelter tab is open. Pick an ore for your furnace.',4000);save()}}
-  else if(a==='warp'){if(!armed('warp')){arm={k:'warp',until:Date.now()+4000}}else{const g=pendingDM();S=newRun({dm:S.dm+g,lifetime:S.lifetime,warps:S.warps+1,music:S.music,probeLife:S.probeLife});arm=null;refreshWorld();recenter();save();toast(`Warped. +${fmt(g)} star dust. Everything now sells for +${fmt(S.dm*10)}%.`,4500);setTab('planet')}}
+  else if(a==='warp'){if(!armed('warp')){arm={k:'warp',until:Date.now()+4000}}else{const g=pendingDM();S=newRun({dm:S.dm+g,lifetime:S.lifetime,warps:S.warps+1,music:S.music,probeLife:S.probeLife});arm=null;refreshWorld();recenter();save();toast(`Warped. +${fmt(g)} star dust. Everything now sells for +${fmt(S.dm)}%.`,4500);setTab('planet')}}
   else if(a==='reset'){if(!armed('reset')){arm={k:'reset',until:Date.now()+4000}}else{S=newRun({music:S.music});arm=null;refreshWorld();save();toast('Save erased. Fresh start.');setTab('planet')}}
   pressing=false;render(true);hud();
 });
