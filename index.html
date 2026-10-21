@@ -1311,16 +1311,16 @@ function viewPlanet(){
    <div class="row"><div class="txt"><span class="t">Ship speed${shipsBN?BN:''}</span><span class="s">${shipSpeed(i).toFixed(1)} AU/s · trip ${T.toFixed(1)}s · ${mult('s')}</span></div></div>
    <div class="row"><div class="txt"><span class="t">Cargo hold${shipsBN?BN:''}</span><span class="s">${fmt(cargo(i))} ore/trip · ${mult('c')}</span></div></div></div>
   <div class="note"><span>Hauling <b class="num">${fmt(hl)}/s</b> of ${fmt(rate)}/s mined.</span><span>Stockpile <b class="num">${fmt(p.stock)}</b></span></div>`
-   +hireBtn(i)+viewTeams(i,shipsBN)+settleBtn(i)+viewSettlement(i);
+   +viewTeams(i,shipsBN)+viewSettlement(i);
   return h}
-// the hire button sits just above the Mining teams card, and the settlement button just above the Settlement card
+// the hire button sits under the Mining teams card's title, and the settlement button under the Settlement card's title
 function hireBtn(i){const p=S.planets[i],n=p.teams.length;if(n>=TEAM_MAX)return '';const c=teamHireCost(i,n);
   return `<button class="btn wide" data-act="hire" data-p="${i}" ${S.cash>=c?'':'disabled'} type="button">Hire a ${n===1?'second':'third'} team: the ${teamName(i,n)}<small>${fmt(c)} credits</small></button>`}
 function settleBtn(i){const p=S.planets[i];if(p.teams.length<TEAM_MAX||settleLv(i)>=3)return '';const lv=settleLv(i),c=settleCost(i),[nm,ups]=SETTLE[i];
   return `<button class="btn wide" data-act="settle" data-p="${i}" ${S.cash>=c?'':'disabled'} type="button">${lv?'Grow '+nm+' into a '+SETTLE_LV[lv]:'Found '+nm}: ${ups[lv][0]}<small>${fmt(c)} credits · ${settleDesc(i,ups[lv][1])}</small></button>`}
 // settlement card: its three upgrades, what each does, and which are built
 function viewSettlement(i){const p=S.planets[i],[nm,ups]=SETTLE[i],lv=settleLv(i),ready=p.teams.length>=TEAM_MAX;
-  let h=`<div class="card"><div class="head"><h3>Settlement</h3><span class="num" style="font-size:12px;color:var(--muted)">${lv} / 3 levels</span></div>
+  let h=`<div class="card"><div class="head"><h3>Settlement</h3><span class="num" style="font-size:12px;color:var(--muted)">${lv} / 3 levels</span></div>${settleBtn(i)}
     <div class="head"><span style="font:600 15px var(--f-body)">${nm}</span><span class="num" style="font-size:12px;color:var(--muted)">${lv?SETTLE_LV[lv-1]:ready?'Not founded':'Locked'}</span></div>`;
   if(!ready)h+=`<p style="font-size:12px">Hire all ${TEAM_MAX} mining teams to found ${nm} here.</p>`;
   h+='<div class="rows">';
@@ -1331,7 +1331,7 @@ function viewSettlement(i){const p=S.planets[i],[nm,ups]=SETTLE[i],lv=settleLv(i
 const teamSel={};
 function viewTeams(i,shipsBN){
   const p=S.planets[i],n=p.teams.length;let j=Math.min(teamSel[i]||0,n-1);
-  let h=`<div class="card miner"><div class="head"><h3>Mining teams</h3><span class="num" style="font-size:12px;color:var(--muted)">${n} / ${TEAM_MAX} hired</span></div>`;
+  let h=`<div class="card miner"><div class="head"><h3>Mining teams</h3><span class="num" style="font-size:12px;color:var(--muted)">${n} / ${TEAM_MAX} hired</span></div>`+hireBtn(i);
   if(n>1){h+='<div class="chips">';p.teams.forEach((tm,k)=>{h+=`<button class="chip${k===j?' on':''}" data-act="tsel" data-p="${i}" data-j="${k}" type="button">${teamName(i,k)}</button>`});h+='</div>'}
   const tm=p.teams[j],free=minerFree(tm),full=tm.n>=MINER_MAX,uc=full?0:teamUpCost(i,j);
   h+=`<div class="head"><span style="font:600 15px var(--f-body)">${teamName(i,j)}</span><span class="num" style="font-size:12px;color:var(--muted)">${tm.n} / ${MINER_MAX} upgrades</span></div>
