@@ -485,7 +485,8 @@ const dockMats={clamp:new THREE.MeshStandardMaterial({color:0xf0c040,metalness:.
   busy:new THREE.MeshStandardMaterial({color:0x7cf0a0,emissive:0x2fd36a,emissiveIntensity:1.8})};
 const docks=[];
 for(let k=0;k<DOCK_SLOTS;k++){const g=new THREE.Group();habRing.add(g); // local +x points out from the ring (placed in syncDocks)
-  const base=new THREE.Mesh(new THREE.BoxGeometry(.22,.21,.26),hubMat);base.position.x=.02;g.add(base);
+  // the box passes right through the ring tube, sticking out the same amount inside and outside
+  const base=new THREE.Mesh(new THREE.BoxGeometry(.26,.21,.26),hubMat);base.position.x=0;g.add(base);
   const plate=new THREE.Mesh(new THREE.BoxGeometry(.02,.17,.2),trim);plate.position.x=.135;g.add(plate);
   const collar=new THREE.Mesh(new THREE.TorusGeometry(.065,.018,8,20),trim);collar.rotation.y=Math.PI/2;collar.position.x=.15;g.add(collar);
   const hatch=new THREE.Mesh(new THREE.CircleGeometry(.05,16),dockMats.hatch);hatch.rotation.y=Math.PI/2;hatch.position.x=.152;g.add(hatch);
@@ -494,7 +495,7 @@ for(let k=0;k<DOCK_SLOTS;k++){const g=new THREE.Group();habRing.add(g); // local
     const arm=new THREE.Mesh(new THREE.BoxGeometry(.11,.025,.025),dockMats.clamp);arm.position.x=.055;pv.add(arm);
     const tip=new THREE.Mesh(new THREE.BoxGeometry(.025,.025,.045),dockMats.clamp);tip.position.set(.105,0,-Math.sign(z)*.02);pv.add(tip)}
   // dock lights: one on top of the box and a pair on the dock face, all green and lit only while a ship is docked
-  const status=new THREE.Mesh(new THREE.SphereGeometry(.022,8,6),new THREE.MeshStandardMaterial({color:0x1f3a2a,emissive:0x18d040,emissiveIntensity:0}));status.position.set(.05,.12,0);g.add(status);
+  const status=new THREE.Mesh(new THREE.SphereGeometry(.022,8,6),new THREE.MeshStandardMaterial({color:0x1f3a2a,emissive:0x18d040,emissiveIntensity:0}));status.position.set(0,.12,0);g.add(status);
   for(const y of[-.075,.075]){const gl=new THREE.Mesh(new THREE.SphereGeometry(.014,6,4),status.material);gl.position.set(.15,y,0);g.add(gl)}
   g.visible=false;docks.push({g,status,pivots,clamp:0,state:'free'})}
 const planetSlot=i=>Math.min(i,DOCK_SLOTS-1);
