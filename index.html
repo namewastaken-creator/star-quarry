@@ -1288,7 +1288,8 @@ function viewPlanet(){
   return h}
 // settlement card: its three upgrades, what each does, and which are built
 function viewSettlement(i){const p=S.planets[i],[nm,ups]=SETTLE[i],lv=settleLv(i),ready=p.teams.length>=TEAM_MAX;
-  let h=`<div class="card"><div class="head"><h3>Settlement</h3><span class="num" style="font-size:12px;color:var(--muted)">${lv?nm+' · '+SETTLE_LV[lv-1]:ready?'Not founded':'Locked'}</span></div>`;
+  let h=`<div class="card"><div class="head"><h3>Settlement</h3><span class="num" style="font-size:12px;color:var(--muted)">${lv} / 3 levels</span></div>
+    <div class="head"><span style="font:600 15px var(--f-body)">${nm}</span><span class="num" style="font-size:12px;color:var(--muted)">${lv?SETTLE_LV[lv-1]:ready?'Not founded':'Locked'}</span></div>`;
   if(!ready)h+=`<p style="font-size:12px">Hire all ${TEAM_MAX} mining teams to found ${nm} here.</p>`;
   h+='<div class="rows">';
   ups.forEach(([un,kind],k)=>{const done=k<lv;
