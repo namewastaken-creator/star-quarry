@@ -272,18 +272,23 @@ const RESEARCH=[
 const BAR_IN=8, BAR_MULT=12, OD_LEN=120, OD_CD=600, WARP_AT=5;
 /* Research costs credits plus ore: 60% of each project's old price in credits plus ore worth about 30% of it.
    Ore is the newest types mined by planets costing up to 2/3 of the project, so you're already mining it; bigger projects need more ore types:
-   under 10K credits: 1 type, under 100M: 2 types, 100M and up: 3 types. */
-const RES_ORE_SHARE=.3,RES_CREDIT_SHARE=.6;
+   under 10K credits: 1 type, under 100M: 2 types, 100M and up: 3 types.
+   Projects of 100M and up also need bars of their second ore type: about RES_BAR_MIN minutes of smelting on three
+   furnaces (with Plasma Furnaces, plus Star Forges for projects priced above it). */
+const RES_ORE_SHARE=.3,RES_CREDIT_SHARE=.6,RES_BAR_AT=1e8,RES_BAR_MIN=8;
 (function(){const nice=x=>{const p=Math.pow(10,Math.max(0,Math.floor(Math.log10(x))-1));return Math.ceil(x/p)*p};
   RESEARCH.forEach(r=>{const old=r.cost;let k=0;PLANETS.forEach((P,i)=>{if(P.cost<=old/1.5)k=i}); // ore from planets already within reach
     const top=Math.max(...PLANETS.slice(0,k+1).flatMap(P=>P.mix.map(([o])=>o)));
     const n=old<1e4?1:old<1e8?2:3,types=[...new Set([top,top-1,top-2].map(o=>Math.max(0,o)))].slice(0,n),w=[[1],[.6,.4],[.5,.35,.15]][types.length-1];
-    r.ore=types.map((o,j)=>[o,nice(old*RES_ORE_SHARE*w[j]/ORES[o].v)]);r.cost=nice(old*RES_CREDIT_SHARE)})})();
+    r.ore=types.map((o,j)=>[o,nice(old*RES_ORE_SHARE*w[j]/ORES[o].v)]);r.cost=nice(old*RES_CREDIT_SHARE);
+    if(old>=RES_BAR_AT){const o=types[1],sec=5*(1+o*.35)/(old>5e13?4:2);r.bars=[o,nice(RES_BAR_MIN*60*3/sec)]}})})();
 const openResearch=()=>RESEARCH.filter(r=>!S.research[r.id]&&(!r.req||S.research[r.req]));
 // ore kept back from selling: the most of that ore any open research project needs
 const researchReserve=o=>openResearch().reduce((m,r)=>Math.max(m,(r.ore.find(x=>x[0]===o)||[0,0])[1]),0);
-const canResearch=r=>S.cash>=r.cost&&r.ore.every(([o,q])=>(S.inv[o]||0)>=q);
-function buyResearch(r){if(!canResearch(r))return false;S.cash-=r.cost;r.ore.forEach(([o,q])=>S.inv[o]-=q);S.research[r.id]=1;return true}
+// bars kept back from selling: the most of that bar any open research project needs
+const researchBarReserve=o=>openResearch().reduce((m,r)=>Math.max(m,r.bars&&r.bars[0]===o?r.bars[1]:0),0);
+const canResearch=r=>S.cash>=r.cost&&r.ore.every(([o,q])=>(S.inv[o]||0)>=q)&&(!r.bars||(S.bars[r.bars[0]]||0)>=r.bars[1]);
+function buyResearch(r){if(!canResearch(r))return false;S.cash-=r.cost;r.ore.forEach(([o,q])=>S.inv[o]-=q);if(r.bars)S.bars[r.bars[0]]-=r.bars[1];S.research[r.id]=1;return true}
 
 /* ===================== STATE ===================== */
 const KEY='starquarry_save_v1';
@@ -342,7 +347,7 @@ const reserve=o=>S.slots.slice(0,smeltSlots()).filter(s=>s.r===o).length*BAR_IN*
 function itemValue(key){const o=+key.slice(1);return (key[0]==='b'?ORES[o].v*BAR_MULT:ORES[o].v)*valueMult()}
 function earn(x){S.cash+=x;S.runEarned+=x;S.lifetime+=x}
 function sellItem(key,keep){const store=key[0]==='b'?S.bars:S.inv,o=+key.slice(1),amt=Math.max(0,(store[o]||0)-(keep||0));if(amt<=0)return 0;store[o]-=amt;const v=amt*itemValue(key);earn(v);return v}
-function autoSell(){if(!has('auto'))return;for(const k in S.auto){if(!S.auto[k])continue;sellItem(k,k[0]==='o'?Math.max(reserve(+k.slice(1)),researchReserve(+k.slice(1))):0)}}
+function autoSell(){if(!has('auto'))return;for(const k in S.auto){if(!S.auto[k])continue;sellItem(k,k[0]==='o'?Math.max(reserve(+k.slice(1)),researchReserve(+k.slice(1))):researchBarReserve(+k.slice(1)))}}
 function deliver(i,units){for(const [o,f] of PLANETS[i].mix)S.inv[o]=(S.inv[o]||0)+units*f}
 function discovered(){const set=new Set();S.planets.forEach((p,i)=>{if(p.u)PLANETS[i].mix.forEach(([o])=>set.add(o))});return [...set].sort((a,b)=>a-b)}
 
@@ -1139,11 +1144,11 @@ function viewProbe(){const pr=S.probe,st=pr.st,nw=Date.now(),est=ECON.PROBE_SEC*
 function viewMarket(){
   const items=[];discovered().forEach(o=>{items.push('o'+o);if(has('smelt'))items.push('b'+o)});
   const list=items.filter(k=>k[0]==='o'||(S.bars[+k.slice(1)]||0)>0||S.auto[k]);
-  let total=0;list.forEach(k=>{const bar=k[0]==='b',st=bar?S.bars:S.inv,o=+k.slice(1);total+=Math.max(0,(st[o]||0)-(bar?0:researchReserve(o)))*itemValue(k)});
+  let total=0;list.forEach(k=>{const bar=k[0]==='b',st=bar?S.bars:S.inv,o=+k.slice(1);total+=Math.max(0,(st[o]||0)-(bar?researchBarReserve(o):researchReserve(o)))*itemValue(k)});
   let h=`<div class="head"><h2>Market</h2><span class="num" style="color:var(--muted);font-size:12px">Value ×${valueMult().toFixed(2)}</span></div>
    <button class="btn wide" data-act="sellall" ${total>0?'':'disabled'} type="button">Sell everything<small>+${fmt(total)} credits</small></button><div class="rows">`;
   list.forEach(k=>{const o=+k.slice(1),bar=k[0]==='b',amt=(bar?S.bars:S.inv)[o]||0;
-    h+=`<div class="row"><div class="txt"><span class="t">${oreChip(o)}${bar?' <span style="color:var(--ore);font:600 11px var(--f-display);letter-spacing:.1em">BAR</span>':''}</span><span class="s">${fmt(amt)} × ${fmt(itemValue(k))} = ${fmt(amt*itemValue(k))}${!bar&&researchReserve(o)>0?` · <span style="color:var(--ship)">${fmt(Math.min(amt,researchReserve(o)))} kept for research</span>`:''}</span></div>
+    h+=`<div class="row"><div class="txt"><span class="t">${oreChip(o)}${bar?' <span style="color:var(--ore);font:600 11px var(--f-display);letter-spacing:.1em">BAR</span>':''}</span><span class="s">${fmt(amt)} × ${fmt(itemValue(k))} = ${fmt(amt*itemValue(k))}${(bar?researchBarReserve(o):researchReserve(o))>0?` · <span style="color:var(--ship)">${fmt(Math.min(amt,bar?researchBarReserve(o):researchReserve(o)))} kept for research</span>`:''}</span></div>
     ${has('auto')?`<button class="tog${S.auto[k]?' on':''}" data-act="auto" data-k="${k}" type="button">Auto</button>`:''}
     <button class="btn ghost" data-act="sell" data-k="${k}" ${amt>=1?'':'disabled'} style="min-width:70px" type="button">Sell</button></div>`});
   h+='</div>';
@@ -1157,14 +1162,17 @@ function viewSmelter(){
     h+=`<div class="card"><div class="head"><h3>Furnace ${k+1}</h3><span class="num" style="font-size:12px;color:var(--muted)">${sl.r===null?'Idle':sl.a?fmtTime((1-sl.p)*smeltTime(sl.r))+' left':(S.inv[sl.r]||0)<BAR_IN?'Waiting for ore':'Starting'}</span></div>
       <div class="bar"><i data-smelt="${k}" style="width:${(sl.a?sl.p*100:0).toFixed(1)}%"></i></div>
       <div class="chips wrap"><button class="chip${sl.r===null?' on':''}" data-act="slot" data-i="${k}" data-r="-1" type="button">Off</button>${disc.map(o=>`<button class="chip${sl.r===o?' on':''}" data-act="slot" data-i="${k}" data-r="${o}" type="button">${ORES[o].n}</button>`).join('')}</div></div>`}
+  {const want=openResearch().filter(r=>r.bars).map(r=>r.n+': '+fmt(Math.min(S.bars[r.bars[0]]||0,r.bars[1]))+' / '+fmt(r.bars[1])+' '+ORES[r.bars[0]].n+' bars');
+   if(want.length&&n)h+=`<p style="color:var(--ship)">Research needs ${want.slice(0,3).join(' · ')}</p>`}
   h+=`<p>Each bar takes longer for rarer ores. Bars wait in the Market until you sell them.</p>`;
   return h}
 
 function viewResearch(){
   const open=RESEARCH.filter(r=>!has(r.id)&&(!r.req||has(r.req))),own=RESEARCH.filter(r=>has(r.id));
-  let h='<div class="head"><h2>Research</h2></div><p style="font-size:12px">Projects cost credits and ore. Sell everything and auto-sell keep back the ore your projects need.</p><div class="grid">';
+  let h='<div class="head"><h2>Research</h2></div><p style="font-size:12px">Projects cost credits and ore, and the biggest also need bars from the Smelter. Sell everything and auto-sell keep back the ore and bars your projects need.</p><div class="grid">';
   open.slice(0,6).forEach(r=>{
-    const need=r.ore.map(([o,q])=>{const have=S.inv[o]||0,ok=have>=q;return`<div class="need${ok?' ok':''}"><span class="ore"><i style="background:${ORES[o].c}"></i>${ORES[o].n}</span><span class="num">${fmt(Math.min(have,q))} / ${fmt(q)}</span><span class="nbar"><i style="width:${Math.min(100,have/q*100).toFixed(0)}%"></i></span></div>`}).join('');
+    const need=r.ore.map(([o,q])=>{const have=S.inv[o]||0,ok=have>=q;return`<div class="need${ok?' ok':''}"><span class="ore"><i style="background:${ORES[o].c}"></i>${ORES[o].n}</span><span class="num">${fmt(Math.min(have,q))} / ${fmt(q)}</span><span class="nbar"><i style="width:${Math.min(100,have/q*100).toFixed(0)}%"></i></span></div>`}).join('')
+      +(r.bars?(([o,q])=>{const have=S.bars[o]||0,ok=have>=q;return`<div class="need${ok?' ok':''}"><span class="ore"><i style="background:${ORES[o].c};border-radius:2px"></i>${ORES[o].n} bars</span><span class="num">${fmt(Math.min(have,q))} / ${fmt(q)}</span><span class="nbar"><i style="width:${Math.min(100,have/q*100).toFixed(0)}%"></i></span></div>`})(r.bars):'');
     h+=`<div class="card"><div class="t" style="font:600 15px var(--f-body)">${r.n}</div><p>${r.d}</p>
       <div class="needs"><div class="need${S.cash>=r.cost?' ok':''}"><span class="ore"><i style="background:var(--ore)"></i>Credits</span><span class="num">${fmt(Math.min(S.cash,r.cost))} / ${fmt(r.cost)}</span><span class="nbar"><i style="width:${Math.min(100,S.cash/r.cost*100).toFixed(0)}%"></i></span></div>${need}</div>
       <button class="btn" data-act="res" data-id="${r.id}" ${canResearch(r)?'':'disabled'} type="button">Research</button></div>`});
@@ -1227,7 +1235,7 @@ function showResearch(id){const r=RESEARCH.find(x=>x.id===id);if(!r)return;
   if(r.id==='slot2'||r.id==='slot3'||r.id==='smelt')eff+=`<div class="eff"><span>Furnaces</span><span>${smeltSlots()}</span></div>`;
   if(r.id==='night')eff+=`<div class="eff"><span>Offline limit</span><span>24h</span></div>`;
   if(r.id==='auto')eff+=`<div class="eff"><span>Auto-sell items on</span><span>${Object.values(S.auto).filter(Boolean).length}</span></div>`;
-  $('meff').innerHTML=eff;$('mcost').textContent='Cost '+fmt(r.cost)+' credits + '+r.ore.map(([o,q])=>fmt(q)+' '+ORES[o].n).join(' + ');
+  $('meff').innerHTML=eff;$('mcost').textContent='Cost '+fmt(r.cost)+' credits + '+r.ore.map(([o,q])=>fmt(q)+' '+ORES[o].n).join(' + ')+(r.bars?' + '+fmt(r.bars[1])+' '+ORES[r.bars[0]].n+' bars':'');
   $('modal').hidden=false;$('mclose').focus()}
 function closeModal(){$('modal').hidden=true}
 $('mclose').addEventListener('click',closeModal);
@@ -1261,7 +1269,7 @@ pbody.addEventListener('click',e=>{
   if(a==='sel'&&chipDragged)return;
   if(a==='sel'){focusPlanet(+b.dataset.p)} // picking a planet in the Planet tab flies the camera to it
   else if(a==='sell'){const v=sellItem(b.dataset.k);if(v)toast('+'+fmt(v)+' credits',1200)}
-  else if(a==='sellall'){let v=0;for(const o in S.inv)v+=sellItem('o'+o,researchReserve(+o));for(const o in S.bars)v+=sellItem('b'+o);if(v)toast('+'+fmt(v)+' credits',1400);if(S.tut===1){S.tut=2;setTimeout(()=>toast('Spend credits on your mining team\u2019s upgrades with the green buttons. Tap planets in the sky to switch.',5000),1500)}}
+  else if(a==='sellall'){let v=0;for(const o in S.inv)v+=sellItem('o'+o,researchReserve(+o));for(const o in S.bars)v+=sellItem('b'+o,researchBarReserve(+o));if(v)toast('+'+fmt(v)+' credits',1400);if(S.tut===1){S.tut=2;setTimeout(()=>toast('Spend credits on your mining team\u2019s upgrades with the green buttons. Tap planets in the sky to switch.',5000),1500)}}
   else if(a==='resinfo'){showResearch(b.dataset.id);return}
   else if(a==='pfollow'){focusProbe()}
   else if(a==='focus'){focusPlanet(+b.dataset.p)}
