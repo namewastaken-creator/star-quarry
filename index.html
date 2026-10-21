@@ -1088,6 +1088,8 @@ function viewPlanet(){
     <button class="btn wide" data-act="hire" data-p="${i}" ${S.cash>=c?'':'disabled'} type="button">Hire the ${teamName(i,0)} and claim ${P.n}<small>${fmt(c)} credits</small></button>`;return h}
   const rate=mineRate(i),hl=haul(i),T=tripTime(i),shipsBN=hl<rate*.97,BN='<span class="bn">Bottleneck</span>';
   const mult=k=>`×${minerT(i,k).toFixed(2)} from teams`;
+  // the hire button stays at the top, where the claim button was
+  {const n=p.teams.length;if(n<TEAM_MAX){const c=teamHireCost(i,n);h+=`<button class="btn wide" data-act="hire" data-p="${i}" ${S.cash>=c?'':'disabled'} type="button">Hire a ${n===1?'second':'third'} team: the ${teamName(i,n)}<small>${fmt(c)} credits</small></button>`}}
   h+=`<div class="rows">
    <div class="row"><div class="txt"><span class="t">Mine rate${shipsBN?'':BN}</span><span class="s">${fmt(rate)} ore/s · ${mult('m')}</span></div></div>
    <div class="row"><div class="txt"><span class="t">Ship speed${shipsBN?BN:''}</span><span class="s">${shipSpeed(i).toFixed(1)} AU/s · trip ${T.toFixed(1)}s · ${mult('s')}</span></div></div>
@@ -1113,7 +1115,6 @@ function viewTeams(i,shipsBN){
         :`<button class="btn ship${hot?' bnr':''}" data-act="mbuy" data-p="${i}" data-j="${j}" data-k="${k}" ${S.cash>=uc?'':'disabled'} type="button" aria-label="Upgrade ${name} for ${fmt(uc)} credits">+${MINER_STEP}×<small>${fmt(uc)}</small></button>`}</div>`});
   h+=`</div><div class="note" style="justify-content:space-between"><span>${full?'<b>Fully upgraded.</b>':'Red buttons fix the bottleneck.'}</span>
     <button class="btn ghost${armed('respec'+i+'_'+j)?' warn':''}" data-act="respec" data-p="${i}" data-j="${j}" ${tm.n-free>0?'':'disabled'} type="button" style="min-width:0">${armed('respec'+i+'_'+j)?'Tap to confirm':'Reassign points'}</button></div>`;
-  if(n<TEAM_MAX){const c=teamHireCost(i,n);h+=`<button class="btn wide" data-act="hire" data-p="${i}" ${S.cash>=c?'':'disabled'} type="button">Hire a ${n===1?'second':'third'} team: the ${teamName(i,n)}<small>${fmt(c)} credits</small></button>`}
   return h+'</div>'}
 function viewProbe(){const pr=S.probe,st=pr.st,nw=Date.now(),est=ECON.PROBE_SEC*totalMineValue()*valueMult();
   const ago=t=>{const s=Math.max(0,(nw-t)/1000);return s<60?'just now':s<3600?Math.floor(s/60)+'m ago':Math.floor(s/3600)+'h '+Math.floor(s%3600/60)+'m ago'};
