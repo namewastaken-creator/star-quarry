@@ -870,8 +870,7 @@ function updateWorld(dt){
       w.ship.lookAt(tmp2);
       w.flame.material.opacity=th>0?1:0;w.flame.scale.setScalar(.2+.75*th*(.85+.15*Math.sin(simTime*45+i)))}
   });
-  if(cam.focus>=0&&W[cam.focus]&&cam.orbit)cam.tt.copy(W[cam.focus].pos); // turning the planet: circle its centre
-  else if(cam.focus>=0&&W[cam.focus]){const fi=cam.focus,d=colonyDir(fi);
+  if(cam.focus>=0&&W[cam.focus]){const fi=cam.focus,d=colonyDir(fi);
     // look at the colony on the surface, from an angle so buildings read in 3D
     cam.tt.copy(W[fi].pos).addScaledVector(d,PLANETS[fi].size*.97);
     if(cam.track){const k=Math.min(1,dt*4);_cv.copy(UP).addScaledVector(d,-d.dot(UP));if(_cv.lengthSq()<1e-6)_cv.set(1,0,0);_cv.normalize();
@@ -915,24 +914,19 @@ function fitDistance(){if(!vb)vb=viewBox();const R=outerR()*1.08,fw=(vb.right-vb
   const byW=R/(TAN*fw),byH=R*Math.max(Math.cos(cam.phi),.25)/(TAN*fh)+R*Math.sin(cam.phi)*.15,d=Math.max(byW,byH);return isFinite(d)?clampR(d):30}
 // the galaxy map can't tilt so far that planets line up behind each other; close-ups can
 const maxTilt=()=>cam.focus>=0?1.45:1.2;
-const clampR=r=>Math.min(340,Math.max(cam.focus>=0?PLANETS[cam.focus].size*(cam.orbit?1.25:.35):cam.probe?1.2:cam.station?2.2:8,r));
+const clampR=r=>Math.min(340,Math.max(cam.focus>=0?PLANETS[cam.focus].size*.35:cam.probe?1.2:cam.station?2.2:8,r));
 // double-tapping the station zooms in on it and opens the Research tab
 // tapping the probe status: follow the probe if it's out (otherwise look at the iris) and open the Probe tab
-function focusProbe(){cam.focus=-1;cam.orbit=false;cam.track=false;cam.station=false;
+function focusProbe(){cam.focus=-1;cam.track=false;cam.station=false;
   if(S.probe.out){cam.probe=true;cam.tr=3.4}else{cam.probe=false;cam.station=true;cam.tt.set(0,.5,0);cam.tr=4.2}
   cam.phi=Math.min(cam.phi,1.0);setTab('probe');if(sheet.classList.contains('collapsed'))toggleSheet()}
-function focusStation(){cam.probe=false;cam.orbit=false;cam.focus=-1;cam.track=false;cam.station=true;cam.tt.set(0,.1,0);cam.tr=5.4;cam.phi=.9;setTab('research');if(sheet.classList.contains('collapsed'))toggleSheet()}
-function focusPlanet(i){cam.station=false;cam.probe=false;cam.orbit=false;cam.focus=i;cam.track=true;S.sel=i;cam.tr=PLANETS[i].size*(S.planets[i].u?2.5+.25*Math.max(1,S.planets[i].teams.length):3.6);refreshWorld();
-  if(S.tipClose!==2){S.tipClose=2;toast('Drag to turn the planet. Pinch to zoom. Double-tap to zoom back out.',3200)}}
-// one-finger drag in a close-up: circle the planet's centre, so the planet turns under your finger
-function orbitBy(dx,dy){if(!cam.orbit){const P=PLANETS[cam.focus];cam.orbit=true;cam.track=false;cam.tr=cam.r=clampR(cam.tr+P.size*.97)}
-  cam.theta+=dx*.008;cam.phi=Math.min(Math.PI-.15,Math.max(.15,cam.phi-dy*.008))}
-// double-tap in a close-up: back out to the whole galaxy
-function exitFocus(){cam.focus=-1;cam.orbit=false;cam.track=false;cam.station=false;cam.probe=false;resize();cam.tt.set(0,0,0);cam.phi=1.0;cam.tr=fitDistance()}
-function unfocus(){if(cam.focus<0)return;const i=cam.focus;cam.focus=-1;cam.orbit=false;cam.track=false;cam.phi=Math.min(cam.phi,1.2);cam.tt.copy(W[i].pos);cam.target.copy(W[i].pos);if(cam.tr<8)cam.tr=Math.max(14,PLANETS[i].size*10)}
-function recenter(){cam.station=false;cam.probe=false;cam.orbit=false;cam.focus=-1;cam.track=false;resize();cam.tt.set(0,0,0);cam.target.set(0,0,0);cam.phi=1.0;cam.tr=fitDistance();toast('Map recentered',1000)}
+function focusStation(){cam.probe=false;cam.focus=-1;cam.track=false;cam.station=true;cam.tt.set(0,.1,0);cam.tr=5.4;cam.phi=.9;setTab('research');if(sheet.classList.contains('collapsed'))toggleSheet()}
+function focusPlanet(i){cam.station=false;cam.probe=false;cam.focus=i;cam.track=true;S.sel=i;cam.tr=PLANETS[i].size*(S.planets[i].u?2.5+.25*Math.max(1,S.planets[i].teams.length):3.6);refreshWorld();
+  if(!S.tipClose){S.tipClose=1;toast('Pinch to zoom. Drag to leave the close-up.',2600)}}
+function unfocus(){if(cam.focus<0)return;const i=cam.focus;cam.focus=-1;cam.track=false;cam.phi=Math.min(cam.phi,1.2);cam.tt.copy(W[i].pos);cam.target.copy(W[i].pos);if(cam.tr<8)cam.tr=Math.max(14,PLANETS[i].size*10)}
+function recenter(){cam.station=false;cam.probe=false;cam.focus=-1;cam.track=false;resize();cam.tt.set(0,0,0);cam.target.set(0,0,0);cam.phi=1.0;cam.tr=fitDistance();toast('Map recentered',1000)}
 
-// Camera input: one finger / left mouse = pan (in a planet close-up: turn the planet), pinch / wheel = zoom,
+// Camera input: one finger / left mouse = pan, pinch / wheel = zoom,
 // two-finger twist = rotate, two fingers up/down = tilt, right mouse = rotate + tilt.
 const ptrs=new Map();let tap=null,g2=null,mouseRot=false;
 function panBy(dx,dy){unfocus();cam.probe=false;const k=2*cam.r*TAN/window.innerHeight,c=Math.cos(cam.theta),s=Math.sin(cam.theta),fy=k/Math.max(Math.cos(cam.phi),.35);
@@ -945,12 +939,11 @@ canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);
   if(ptrs.size===1)tap={x:e.clientX,y:e.clientY,t:performance.now()};else{tap=null;if(ptrs.size===2)g2=Object.assign(twoState(),{r:cam.tr})}});
 canvas.addEventListener('pointermove',e=>{const p=ptrs.get(e.pointerId);if(!p)return;const dx=e.clientX-p.x,dy=e.clientY-p.y;p.x=e.clientX;p.y=e.clientY;
   if(ptrs.size===1){if(tap&&Math.hypot(e.clientX-tap.x,e.clientY-tap.y)<8)return;tap=null;
-    if(cam.focus>=0)orbitBy(dx,dy);
-    else if(mouseRot){cam.track=false;cam.theta+=dx*.006;cam.phi=Math.min(maxTilt(),Math.max(.12,cam.phi-dy*.005))}else panBy(dx,dy)}
+    if(mouseRot){cam.track=false;cam.theta+=dx*.006;cam.phi=Math.min(maxTilt(),Math.max(.12,cam.phi-dy*.005))}else panBy(dx,dy)}
   else if(ptrs.size===2&&g2){const n=twoState();cam.tr=cam.r=clampR(g2.r*g2.d/Math.max(n.d,1));
     let da=n.ang-g2.ang;if(da>Math.PI)da-=2*Math.PI;if(da<-Math.PI)da+=2*Math.PI;
     if(cam.track){g2.acc=(g2.acc||0)+Math.abs(da);g2.tacc=(g2.tacc||0)+Math.abs(n.my-g2.my);if(g2.acc>.25||g2.tacc>40)cam.track=false}
-    if(!cam.track){cam.theta-=da;cam.phi=Math.min(cam.orbit?Math.PI-.15:maxTilt(),Math.max(.12,cam.phi-(n.my-g2.my)*.006))}
+    if(!cam.track){cam.theta-=da;cam.phi=Math.min(maxTilt(),Math.max(.12,cam.phi-(n.my-g2.my)*.006))}
     g2.ang=n.ang;g2.my=n.my}});
 function endPtr(e){const wasTap=tap&&ptrs.size===1&&performance.now()-tap.t<350;ptrs.delete(e.pointerId);
   if(wasTap)pick(e.clientX,e.clientY);tap=null;
@@ -960,8 +953,7 @@ canvas.addEventListener('pointerup',endPtr);canvas.addEventListener('pointercanc
 canvas.addEventListener('wheel',e=>{e.preventDefault();cam.tr=clampR(cam.tr*(1+Math.sign(e.deltaY)*.1))},{passive:false});
 const ray=new THREE.Raycaster();
 let lastPick={i:-1,t:0};
-function pick(x,y){if(cam.focus>=0){const now=performance.now();if(lastPick.i===-3&&now-lastPick.t<450){exitFocus();lastPick.i=-9}else lastPick={i:-3,t:now};return}
-  const v=new THREE.Vector2(x/window.innerWidth*2-1,-(y/window.innerHeight)*2+1);ray.setFromCamera(v,camera);
+function pick(x,y){const v=new THREE.Vector2(x/window.innerWidth*2-1,-(y/window.innerHeight)*2+1);ray.setFromCamera(v,camera);
   // the station: a tap inside its on-screen footprint (ring radius, at least 28px)
   {tmp.set(0,0,0).project(camera);const sx=(tmp.x+1)/2*innerWidth,sy=(1-tmp.y)/2*innerHeight;tmp2.set(1.5,0,0).project(camera);
    const rad=Math.max(28,Math.abs((tmp2.x-tmp.x)/2*innerWidth));
