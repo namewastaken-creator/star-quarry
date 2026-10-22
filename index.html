@@ -963,8 +963,21 @@ function buildSettleLevel(w,i,k){const P=PLANETS[i],s=w.facS,R=w.facR,g=new THRE
       const vent=new THREE.Mesh(new THREE.CylinderGeometry(.05*s,.06*s,.06*s,10),DM.dark);vent.position.y=.4*s;d.add(vent);
       setTube(g,R,s,SET_AT(0,0),.55,SET_AT(1.0,a),.3)});
     [162,234,306,18].forEach(a=>setLamp(g,R,s,SET_AT(.78,a)));
-    // twin transit tubes from the launch pad's south edge to the hub, on supports, with light rings along them
-    {const A=new THREE.Vector3().copy(PORT_DIR).applyAxisAngle(new THREE.Vector3().crossVectors(PORT_DIR,SET_DIR).normalize(),1.08*.16),B=setDir(0,.5*SET_SC),dirs=[];
+    // twin transit tubes from the pad terminal to the hub, on supports, with light rings along them
+    // transit terminal on the launch pad's south edge: glass front facing the pad, the two tubes enter its back wall
+    {const ax=new THREE.Vector3().crossVectors(PORT_DIR,SET_DIR).normalize(),TD=PORT_DIR.clone().applyAxisAngle(ax,1.45*.16);
+     const term=new THREE.Group();term.position.copy(TD).multiplyScalar(R-.02*s);orient(term,TD,PORT_DIR.clone().addScaledVector(TD,-PORT_DIR.dot(TD)).normalize());term.scale.setScalar(SET_SC);g.add(term);
+     const tb=new THREE.Mesh(new THREE.BoxGeometry(.64*s,.06*s,.5*s),DM.pad);tb.position.y=.03*s;term.add(tb);
+     const body=new THREE.Mesh(new THREE.BoxGeometry(.56*s,.26*s,.4*s),DM.hull);body.position.y=.19*s;term.add(body);
+     const roof=new THREE.Mesh(new THREE.CylinderGeometry(.2*s,.2*s,.56*s,16,1,false,0,Math.PI),DM.hull);roof.rotation.z=Math.PI/2;roof.rotation.y=Math.PI/2;roof.position.y=.32*s;roof.scale.set(1,1,.9);term.add(roof);
+     const glassF=new THREE.Mesh(new THREE.BoxGeometry(.46*s,.16*s,.012*s),DM.glass);glassF.position.set(0,.2*s,.205*s);term.add(glassF);
+     const winF=new THREE.Mesh(new THREE.BoxGeometry(.5*s,.025*s,.014*s),DM.window);winF.position.set(0,.3*s,.205*s);term.add(winF);
+     const door=new THREE.Mesh(new THREE.BoxGeometry(.14*s,.14*s,.016*s),DM.door);door.position.set(0,.13*s,.21*s);term.add(door);
+     const canopy=new THREE.Mesh(new THREE.BoxGeometry(.5*s,.02*s,.12*s),acc);canopy.position.set(0,.31*s,.26*s);term.add(canopy);
+     for(const x of[-.11,.11]){const portal=new THREE.Mesh(new THREE.TorusGeometry(.075*s,.016*s,6,20),DM.teal);portal.position.set(x*s,.16*s,-.205*s);term.add(portal)}
+     const sign=new THREE.Mesh(new THREE.BoxGeometry(.2*s,.06*s,.02*s),glow);sign.position.set(0,.47*s,.05*s);term.add(sign);
+     const lamp=new THREE.Mesh(new THREE.SphereGeometry(.035*s,8,6),DM.amber);lamp.position.set(.24*s,.36*s,0);term.add(lamp)}
+    {const A=new THREE.Vector3().copy(PORT_DIR).applyAxisAngle(new THREE.Vector3().crossVectors(PORT_DIR,SET_DIR).normalize(),1.7*.16),B=setDir(0,.5*SET_SC),dirs=[];
      for(let q=0;q<=24;q++)dirs.push(slerpDir(A,B,q/24,new THREE.Vector3()));
      const sideAt=q=>{const d=dirs[q],t=dirs[Math.min(24,q+1)].clone().sub(dirs[Math.max(0,q-1)]);return new THREE.Vector3().crossVectors(d,t).normalize()};
      const H=.16*s*SET_SC,TR=.065*s*SET_SC;
