@@ -38,8 +38,8 @@ body{background:radial-gradient(120% 80% at 70% 10%,#151a3a 0%,#090b1a 45%,var(-
 .cash .probe:focus-visible{outline:2px solid var(--ship);outline-offset:2px}
 .hudr{display:flex;flex-direction:column;align-items:flex-end;gap:6px;pointer-events:auto}
 .dm{font:500 12px var(--f-data);color:#c9b8ff}
-#od{font:700 13px var(--f-display);letter-spacing:.12em;text-transform:uppercase;background:var(--panel2);color:var(--ship);border:1px solid #2d6b66;border-radius:6px;padding:7px 11px;min-width:118px;cursor:pointer}
-#od.on{background:var(--ship);color:#052523;border-color:var(--ship)}
+#od.odl{color:var(--ore)}
+#od.odl.on{color:#7ff0e0;text-shadow:0 0 8px rgba(95,212,196,.7)}
 #music{font:600 11px var(--f-display);letter-spacing:.14em;text-transform:uppercase;background:rgba(13,16,32,.75);color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:6px 10px;cursor:pointer}
 #music.on{color:var(--ship);border-color:#2d6b66}
 #fs{font:600 11px var(--f-display);letter-spacing:.14em;text-transform:uppercase;background:rgba(13,16,32,.75);color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:6px 10px;cursor:pointer}
@@ -49,7 +49,7 @@ body{background:radial-gradient(120% 80% at 70% 10%,#151a3a 0%,#090b1a 45%,var(-
 .vol input{flex:1;min-width:0;accent-color:var(--ore)}
 #center{font:600 11px var(--f-display);letter-spacing:.14em;text-transform:uppercase;background:rgba(13,16,32,.75);color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:6px 10px;cursor:pointer}
 #center:focus-visible{outline:2px solid var(--ship);outline-offset:2px}
-#od:disabled{color:var(--muted);border-color:var(--line);cursor:default}
+#od.odl:disabled{color:var(--muted);cursor:default;text-decoration:none}
 
 /* Sheet */
 #sheet{position:fixed;left:0;right:0;bottom:0;background:var(--panel);border-top:1px solid var(--line);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);display:flex;flex-direction:column;height:46%;padding-bottom:env(safe-area-inset-bottom,0px);transition:height .25s ease}
@@ -167,10 +167,10 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
     <span class="val" id="cash">0</span>
     <span class="rate" id="rate">≈ 0 /s</span>
     <button class="rate probe" id="probeInfo" type="button"></button>
+    <button class="rate probe odl" id="od" type="button"></button>
   </div>
   <div class="hudr">
     <span class="dm" id="dm"></span>
-    <button id="od" type="button">Overdrive</button>
     <button id="center" type="button">Recenter</button>
     <button id="music" type="button" aria-pressed="true">Music on</button>
     <button id="fs" type="button" hidden>Full screen</button>
@@ -320,7 +320,8 @@ const newestOre=i=>Math.max(...PLANETS[i].mix.map(([o])=>o));
 function settleDesc(i,k){const P=PLANETS[i];return{m:`Mining ×1.5 on ${P.n}`,s:`Ship speed ×1.5 on ${P.n}`,c:`Cargo ×1.5 on ${P.n}`,
   ore:`${ORES[newestOre(i)].n} and its bars sell for ×1.5`,gm:'All planets mine 10% faster',gs:'All ships fly 10% faster',gc:'All ships carry 10% more',
   gv:'Everything sells for 5% more',smelt:'Smelting runs 25% faster',probe:'Probes bring back 25% more'}[k]}
-const BAR_IN=8, BAR_MULT=12, OD_LEN=120, OD_CD=600, WARP_AT=5;
+// Overdrive: 2x mining and ship speed for OD_LEN seconds, then OD_CD seconds to recharge
+const BAR_IN=8, BAR_MULT=12, OD_LEN=600, OD_CD=3600, WARP_AT=5;
 /* Research costs credits plus ore: 60% of each project's old price in credits plus ore worth about 30% of it.
    Ore is the newest types mined by planets costing up to 2/3 of the project, so you're already mining it; bigger projects need more ore types:
    under 10K credits: 1 type, under 100M: 2 types, 100M and up: 3 types.
@@ -521,7 +522,7 @@ const EV_TITLES={credits:['Treasury Run','Golden Ledger','Seed Capital','Strongb
  settle:['New Homes','Raise the Domes','Groundbreaking','Hearth and Hull'],bars:['Furnace Week','Bar Rush','Cast Iron Will','Hot Metal'],od:['Redline','Full Burn','Engines Hot','Afterburn'],
  warp:['Rebirth','Fold the Stars','New Dawn','Second Sky'],claim:['Frontier Claims','Stake the Flag','Uncharted','Outer Worlds'],research:['Archive Keys','Lost Formulas','Lab Nights','Blueprints']};
 const EV_DAYS_H={3:18,4:24,5:30};
-const EV_FIXED={probes:{3:30,4:40,5:50},ups:{3:20,4:28,5:36},teams:{3:2,4:3,5:4},settle:{3:1,4:2,5:2},bars:{3:150,4:200,5:260},od:{3:8,4:11,5:14},warp:{3:1,4:1,5:1},claim:{3:1,4:2,5:2},research:{3:2,4:3,5:4}};
+const EV_FIXED={probes:{3:30,4:40,5:50},ups:{3:20,4:28,5:36},teams:{3:2,4:3,5:4},settle:{3:1,4:2,5:2},bars:{3:150,4:200,5:260},od:{3:6,4:8,5:10},warp:{3:1,4:1,5:1},claim:{3:1,4:2,5:2},research:{3:2,4:3,5:4}};
 const EV_BOOSTS=['mine','ship','cargo','value','probe','smelt'],EV_BOOST_NAME={mine:'mining',ship:'ship speed',cargo:'cargo',value:'sale prices',probe:'probe hauls',smelt:'smelting speed'};
 function newLife(){return{del:{},deliv:0,bars:0,ups:0,teams:0,claims:0,settle:0,res:0,od:0}}
 function newPerm(){return{mine:1,ship:1,cargo:1,value:1,probe:1,smelt:1}}
@@ -1874,9 +1875,9 @@ function hud(){
   $('dm').textContent=S.dm?`✦ ${fmt(S.dm)} star dust`:'';
   {const pr=S.probe,nw=Date.now();$('probeInfo').textContent=pr.out?`◈ Probe out · back in ${fmtTime(Math.max(0,pr.out.at+ECON.PROBE_FLY*1000-nw)/1000)}`:`◈ Next probe in ${fmtTime(Math.max(0,pr.nextAt-nw)/1000)}`}
   const od=$('od'),now=Date.now();
-  if(odOn()){od.className='on';od.disabled=false;od.textContent='2× · '+fmtTime((S.od.until-now)/1000)}
-  else if(now<S.od.ready){od.className='';od.disabled=true;od.textContent='Recharge '+fmtTime((S.od.ready-now)/1000)}
-  else{od.className='';od.disabled=false;od.textContent='Overdrive 2×'}
+  if(odOn()){od.className='rate probe odl on';od.disabled=false;od.textContent='⚡︎ Overdrive 2× · '+fmtTime((S.od.until-now)/1000)+' left'}
+  else if(now<S.od.ready){od.className='rate probe odl';od.disabled=true;od.textContent='⚡︎ Overdrive recharging · '+fmtTime((S.od.ready-now)/1000)}
+  else{od.className='rate probe odl';od.disabled=false;od.textContent='⚡︎ Overdrive ready · tap for 2× ('+Math.round(OD_LEN/60)+'m)'}
   document.querySelector('[data-tab="smelter"]').hidden=!has('smelt');
   chipNav();
 }
@@ -1913,7 +1914,7 @@ musicUI();
     else{const p=req.call(de,{navigationUI:'hide'});if(p&&p.catch)p.catch(()=>toast('Full screen is not available here.'));try{screen.orientation&&screen.orientation.lock&&screen.orientation.lock('portrait').catch(()=>{})}catch(err){}}});
   const ch=()=>{ui();setTimeout(resize,200)};document.addEventListener('fullscreenchange',ch);document.addEventListener('webkitfullscreenchange',ch);
 })();
-$('od').addEventListener('click',()=>{if(odOn()||Date.now()<S.od.ready)return;S.od.until=Date.now()+OD_LEN*1000;S.od.ready=S.od.until+OD_CD*1000;S.life.od++;toast('Overdrive engaged. Mines and ships run at double speed for 2 minutes.');save()});
+$('od').addEventListener('click',()=>{if(odOn()||Date.now()<S.od.ready)return;S.od.until=Date.now()+OD_LEN*1000;S.od.ready=S.od.until+OD_CD*1000;S.life.od++;toast(`Overdrive engaged. Mines and ships run at double speed for ${Math.round(OD_LEN/60)} minutes.`);save()});
 
 pbody.addEventListener('click',e=>{
   const b=e.target.closest('[data-act]');if(!b||b.disabled)return;const a=b.dataset.act;
