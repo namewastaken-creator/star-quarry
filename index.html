@@ -425,8 +425,9 @@ function overflowSale(quiet){let units=0,v=0;S.planets.forEach((p,i)=>{if(p.over
 function step(dt){
   S.planets.forEach((p,i)=>{
     if(!p.u)return;
-    // ore beyond the stockpile cap goes to the overflow store (sold every 10 minutes at a 75% discount) instead of being lost
-    const rate=mineRate(i),lim=rate*300+cargo(i),ns=p.stock+rate*dt;if(ns>lim){p.over=(p.over||0)+ns-lim;p.stock=lim}else p.stock=ns;
+    // the stockpile holds one cargo load (ships still leave full whenever mining outpaces them); ore beyond it goes
+    // straight to the overflow store (sold every 10 minutes at a 75% discount), so any surplus shows up there at once
+    const rate=mineRate(i),lim=cargo(i),ns=p.stock+rate*dt;if(ns>lim){p.over=(p.over||0)+ns-lim;p.stock=lim}else p.stock=ns;
     const prev=p.t,cap=cargo(i);p.t+=dt/tripTime(i);
     if(prev<.5&&p.t>=.5){p.load=Math.min(cap,p.stock);p.stock-=p.load}
     if(p.t>=1){const n=Math.floor(p.t);p.t-=n;
