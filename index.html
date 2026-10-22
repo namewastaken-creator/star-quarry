@@ -678,6 +678,21 @@ function addRim(mat,P){const rc=new THREE.Color(P.c2).lerp(new THREE.Color(0xbfd
   mat.onBeforeCompile=sh=>{sh.uniforms.rimK=mat.userData.rimK;sh.uniforms.rimC=mat.userData.rimC;
     sh.fragmentShader='uniform float rimK;uniform vec3 rimC;\n'+sh.fragmentShader.replace('gl_FragColor = vec4( outgoingLight, diffuseColor.a );',
       'float rimF=pow(1.0-clamp(dot(normalize(vNormal),normalize(vViewPosition)),0.0,1.0),3.0);\n\tgl_FragColor = vec4( outgoingLight+rimC*rimF*rimK, diffuseColor.a );')}}
+/* Glow for lights: one consistent rule for every new graphics element.
+   Any mesh whose material is a light (emissive, intensity >= 1) gets a glow that follows its colour and brightness:
+   small spheres (lamps, beacons) get a soft sprite halo; rings and bands (torus, open cylinders) get a faint additive shell.
+   Call glowify(group, list) after building, and updateGlows(list) each frame so pulsing or colour-cycling lights glow in step. */
+const GLOW_TEX=glowTex('rgba(255,255,255,1)','rgba(255,255,255,.22)');
+const isLight=m=>m&&m.emissive&&m.emissiveIntensity>=1&&(m.emissive.r+m.emissive.g+m.emissive.b)>.05;
+function glowify(root,list){const add=[];
+  root.traverse(o=>{if(!o.isMesh||o.userData.glow||!isLight(o.material))return;const g=o.geometry,p=g.parameters||{},src=o.material;let gl=null;
+    if(g.type==='SphereGeometry'&&(p.thetaLength===undefined||p.thetaLength>3)){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color:src.emissive.clone(),blending:THREE.AdditiveBlending,depthWrite:false,transparent:true,opacity:.8}));
+      sp.scale.setScalar(p.radius*7);gl={o:sp,base:.8}}
+    else if(g.type==='TorusGeometry'){gl={o:new THREE.Mesh(new THREE.TorusGeometry(p.radius,p.tube*3.2,6,p.tubularSegments||24),new THREE.MeshBasicMaterial({color:src.emissive.clone(),blending:THREE.AdditiveBlending,depthWrite:false,transparent:true,opacity:.3})),base:.3}}
+    else if(g.type==='CylinderGeometry'&&p.openEnded){gl={o:new THREE.Mesh(new THREE.CylinderGeometry(p.radiusTop*1.07,p.radiusBottom*1.07,p.height*2.4,p.radialSegments,1,true),new THREE.MeshBasicMaterial({color:src.emissive.clone(),blending:THREE.AdditiveBlending,depthWrite:false,transparent:true,opacity:.28,side:THREE.DoubleSide})),base:.28}}
+    if(gl){gl.o.userData.glow=1;gl.o.renderOrder=2;add.push([o,gl]);list.push({src,gm:gl.o.material,base:gl.base})}});
+  add.forEach(([o,gl])=>o.add(gl.o))}
+function updateGlows(list){for(const g of list){g.gm.color.copy(g.src.emissive);g.gm.opacity=g.base*Math.min(1.4,g.src.emissiveIntensity/1.2)}}
 const selTex=(()=>{const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d');g.strokeStyle='#f0a33c';g.lineWidth=5;g.setLineDash([14,9]);g.beginPath();g.arc(64,64,56,0,7);g.stroke();return new THREE.CanvasTexture(c)})();
 const selRing=new THREE.Sprite(new THREE.SpriteMaterial({map:selTex,transparent:true,depthWrite:false}));scene.add(selRing);
 const shipGeo=new THREE.ConeGeometry(.17,.55,6);shipGeo.rotateX(Math.PI/2);
@@ -998,9 +1013,10 @@ function buildSettleLevel(w,i,k){const P=PLANETS[i],s=w.facS,R=w.facR,g=new THRE
     const mb=new THREE.Mesh(new THREE.SphereGeometry(.04*s,8,6),DM.red);mb.position.set(-.25*s,.5*s,0);mg.add(mb);
     setTube(g,R,s,SET_AT(2.6,270),.65,SET_AT(1.0,270),.3);setTube(g,R,s,SET_AT(2.6,342),.55,SET_AT(1.0,342),.3);
     w.setHalo=halo;w.setBeacon=beacon;w.setShow=showMat;w.setHolo=holo;w.setHoloRing=holoRing;w.setDish=dishG}}
-function syncSettlement(w,i){const lv=settleLv(i);if(!w.settle)w.settle=[];
-  for(let k=0;k<3;k++){if(lv>k&&!w.settle[k])buildSettleLevel(w,i,k);if(w.settle[k])w.settle[k].visible=lv>k}}
+function syncSettlement(w,i){const lv=settleLv(i);if(!w.settle)w.settle=[];if(!w.setGlows)w.setGlows=[];
+  for(let k=0;k<3;k++){if(lv>k&&!w.settle[k]){buildSettleLevel(w,i,k);glowify(w.settle[k],w.setGlows)}if(w.settle[k])w.settle[k].visible=lv>k}}
 function animateSettlement(w,dt){if(!w.settle)return;
+  if(w.settle[0]&&w.settle[0].visible)updateGlows(w.setGlows);
   if(w.setHalo&&w.settle[2]&&w.settle[2].visible){w.setHalo.rotation.y+=dt*.6;w.setBeacon.material.emissiveIntensity=1+Math.sin(simTime*2.2);
     w.setShow.emissive.setHSL((simTime*.08)%1,.9,.55);w.setShow.color.copy(w.setShow.emissive);w.setHolo.rotation.y+=dt*1.5;w.setHoloRing.rotation.x+=dt*.9;w.setDish.rotation.y+=dt*.7}}
 // Show the base tiers and rovers that match the number of teams hired.
