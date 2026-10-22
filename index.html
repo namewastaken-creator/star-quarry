@@ -690,7 +690,7 @@ const probeObj=new THREE.Group();probeObj.visible=false;scene.add(probeObj);
 // Probe: a gold-foil bus with a high-gain dish, an ore collector scoop at the front (glowing in the colour of the
 // ore it's after), two hinged solar wings that slowly track the sun, a power unit on a finned boom, a sensor boom,
 // a scanner lens, three thrusters at the back with an engine flame, and red/green wingtip lights. Forward is +z.
-const probeParts={};
+const probeParts={},_pq1=new THREE.Quaternion(),_pq2=new THREE.Quaternion(),_pq3=new THREE.Quaternion(),_pe=new THREE.Euler(),_pm=new THREE.Matrix4();
 { const P=probeObj;
   const foil=(()=>{const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d'),R=rng(77);g.fillStyle='#c99a3a';g.fillRect(0,0,128,128);
     for(let k=0;k<70;k++){const x=R()*128,y=R()*128,r=6+R()*16;g.fillStyle=`rgba(${R()<.5?'255,226,150':'120,80,20'},${.18+R()*.25})`;g.beginPath();g.moveTo(x,y);for(let q=0;q<5;q++)g.lineTo(x+(R()-.5)*r*2,y+(R()-.5)*r*2);g.fill()}
@@ -706,8 +706,10 @@ const probeParts={};
   for(const z of[-.1,.1]){const ring=new THREE.Mesh(new THREE.CylinderGeometry(.09,.09,.015,6),trim);ring.rotation.x=Math.PI/2;ring.position.z=z;P.add(ring)}
   const deck=new THREE.Mesh(new THREE.BoxGeometry(.11,.035,.13),dark);deck.position.y=.085;P.add(deck);
   // high-gain dish on a short mast, angled up and forward
-  const dishG=new THREE.Group();dishG.position.set(0,.13,.02);dishG.rotation.x=-.5;P.add(dishG);
-  const dmast=new THREE.Mesh(new THREE.CylinderGeometry(.008,.008,.06,6),metal);dmast.position.y=-.02;dishG.add(dmast);
+  // the dish sits on a taller mast, clear of the deck, and turns slowly
+  const dishSpin=new THREE.Group();dishSpin.position.set(0,.1,.02);P.add(dishSpin);probeParts.dishSpin=dishSpin;
+  const dmast=new THREE.Mesh(new THREE.CylinderGeometry(.008,.01,.11,6),metal);dmast.position.y=.055;dishSpin.add(dmast);
+  const dishG=new THREE.Group();dishG.position.y=.1;dishG.rotation.x=-.5;dishSpin.add(dishG);
   const dish=new THREE.Mesh(new THREE.SphereGeometry(.09,18,6,0,Math.PI*2,0,Math.PI/3.4),new THREE.MeshStandardMaterial({color:0xe6ebf5,metalness:.4,roughness:.3,side:THREE.DoubleSide,envMap:stEnv}));dish.rotation.x=Math.PI;dish.position.y=.06;dishG.add(dish);
   const feed=new THREE.Mesh(new THREE.ConeGeometry(.012,.05,6),dark);feed.position.y=.02;dishG.add(feed);
   // collector scoop at the front with a spinning intake ring in the ore's colour
@@ -1273,11 +1275,15 @@ function updateWorld(dt){
     d.state='free'}); // ships re-mark their own dock every frame
   {const pr=S.probe;if(pr&&pr.out){const f=(Date.now()-pr.out.at)/(ECON.PROBE_FLY*1000);
      if(f>=0&&f<1){probeObj.visible=true;probePos(f,pr.out.ang,probeObj.position);
-       if(f<.05||f>.95)tmp2.set(0,50,0).add(probeObj.position);else probePos(Math.min(.999,f+.002),pr.out.ang,tmp2);probeObj.lookAt(tmp2);
+       // launch and landing: hold still, pointing straight up; ease into and out of the flight direction just outside the station
+       {const qUp=_pq1.setFromEuler(_pe.set(-Math.PI/2,0,0)).premultiply(_pq3.setFromAxisAngle(UP,-pr.out.ang+Math.PI/2));
+        if(f<.05||f>.95)probeObj.quaternion.copy(qUp);
+        else{probePos(Math.min(.999,f+.002),pr.out.ang,tmp2);_pm.lookAt(tmp2,probeObj.position,UP);_pq2.setFromRotationMatrix(_pm);
+          const k=f<.5?ss(Math.min(1,(f-.05)/.05)):ss(Math.min(1,(.95-f)/.05));probeObj.quaternion.copy(qUp).slerp(_pq2,k)}}
        probeGlow.material.color.set(ORES[pr.out.ore].c);const far=(f<.05||f>.95)?.55:cam.probe?1.1:Math.min(4,1+probeObj.position.length()/12);probeObj.scale.setScalar(far); // normal size when the camera follows it
        probeBlink.material.emissiveIntensity=(simTime*1.6)%1<.25?2.5:.2;
        {const oc=probeParts.oreMat;oc.color.set(ORES[pr.out.ore].c);oc.emissive.set(ORES[pr.out.ore].c);oc.emissiveIntensity=1.3+.5*Math.sin(simTime*4);
-        probeParts.intake.rotation.z+=dt*3;probeParts.wings.forEach(wg=>wg.rotation.x=Math.sin(simTime*.25)*.6);
+        probeParts.intake.rotation.z+=dt*3;probeParts.dishSpin.rotation.y+=dt*.5;probeParts.wings.forEach(wg=>wg.rotation.x=Math.sin(simTime*.25)*.6);
         const cruising=f>=.05&&f<=.95;probeParts.flame.material.opacity=cruising?.75+.25*Math.sin(simTime*30):0;updateGlows(probeGlowL)}
      }else probeObj.visible=false}else probeObj.visible=false}
   // iris: opens and closes at one steady speed (IRIS_T seconds either way). It starts opening just before a probe
