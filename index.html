@@ -687,12 +687,56 @@ for(const sx of[-1,1]){const truss=new THREE.Mesh(new THREE.BoxGeometry(1.75,.03
  const t=new THREE.Mesh(new THREE.SphereGeometry(.03,8,6),stTeal.clone());t.position.set(-.4,1.04,.12);station.add(t);stLights.push(t)}
 // space probe: launched from the iris, loops the galaxy, glows in the colour of the ore it is after
 const probeObj=new THREE.Group();probeObj.visible=false;scene.add(probeObj);
-{ const body=new THREE.Mesh(new THREE.OctahedronGeometry(.12),trim);body.scale.set(1,1.4,1);probeObj.add(body);
-  const band=new THREE.Mesh(new THREE.TorusGeometry(.1,.016,6,20),stTeal);band.rotation.x=Math.PI/2;probeObj.add(band);
-  for(const s of[-1,1]){const fin=new THREE.Mesh(new THREE.BoxGeometry(.24,.012,.09),new THREE.MeshStandardMaterial({color:0x1d3a7a,metalness:.4,roughness:.25,emissive:0x0a1a40}));fin.position.x=s*.2;probeObj.add(fin)}
-  const ant=new THREE.Mesh(new THREE.CylinderGeometry(.006,.006,.2,5),metal);ant.rotation.x=Math.PI/2;ant.position.z=.16;probeObj.add(ant)}
+// Probe: a gold-foil bus with a high-gain dish, an ore collector scoop at the front (glowing in the colour of the
+// ore it's after), two hinged solar wings that slowly track the sun, a power unit on a finned boom, a sensor boom,
+// a scanner lens, three thrusters at the back with an engine flame, and red/green wingtip lights. Forward is +z.
+const probeParts={};
+{ const P=probeObj;
+  const foil=(()=>{const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d'),R=rng(77);g.fillStyle='#c99a3a';g.fillRect(0,0,128,128);
+    for(let k=0;k<70;k++){const x=R()*128,y=R()*128,r=6+R()*16;g.fillStyle=`rgba(${R()<.5?'255,226,150':'120,80,20'},${.18+R()*.25})`;g.beginPath();g.moveTo(x,y);for(let q=0;q<5;q++)g.lineTo(x+(R()-.5)*r*2,y+(R()-.5)*r*2);g.fill()}
+    const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;return new THREE.MeshStandardMaterial({map:t,metalness:.85,roughness:.35,envMap:stEnv,envMapIntensity:1.2})})();
+  const cells=(()=>{const c=document.createElement('canvas');c.width=128;c.height=64;const g=c.getContext('2d');g.fillStyle='#132a5e';g.fillRect(0,0,128,64);
+    g.strokeStyle='#5f7fc0';g.lineWidth=1;for(let x=0;x<=128;x+=16){g.beginPath();g.moveTo(x,0);g.lineTo(x,64);g.stroke()}for(let y=0;y<=64;y+=16){g.beginPath();g.moveTo(0,y);g.lineTo(128,y);g.stroke()}
+    g.fillStyle='rgba(160,200,255,.18)';for(let x=0;x<128;x+=16)g.fillRect(x+2,2,6,60);
+    const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;return new THREE.MeshStandardMaterial({map:t,metalness:.5,roughness:.25,emissive:0x0a1a40,envMap:stEnv})})();
+  const dark=new THREE.MeshStandardMaterial({color:0x2a3048,metalness:.6,roughness:.45,envMap:stEnv});
+  const oreMat=new THREE.MeshStandardMaterial({color:0xffffff,emissive:0xffffff,emissiveIntensity:1.6});probeParts.oreMat=oreMat;
+  // body: six-sided bus wrapped in gold foil, with a dark instrument deck and trim bands
+  const bus=new THREE.Mesh(new THREE.CylinderGeometry(.085,.085,.2,6),foil);bus.rotation.x=Math.PI/2;P.add(bus);
+  for(const z of[-.1,.1]){const ring=new THREE.Mesh(new THREE.CylinderGeometry(.09,.09,.015,6),trim);ring.rotation.x=Math.PI/2;ring.position.z=z;P.add(ring)}
+  const deck=new THREE.Mesh(new THREE.BoxGeometry(.11,.035,.13),dark);deck.position.y=.085;P.add(deck);
+  // high-gain dish on a short mast, angled up and forward
+  const dishG=new THREE.Group();dishG.position.set(0,.13,.02);dishG.rotation.x=-.5;P.add(dishG);
+  const dmast=new THREE.Mesh(new THREE.CylinderGeometry(.008,.008,.06,6),metal);dmast.position.y=-.02;dishG.add(dmast);
+  const dish=new THREE.Mesh(new THREE.SphereGeometry(.09,18,6,0,Math.PI*2,0,Math.PI/3.4),new THREE.MeshStandardMaterial({color:0xe6ebf5,metalness:.4,roughness:.3,side:THREE.DoubleSide,envMap:stEnv}));dish.rotation.x=Math.PI;dish.position.y=.06;dishG.add(dish);
+  const feed=new THREE.Mesh(new THREE.ConeGeometry(.012,.05,6),dark);feed.position.y=.02;dishG.add(feed);
+  // collector scoop at the front with a spinning intake ring in the ore's colour
+  const scoop=new THREE.Mesh(new THREE.CylinderGeometry(.075,.045,.07,16,1,true),new THREE.MeshStandardMaterial({color:0x9aa3bd,metalness:.7,roughness:.3,side:THREE.DoubleSide,envMap:stEnv}));scoop.rotation.x=Math.PI/2;scoop.position.z=.135;P.add(scoop);
+  const intake=new THREE.Mesh(new THREE.TorusGeometry(.072,.009,6,24),oreMat);intake.position.z=.17;P.add(intake);probeParts.intake=intake;
+  for(let k=0;k<4;k++){const vane=new THREE.Mesh(new THREE.BoxGeometry(.005,.06,.004),dark);vane.rotation.z=k*Math.PI/4;intake.add(vane)}
+  // solar wings on hinged booms; they turn slowly to track the sun
+  probeParts.wings=[];
+  for(const sd of[-1,1]){const hinge=new THREE.Group();hinge.position.x=sd*.09;P.add(hinge);
+    const boom=new THREE.Mesh(new THREE.CylinderGeometry(.006,.006,.06,6),metal);boom.rotation.z=Math.PI/2;boom.position.x=sd*.03;hinge.add(boom);
+    const wing=new THREE.Group();wing.position.x=sd*.06;hinge.add(wing);
+    for(let q=0;q<2;q++){const pn=new THREE.Mesh(new THREE.BoxGeometry(.12,.006,.1),cells);pn.position.x=sd*(.065+q*.125);wing.add(pn);
+      const fr=new THREE.Mesh(new THREE.BoxGeometry(.122,.008,.004),trim);fr.position.set(sd*(.065+q*.125),0,.051);wing.add(fr);const fr2=fr.clone();fr2.position.z=-.051;wing.add(fr2)}
+    const tip=new THREE.Mesh(new THREE.SphereGeometry(.012,8,6),new THREE.MeshStandardMaterial({color:sd<0?0xff5a5a:0x7cf0a0,emissive:sd<0?0xff3b3b:0x2fd36a,emissiveIntensity:1.6}));tip.position.x=sd*.255;wing.add(tip);
+    probeParts.wings.push(wing)}
+  // power unit on a finned boom underneath, and a long sensor boom
+  const rtgBoom=new THREE.Mesh(new THREE.CylinderGeometry(.006,.006,.12,6),metal);rtgBoom.position.set(0,-.12,-.04);P.add(rtgBoom);
+  const rtg=new THREE.Mesh(new THREE.CylinderGeometry(.022,.022,.08,10),dark);rtg.rotation.x=Math.PI/2;rtg.position.set(0,-.18,-.04);P.add(rtg);
+  for(let k=0;k<6;k++){const fin=new THREE.Mesh(new THREE.BoxGeometry(.004,.06,.07),metal);fin.rotation.z=k*Math.PI/6;fin.position.set(0,-.18,-.04);P.add(fin)}
+  const sBoom=new THREE.Mesh(new THREE.CylinderGeometry(.004,.004,.32,5),metal);sBoom.rotation.z=Math.PI/2.6;sBoom.position.set(-.1,.1,-.06);P.add(sBoom);
+  const sTip=new THREE.Mesh(new THREE.SphereGeometry(.014,8,6),trim);sTip.position.set(-.235,.155,-.06);P.add(sTip);
+  // scanner lens under the deck, pulsing in the ore's colour
+  const lens=new THREE.Mesh(new THREE.SphereGeometry(.022,12,8),oreMat);lens.position.set(.045,-.07,.08);P.add(lens);
+  const hood=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,.03,12,1,true),dark);hood.position.set(.045,-.07,.08);hood.rotation.x=Math.PI/2;P.add(hood);
+  // thrusters and engine flame at the back
+  for(const [x,y] of[[0,.035],[-.03,-.02],[.03,-.02]]){const nz=new THREE.Mesh(new THREE.ConeGeometry(.018,.04,10,1,true),dark);nz.rotation.x=-Math.PI/2;nz.position.set(x,y,-.12);P.add(nz)}
+  const flame=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex('rgba(160,230,255,1)','rgba(80,150,255,.3)'),blending:THREE.AdditiveBlending,depthWrite:false,transparent:true}));flame.position.z=-.17;flame.scale.set(.16,.16,1);P.add(flame);probeParts.flame=flame}
 const probeGlow=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex('rgba(255,255,255,1)','rgba(255,255,255,.3)'),blending:THREE.AdditiveBlending,depthWrite:false}));probeGlow.scale.set(.9,.9,1);probeObj.add(probeGlow);
-const probeBlink=new THREE.Mesh(new THREE.SphereGeometry(.03,8,6),new THREE.MeshStandardMaterial({color:0xff5a5a,emissive:0xff3b3b,emissiveIntensity:2}));probeBlink.position.y=.18;probeObj.add(probeBlink);
+const probeBlink=new THREE.Mesh(new THREE.SphereGeometry(.03,8,6),new THREE.MeshStandardMaterial({color:0xff5a5a,emissive:0xff3b3b,emissiveIntensity:2}));probeBlink.position.set(0,.105,-.05);probeBlink.scale.setScalar(.6);probeObj.add(probeBlink);
 function probePos(f,ang,res){const top=2.6,base=.15;let Rmax=8;S.planets.forEach((p,i)=>{if(p.u)Rmax=Math.max(Rmax,PLANETS[i].r*.9+2)});
   if(f<.05){const k=ss(f/.05);return res.set(0,base+(top-base)*k,0)}
   if(f>.95){const k=ss((f-.95)/.05);return res.set(0,top-(top-base)*k,0)}
@@ -782,7 +826,8 @@ function glowify(root,list){const add=[];
 function updateGlows(list){for(const g of list){g.gm.color.copy(g.src.emissive);g.gm.opacity=g.base*Math.min(1.4,g.src.emissiveIntensity/1.2)}}
 // station lights get the same glow; its blinking navigation lights already have their own
 stGlowL=[];stLights.forEach(l=>l.userData.glowed=1);irisRim.material.userData.light=1;docks.forEach(d=>d.status.material.userData.light=1);
-glowify(station,stGlowL);if(ringLights){const nl=[];glowify(ringLights,nl);nl.forEach(x=>{x.ring=1;stGlowL.push(x)})}
+glowify(station,stGlowL);
+const probeGlowL=[];glowify(probeObj,probeGlowL);if(ringLights){const nl=[];glowify(ringLights,nl);nl.forEach(x=>{x.ring=1;stGlowL.push(x)})}
 const selTex=(()=>{const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d');g.strokeStyle='#f0a33c';g.lineWidth=5;g.setLineDash([14,9]);g.beginPath();g.arc(64,64,56,0,7);g.stroke();return new THREE.CanvasTexture(c)})();
 const selRing=new THREE.Sprite(new THREE.SpriteMaterial({map:selTex,transparent:true,depthWrite:false}));scene.add(selRing);
 const shipGeo=new THREE.ConeGeometry(.17,.55,6);shipGeo.rotateX(Math.PI/2);
@@ -1230,7 +1275,11 @@ function updateWorld(dt){
      if(f>=0&&f<1){probeObj.visible=true;probePos(f,pr.out.ang,probeObj.position);
        if(f<.05||f>.95)tmp2.set(0,50,0).add(probeObj.position);else probePos(Math.min(.999,f+.002),pr.out.ang,tmp2);probeObj.lookAt(tmp2);
        probeGlow.material.color.set(ORES[pr.out.ore].c);const far=(f<.05||f>.95)?.55:cam.probe?1.1:Math.min(4,1+probeObj.position.length()/12);probeObj.scale.setScalar(far); // normal size when the camera follows it
-       probeBlink.material.emissiveIntensity=(simTime*1.6)%1<.25?2.5:.2}else probeObj.visible=false}else probeObj.visible=false}
+       probeBlink.material.emissiveIntensity=(simTime*1.6)%1<.25?2.5:.2;
+       {const oc=probeParts.oreMat;oc.color.set(ORES[pr.out.ore].c);oc.emissive.set(ORES[pr.out.ore].c);oc.emissiveIntensity=1.3+.5*Math.sin(simTime*4);
+        probeParts.intake.rotation.z+=dt*3;probeParts.wings.forEach(wg=>wg.rotation.x=Math.sin(simTime*.25)*.6);
+        const cruising=f>=.05&&f<=.95;probeParts.flame.material.opacity=cruising?.75+.25*Math.sin(simTime*30):0;updateGlows(probeGlowL)}
+     }else probeObj.visible=false}else probeObj.visible=false}
   // iris: opens and closes at one steady speed (IRIS_T seconds either way). It starts opening just before a probe
   // launches or arrives so it is fully open in time, and closes once the probe is clear.
   {const pr=S.probe,nw=Date.now(),fly=ECON.PROBE_FLY*1000;let want=false;
