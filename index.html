@@ -82,6 +82,10 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
 .chips.wrap{flex-wrap:wrap;overflow-x:visible}
 .chipnav{display:flex;align-items:center;gap:6px;min-width:0}
 .chipnav .chips{flex:1;min-width:0;position:relative}
+.chipnav.more-r .tabscroll{-webkit-mask-image:linear-gradient(to right,#000 82%,transparent);mask-image:linear-gradient(to right,#000 82%,transparent)}
+.chipnav.more-l .tabscroll{-webkit-mask-image:linear-gradient(to left,#000 82%,transparent);mask-image:linear-gradient(to left,#000 82%,transparent)}
+.chipnav.more-l.more-r .tabscroll{-webkit-mask-image:linear-gradient(to right,transparent,#000 14%,#000 86%,transparent);mask-image:linear-gradient(to right,transparent,#000 14%,#000 86%,transparent)}
+.tabbar.chipnav{gap:2px}.tabbar .cnav{flex:0 0 26px;height:28px;align-self:center;font-size:16px}
 .chipnav.more-r .chips{-webkit-mask-image:linear-gradient(to right,#000 82%,transparent);mask-image:linear-gradient(to right,#000 82%,transparent)}
 .chipnav.more-l .chips{-webkit-mask-image:linear-gradient(to left,#000 82%,transparent);mask-image:linear-gradient(to left,#000 82%,transparent)}
 .chipnav.more-l.more-r .chips{-webkit-mask-image:linear-gradient(to right,transparent,#000 14%,#000 86%,transparent);mask-image:linear-gradient(to right,transparent,#000 14%,#000 86%,transparent)}
@@ -175,7 +179,8 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
 <div id="toast" role="status" hidden></div>
 <div id="modal" hidden><div class="box" role="dialog" aria-modal="true" aria-labelledby="mtitle"><span class="tag">Research complete</span><h2 id="mtitle"></h2><p id="mdesc" style="color:var(--ink)"></p><div id="meff"></div><span class="num" id="mcost" style="font-size:12px;color:var(--muted)"></span><button class="btn ghost wide" id="mclose" type="button">Close</button></div></div>
 <section id="sheet">
-  <nav class="tabbar" id="tabs">
+  <nav class="tabbar chipnav" id="tabs">
+    <button class="cnav" data-hs="-1" type="button" aria-label="Scroll tabs left">‹</button>
     <div class="tabscroll" id="tabscroll">
     <button class="tab on" data-tab="planet" type="button">Planet</button>
     <button class="tab" data-tab="market" type="button">Market</button>
@@ -185,6 +190,7 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
     <button class="tab" data-tab="events" type="button">Events</button>
     <button class="tab" data-tab="warp" type="button">Warp</button>
     </div>
+    <button class="cnav" data-hs="1" type="button" aria-label="Scroll tabs right">›</button>
     <button id="grip" type="button" aria-label="Collapse console"><i></i></button>
   </nav>
   <div id="pbody"></div>
@@ -1609,9 +1615,9 @@ const armed=k=>arm&&arm.k===k&&Date.now()<arm.until;
 function oreChip(o,f){return `<span class="ore"><i style="background:${ORES[o].c}"></i>${ORES[o].n}${f!=null?` <span class="num" style="color:var(--muted)">${Math.round(f*100)}%</span>`:''}</span>`}
 function viewPlanet(){
   const i=S.sel,P=PLANETS[i],p=S.planets[i],firstLocked=S.planets.findIndex(x=>!x.u);
-  let chips='<div class="chipnav" id="pnav"><button class="cnav" data-act="cscroll" data-d="-1" type="button" aria-label="Scroll planets left">‹</button><div class="chips" id="pchips">';
+  let chips='<div class="chipnav" id="pnav"><button class="cnav" data-hs="-1" type="button" aria-label="Scroll planets left">‹</button><div class="chips" id="pchips">';
   S.planets.forEach((x,k)=>{if(x.u||k===firstLocked)chips+=`<button class="chip${k===i?' on':''}${x.u?'':' lock'}" data-act="sel" data-p="${k}" type="button">${PLANETS[k].n}</button>`});
-  chips+='</div><button class="cnav" data-act="cscroll" data-d="1" type="button" aria-label="Scroll planets right">›</button></div>';
+  chips+='</div><button class="cnav" data-hs="1" type="button" aria-label="Scroll planets right">›</button></div>';
   let h=chips+`<div class="head"><h2>${P.n}</h2><span class="num" style="color:var(--muted);font-size:12px">Orbit ${i+1} · ${P.r.toFixed(1)} AU</span><button class="tog${cam.focus!==i||cam.track?' on':''}" data-act="${cam.focus===i&&cam.track?'unfocus':'focus'}" data-p="${i}" type="button">${cam.focus===i?(cam.track?'Back to galaxy':(p.u?'Center colony':'Re-center')):'Close-up'}</button></div>
   <div class="ores">${P.mix.map(([o,f])=>oreChip(o,f)).join('')}</div>`;
   if(!p.u){const c=teamHireCost(i,0);h+=`<p>A survey drone has mapped ${P.n}. Hire a mining team to claim it and start mining ${P.mix.map(([o])=>ORES[o].n.toLowerCase()).join(' and ')}.</p>
@@ -1645,7 +1651,7 @@ const teamSel={};
 function viewTeams(i,shipsBN){
   const p=S.planets[i],n=p.teams.length;let j=Math.min(teamSel[i]||0,n-1);
   let h=`<div class="card miner"><div class="head"><h3>Mining teams</h3><span class="num" style="font-size:12px;color:var(--muted)">${n} / ${TEAM_MAX} hired</span></div>`+hireBtn(i);
-  if(n>1){h+='<div class="chips">';p.teams.forEach((tm,k)=>{h+=`<button class="chip${k===j?' on':''}" data-act="tsel" data-p="${i}" data-j="${k}" type="button">${embIcon(i,k,14)}${teamName(i,k)}</button>`});h+='</div>'}
+  if(n>1)h+=hscroll(p.teams.map((tm,k)=>`<button class="chip${k===j?' on':''}" data-act="tsel" data-p="${i}" data-j="${k}" type="button">${embIcon(i,k,14)}${teamName(i,k)}</button>`).join(''),'teams');
   const tm=p.teams[j],free=minerFree(tm),full=tm.n>=MINER_MAX,uc=full?0:teamUpCost(i,j);
   h+=`<div class="head"><span style="font:600 15px var(--f-body)">${embIcon(i,j,20)}${teamName(i,j)}</span><span class="num" style="font-size:12px;color:var(--muted)">${tm.n} / ${MINER_MAX} upgrades</span></div>
     <div class="bar"><i style="width:${(tm.n/MINER_MAX*100).toFixed(1)}%;background:var(--ship)"></i></div>
@@ -1770,16 +1776,24 @@ function viewWarp(){
 
 // planet button row: arrows, edge fades, selected planet kept in view, mouse drag and wheel on computers
 let shownSel=-1;
-function chipNav(){const nav=$('pnav'),c=$('pchips');if(!nav||!c)return;const max=c.scrollWidth-c.clientWidth;
-  nav.classList.toggle('fits',max<=2);nav.classList.toggle('more-l',c.scrollLeft>2);nav.classList.toggle('more-r',c.scrollLeft<max-2);
-  const [l,r]=nav.querySelectorAll('.cnav');if(!l||!r)return;l.disabled=c.scrollLeft<=2;r.disabled=c.scrollLeft>=max-2}
+/* Horizontal lists: every list that can run past the edge (tabs, planets, teams) uses the same scroller:
+   ‹ › arrows that show only when it doesn't fit and dim at the ends, faded edges where more is hidden,
+   swipe on touch, and drag or mouse wheel with a mouse. Wrapping lists (ore chips etc.) never overflow. */
+function hscroll(inner,label){return `<div class="chipnav"><button class="cnav" data-hs="-1" type="button" aria-label="Scroll ${label} left">‹</button><div class="chips">${inner}</div><button class="cnav" data-hs="1" type="button" aria-label="Scroll ${label} right">›</button></div>`}
+const hsScroller=nav=>nav.querySelector(':scope > .chips, :scope > .tabscroll');
+function chipNav(){document.querySelectorAll('.chipnav').forEach(nav=>{const c=hsScroller(nav);if(!c)return;const max=c.scrollWidth-c.clientWidth;
+  nav.classList.toggle('fits',max<=2);nav.classList.toggle('more-l',max>2&&c.scrollLeft>2);nav.classList.toggle('more-r',max>2&&c.scrollLeft<max-2);
+  const ar=nav.querySelectorAll(':scope > .cnav');if(ar.length===2){ar[0].disabled=c.scrollLeft<=2;ar[1].disabled=c.scrollLeft>=max-2}})}
+function hsStep(btn){const nav=btn.closest('.chipnav'),c=nav&&hsScroller(nav);if(!c)return;c.scrollBy({left:+btn.dataset.hs*c.clientWidth*.7,behavior:'smooth'});lastScroll=performance.now()}
+document.addEventListener('click',e=>{const b=e.target.closest('.cnav[data-hs]');if(b){e.stopPropagation();hsStep(b)}},true);
+document.addEventListener('scroll',e=>{const t=e.target;if(t&&t.classList&&(t.classList.contains('chips')||t.classList.contains('tabscroll')))chipNav()},{passive:true,capture:true});
+window.addEventListener('resize',()=>setTimeout(chipNav,50));
 function centerSelChip(){const c=$('pchips');if(!c)return;const on=c.querySelector('.chip.on');if(on)c.scrollLeft=on.offsetLeft-(c.clientWidth-on.offsetWidth)/2}
 let chipDrag=null,chipDragged=false;
-pbody.addEventListener('pointerdown',e=>{const c=e.target.closest('#pchips');if(c&&e.pointerType==='mouse'){chipDrag={x:e.clientX,l:c.scrollLeft,c};chipDragged=false}});
+sheet.addEventListener('pointerdown',e=>{const c=e.target.closest('.chipnav > .chips, .chipnav > .tabscroll');if(c&&e.pointerType==='mouse'){chipDrag={x:e.clientX,l:c.scrollLeft,c};chipDragged=false}});
 window.addEventListener('pointermove',e=>{if(!chipDrag)return;const dx=e.clientX-chipDrag.x;if(Math.abs(dx)>5)chipDragged=true;if(chipDragged){chipDrag.c.scrollLeft=chipDrag.l-dx;lastScroll=performance.now()}});
 window.addEventListener('pointerup',()=>{chipDrag=null;setTimeout(()=>chipDragged=false,0)});
-pbody.addEventListener('wheel',e=>{const c=e.target.closest('#pchips');if(c&&Math.abs(e.deltaY)>Math.abs(e.deltaX)){c.scrollLeft+=e.deltaY;e.preventDefault()}},{passive:false});
-pbody.addEventListener('scroll',e=>{if(e.target.id==='pchips')chipNav()},{passive:true,capture:true});
+sheet.addEventListener('wheel',e=>{const c=e.target.closest('.chipnav > .chips, .chipnav > .tabscroll');if(c&&c.scrollWidth>c.clientWidth+2&&Math.abs(e.deltaY)>Math.abs(e.deltaX)){c.scrollLeft+=e.deltaY;e.preventDefault()}},{passive:false});
 function render(force){
   if((pressing||touchHold||performance.now()-lastScroll<500)&&!force)return;
   if(sheet.classList.contains('collapsed')&&!force)return;
@@ -1796,6 +1810,7 @@ function hud(){
   else if(now<S.od.ready){od.className='';od.disabled=true;od.textContent='Recharge '+fmtTime((S.od.ready-now)/1000)}
   else{od.className='';od.disabled=false;od.textContent='Overdrive 2×'}
   document.querySelector('[data-tab="smelter"]').hidden=!has('smelt');
+  chipNav();
 }
 const EFFECT_NAMES={mine:'All mining',ship:'All ship speed',cargo:'All cargo',value:'All sale prices',smelt:'Smelting speed'};
 function showResearch(id){const r=RESEARCH.find(x=>x.id===id);if(!r)return;
@@ -1834,8 +1849,7 @@ $('od').addEventListener('click',()=>{if(odOn()||Date.now()<S.od.ready)return;S.
 
 pbody.addEventListener('click',e=>{
   const b=e.target.closest('[data-act]');if(!b||b.disabled)return;const a=b.dataset.act;
-  if(a==='cscroll'){const c=$('pchips');if(c){c.scrollBy({left:+b.dataset.d*c.clientWidth*.7,behavior:'smooth'});lastScroll=performance.now()}return}
-  if(a==='sel'&&chipDragged)return;
+  if((a==='sel'||a==='tsel')&&chipDragged)return;
   if(a==='sel'){focusPlanet(+b.dataset.p)} // picking a planet in the Planet tab flies the camera to it
   else if(a==='sell'){const v=sellItem(b.dataset.k);if(v)toast('+'+fmt(v)+' credits',1200)}
   else if(a==='sellall'){let v=0;for(const o in S.inv)v+=sellItem('o'+o,researchReserve(+o));for(const o in S.bars)v+=sellItem('b'+o,researchBarReserve(+o));if(v)toast('+'+fmt(v)+' credits',1400);if(S.tut===1){S.tut=2;setTimeout(()=>toast('Spend credits on your mining team\u2019s upgrades with the green buttons. Tap planets in the sky to switch.',5000),1500)}}
