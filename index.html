@@ -243,9 +243,11 @@ const GALAXY_SPIN=.012;
 PLANETS.forEach((p,i)=>{p.r=ORBIT_R[i];p.speed=GALAXY_SPIN;p.a0=ORBIT_A[i];});
 /* Economy. Planet output comes only from its mining teams (and research / star dust).
    Each planet's base output is scaled to its claim price so every new planet is worth claiming. */
-const ECON={DUST_A:2,DUST_K:.2,EXP:.7,PAY:3.4,SCALE_MIN:100,HIRE:[1,4,30],UP_BASE:.12,UP_GROW:1.32,TEAM_X:[1,6,40],SHIP_BASE:.8,SHIP_OVH:16,DOCK_T:3,PROBE_EVERY:300,PROBE_FLY:180,PROBE_FIRST:60,PROBE_SEC:90,CARGO_FIT:.9};
+const ECON={DUST_A:2,DUST_K:.2,EXP:.7,PAY:2.9,SCALE_MIN:100,HIRE:[1,4,30],UP_BASE:.12,UP_GROW:1.32,TEAM_X:[1,6,40],SHIP_BASE:.8,SHIP_OVH:28,DOCK_T:5,PROBE_EVERY:300,PROBE_FLY:180,PROBE_FIRST:60,PROBE_SEC:90,CARGO_FIT:.9};
 // overflow: surplus ore is sold every OVER_EVERY seconds at OVER_PRICE of the normal price
 const OVER_EVERY=600,OVER_PRICE=.25;
+// fixed handling steps (seconds): orbit in, descend, load, ascend, orbit out; plus DOCK_T at each end = SHIP_OVH
+const HANDLE_SEG=[4,3,4,3,4];
 PLANETS.forEach((p,i)=>{const avg=p.mix.reduce((a,[o,f])=>a+ORES[o].v*f,0);
   p.scale=Math.max(ECON.SCALE_MIN,p.cost);
   p.rate=i===0?.8:Math.pow(p.cost,ECON.EXP)/(ECON.PAY*avg);
@@ -253,9 +255,9 @@ PLANETS.forEach((p,i)=>{const avg=p.mix.reduce((a,[o,f])=>a+ORES[o].v*f,0);
   // cargo is sized to the whole trip, so slower ships carry more and hauling still keeps up with mining
   const trip=2*p.r/ECON.SHIP_BASE+ECON.SHIP_OVH;p.cargo=p.rate*trip*ECON.CARGO_FIT;
   // trip timeline (seconds at base speed, then as fractions of the trip):
-  // undock 3 | cruise out | orbit in 2.5 | descend 1.5 | load 2 | ascend 1.5 | orbit out 2.5 | cruise back | dock 3
+  // undock 5 | cruise out | orbit in 4 | descend 3 | load 4 | ascend 3 | orbit out 4 | cruise back | dock 5 (handling is never sped up)
   // the trip wraps while docked, so cargo is delivered in the middle of the unloading pause
-  const cr=p.r/ECON.SHIP_BASE,D=ECON.DOCK_T;let acc=0;p.lay=[D,cr,2.5,1.5,2,1.5,2.5,cr].map(x=>(acc+=x)/trip);
+  const cr=p.r/ECON.SHIP_BASE,D=ECON.DOCK_T;let acc=0;p.lay=[D,cr,...HANDLE_SEG,cr].map(x=>(acc+=x)/trip);
   p.berth0=p.lay[7]+.3*(1-p.lay[7]);p.berthLen=(1-p.berth0)+.7*p.lay[0]});
 const RESEARCH=[
  {id:'auto',n:'Trade Contracts',d:'Unlocks auto-sell toggles in the Market.',cost:400},
@@ -402,24 +404,24 @@ function buySettle(i){const p=S.planets[i];if(p.teams.length<TEAM_MAX||settleLv(
   S.cash-=c;p.set=settleLv(i)+1;settleVer++;S.life.settle++;return true}
 function mineRate(i){return PLANETS[i].rate*rmult('mine')*perm('mine')*minerT(i,'m')*setLoc(i,'m')*setG('gm')*(odOn()?2:1)}
 /* Ship speed vs cargo:
-   - team Ship speed points (and a settlement's local ship upgrade) only speed up the flight between station and planet;
-   - each team Cargo point adds hold space but makes the ship heavier: flight speed / (1 + CARGO_MASS x cargo points);
-   - galaxy-wide speed (research, event boosts, settlement perks, Overdrive) speeds up the whole trip, handling included.
+   - every speed boost (team Ship speed points, research, event boosts, settlement upgrades and perks, Overdrive) only
+     speeds up the flight between station and planet; docking, orbiting, landing and loading always take ECON.SHIP_OVH s;
+   - each team Cargo point adds hold space but makes the ship heavier: flight speed / (1 + CARGO_MASS x cargo points).
    So near planets (short flights, trips mostly docking and landing) favour Cargo, and far planets (long flights) favour Ship speed. */
 const CARGO_MASS=.06;
 function shipG(i){return rmult('ship')*perm('ship')*setG('gs')*(odOn()?2:1)}
 function shipL(i){return minerT(i,'s')*setLoc(i,'s')/(1+CARGO_MASS*teamPts(i,'c'))}
 function shipSpeed(i){return ECON.SHIP_BASE*shipG(i)*shipL(i)}
-const handleTime=i=>ECON.SHIP_OVH/shipG(i);
+const handleTime=i=>ECON.SHIP_OVH;
 const cruiseTime=i=>2*PLANETS[i].r/shipSpeed(i);
 // hauling capacity if this planet had ds more Ship speed points and dc more Cargo points
 function haulCapWith(i,ds,dc){const s0=teamPts(i,'s'),c0=teamPts(i,'c'),sp=shipSpeed(i)*(1+MINER_STEP*(s0+ds))/(1+MINER_STEP*s0)*(1+CARGO_MASS*c0)/(1+CARGO_MASS*(c0+dc)),
-  cg=cargo(i)*(1+MINER_STEP*(c0+dc))/(1+MINER_STEP*c0),tt=2*PLANETS[i].r/sp+ECON.SHIP_OVH/shipG(i);return cg/tt}
+  cg=cargo(i)*(1+MINER_STEP*(c0+dc))/(1+MINER_STEP*c0),tt=2*PLANETS[i].r/sp+ECON.SHIP_OVH;return cg/tt}
 // which of Ship speed ('s') or Cargo ('c') adds more hauling for one point
 const bestHaulTrait=i=>haulCapWith(i,1,0)>=haulCapWith(i,0,1)?'s':'c';
 // the ship's on-screen timeline (fractions of the trip) follows the current flight and handling times
-function layFor(i){const P=PLANETS[i],g=shipG(i),cr=PLANETS[i].r/shipSpeed(i),D=ECON.DOCK_T/g;
-  const seg=[D,cr,2.5/g,1.5/g,2/g,1.5/g,2.5/g,cr],tot=seg.reduce((a,b)=>a+b,0)+D;let acc=0;for(let k=0;k<8;k++){acc+=seg[k];P.lay[k]=acc/tot}
+function layFor(i){const P=PLANETS[i],cr=PLANETS[i].r/shipSpeed(i),D=ECON.DOCK_T;
+  const seg=[D,cr,...HANDLE_SEG,cr],tot=seg.reduce((a,b)=>a+b,0)+D;let acc=0;for(let k=0;k<8;k++){acc+=seg[k];P.lay[k]=acc/tot}
   P.berth0=P.lay[7]+.3*(1-P.lay[7]);P.berthLen=(1-P.berth0)+.7*P.lay[0]}
 function cargo(i){return PLANETS[i].cargo*rmult('cargo')*perm('cargo')*minerT(i,'c')*setLoc(i,'c')*setG('gc')}
 const tripTime=i=>cruiseTime(i)+handleTime(i);
