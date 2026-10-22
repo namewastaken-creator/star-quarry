@@ -581,7 +581,7 @@ for(let k=0;k<DOCK_SLOTS;k++){const g=new THREE.Group();habRing.add(g); // local
   g.visible=false;docks.push({g,status,pivots,clamp:0,state:'free'})}
 const planetSlot=i=>Math.min(i,DOCK_SLOTS-1);
 // lights on the ring's outer face: the same even number between every pair of neighbouring docks
-let ringLights=null;
+let ringLights=null,stGlowL=null;
 function syncDocks(){let last=3;S.planets.forEach((p,i)=>{if(p.u)last=Math.max(last,i)});const n=Math.min(DOCK_SLOTS,last+1);
   if(n===DOCK_N&&ringLights)return;DOCK_N=n;
   docks.forEach((d,k)=>{d.g.visible=k<n;if(k<n){const a=slotAngle(k);d.g.position.set(Math.cos(a)*1.25,0,Math.sin(a)*1.25);d.g.rotation.y=-a}});
@@ -589,7 +589,8 @@ function syncDocks(){let last=3;S.planets.forEach((p,i)=>{if(p.u)last=Math.max(l
   ringLights=new THREE.Group();habRing.add(ringLights);
   const gap=Math.PI*2/n,per=n<=6?4:2,len=Math.min(.1,(gap*1.355-.3)/(per*1.6));
   for(let k=0;k<n;k++)for(let j=1;j<=per;j++){const a=slotAngle(k)+gap*j/(per+1),win=new THREE.Mesh(new THREE.BoxGeometry(.03,.05,len),stWin);
-    win.position.set(Math.cos(a)*1.355,0,Math.sin(a)*1.355);win.rotation.y=-a;ringLights.add(win)}}
+    win.position.set(Math.cos(a)*1.355,0,Math.sin(a)*1.355);win.rotation.y=-a;ringLights.add(win)}
+  if(stGlowL){for(let k=stGlowL.length-1;k>=0;k--)if(stGlowL[k].ring)stGlowL.splice(k,1);const nl=[];glowify(ringLights,nl);nl.forEach(x=>{x.ring=1;stGlowL.push(x)})}}
 // tilted blue ring: rides on the docking ring so it always passes between the spokes, never through them
 const ring2=new THREE.Mesh(new THREE.TorusGeometry(.95,.022,8,48),stTeal.clone());ring2.rotation.x=Math.PI/2.6;habRing.add(ring2);
 // solar wings below the ring plane
@@ -683,16 +684,21 @@ function addRim(mat,P){const rc=new THREE.Color(P.c2).lerp(new THREE.Color(0xbfd
    small spheres (lamps, beacons) get a soft sprite halo; rings and bands (torus, open cylinders) get a faint additive shell.
    Call glowify(group, list) after building, and updateGlows(list) each frame so pulsing or colour-cycling lights glow in step. */
 const GLOW_TEX=glowTex('rgba(255,255,255,1)','rgba(255,255,255,.22)');
-const isLight=m=>m&&m.emissive&&m.emissiveIntensity>=1&&(m.emissive.r+m.emissive.g+m.emissive.b)>.05;
+const isLight=m=>m&&m.emissive&&!m.emissiveMap&&(m.emissiveIntensity>=1||m.userData.light)&&(m.emissive.r+m.emissive.g+m.emissive.b)>.05;
 function glowify(root,list){const add=[];
-  root.traverse(o=>{if(!o.isMesh||o.userData.glow||!isLight(o.material))return;const g=o.geometry,p=g.parameters||{},src=o.material;let gl=null;
+  root.traverse(o=>{if(!o.isMesh||o.userData.glow||o.userData.glowed||!isLight(o.material))return;o.userData.glowed=1;const g=o.geometry,p=g.parameters||{},src=o.material;let gl=null;
     if(g.type==='SphereGeometry'&&(p.thetaLength===undefined||p.thetaLength>3)){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color:src.emissive.clone(),blending:THREE.AdditiveBlending,depthWrite:false,transparent:true,opacity:.8}));
       sp.scale.setScalar(p.radius*7);gl={o:sp,base:.8}}
+    else if(g.type==='BoxGeometry'){const d=[p.width,p.height,p.depth].sort((a,b)=>a-b);if(d[2]/Math.max(d[1],1e-6)<=4){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color:src.emissive.clone(),blending:THREE.AdditiveBlending,depthWrite:false,transparent:true,opacity:.6}));
+      sp.scale.setScalar(d[2]*2.6);gl={o:sp,base:.6}}}
     else if(g.type==='TorusGeometry'){gl={o:new THREE.Mesh(new THREE.TorusGeometry(p.radius,p.tube*3.2,6,p.tubularSegments||24),new THREE.MeshBasicMaterial({color:src.emissive.clone(),blending:THREE.AdditiveBlending,depthWrite:false,transparent:true,opacity:.3})),base:.3}}
     else if(g.type==='CylinderGeometry'&&p.openEnded){gl={o:new THREE.Mesh(new THREE.CylinderGeometry(p.radiusTop*1.07,p.radiusBottom*1.07,p.height*2.4,p.radialSegments,1,true),new THREE.MeshBasicMaterial({color:src.emissive.clone(),blending:THREE.AdditiveBlending,depthWrite:false,transparent:true,opacity:.28,side:THREE.DoubleSide})),base:.28}}
     if(gl){gl.o.userData.glow=1;gl.o.renderOrder=2;add.push([o,gl]);list.push({src,gm:gl.o.material,base:gl.base})}});
   add.forEach(([o,gl])=>o.add(gl.o))}
 function updateGlows(list){for(const g of list){g.gm.color.copy(g.src.emissive);g.gm.opacity=g.base*Math.min(1.4,g.src.emissiveIntensity/1.2)}}
+// station lights get the same glow; its blinking navigation lights already have their own
+stGlowL=[];stLights.forEach(l=>l.userData.glowed=1);irisRim.material.userData.light=1;docks.forEach(d=>d.status.material.userData.light=1);
+glowify(station,stGlowL);if(ringLights){const nl=[];glowify(ringLights,nl);nl.forEach(x=>{x.ring=1;stGlowL.push(x)})}
 const selTex=(()=>{const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d');g.strokeStyle='#f0a33c';g.lineWidth=5;g.setLineDash([14,9]);g.beginPath();g.arc(64,64,56,0,7);g.stroke();return new THREE.CanvasTexture(c)})();
 const selRing=new THREE.Sprite(new THREE.SpriteMaterial({map:selTex,transparent:true,depthWrite:false}));scene.add(selRing);
 const shipGeo=new THREE.ConeGeometry(.17,.55,6);shipGeo.rotateX(Math.PI/2);
@@ -1023,12 +1029,14 @@ function animateSettlement(w,dt){if(!w.settle)return;
 function syncBase(w,i){const n=S.planets[i].teams.length;if(!S.planets[i].u||!n)return;
   if(!w.fac)buildFacility(w,i);
   for(let k=1;k<TEAM_MAX;k++){if(n>k&&!w.tiers[k])buildTier(w,k);if(w.tiers[k])w.tiers[k].visible=n>k}
-  syncSettlement(w,i)}
+  syncSettlement(w,i);
+  if(!w.facGlows)w.facGlows=[];glowify(w.fac,w.facGlows);if(w.port)glowify(w.port,w.facGlows)}
 const COLONY_DIR=PORT_DIR.clone(),COLONY_TEAM_DIR=locDir(-.5,1.6),COLONY_SET_DIR=COLONY_TEAM_DIR.clone().multiplyScalar(.4).addScaledVector(SET_DIR,.6).normalize();
 const _cd=new THREE.Vector3(),_cv=new THREE.Vector3();
 // with a settlement, the close-up looks between the base and the settlement
 function colonyDir(i){return _cd.copy(S.planets[i].u?(S.planets[i].set?COLONY_SET_DIR:COLONY_TEAM_DIR):COLONY_DIR).applyQuaternion(W[i].mesh.quaternion)}
 function animateSurface(w,i,dt){
+  if(w.facGlows)updateGlows(w.facGlows);
   if(w.portBeacon){const on=(simTime*1.2+i)%1<.5;w.portBeacon.material.emissiveIntensity=on?2:.2;w.portLights.forEach((l,k)=>l.material.emissiveIntensity=.4+1.2*Math.max(0,Math.sin(simTime*4-k)))}
   if(!w.fac||!w.fac.visible)return;const R=w.facR,s=w.facS,n=S.planets[i].teams.length;
   w.drill.rotation.y+=dt*6;w.facBeacon.material.emissiveIntensity=(simTime*.9)%1<.5?1.8:.3;
@@ -1112,6 +1120,7 @@ function updateWorld(dt){
   // close-up starts or ends: redraw the unclaimed planet at full or faint strength
   if(cam.focus!==seenFocus){seenFocus=cam.focus;refreshWorld()}
   station.rotation.y+=dt*STATION_SPIN;habRing.rotation.y+=dt*RING_SPIN;
+  updateGlows(stGlowL);
   stLights.forEach((l,k)=>{const on=((simTime*.8+k*.33)%1)<.25;l.material.emissiveIntensity=on?2.2:.25;lightGlows[k].material.opacity=on?.95:.12});
   // docks: clamps swing shut while a ship is berthed and open otherwise; the dock-face lights are steady green
   // while a ship is docked and off otherwise
