@@ -871,10 +871,10 @@ const selTex=(()=>{const c=document.createElement('canvas');c.width=c.height=128
 const selRing=new THREE.Sprite(new THREE.SpriteMaterial({map:selTex,transparent:true,depthWrite:false}));scene.add(selRing);
 const shipGeo=new THREE.ConeGeometry(.17,.55,6);shipGeo.rotateX(Math.PI/2);
 const shipMat=new THREE.MeshStandardMaterial({color:0xcfe9ff,metalness:.5,roughness:.3,emissive:0x5fd4c4,emissiveIntensity:.5});
-const strutGeo=new THREE.CylinderGeometry(.011,.014,.245,6).rotateX(Math.PI/2),footGeo=new THREE.CylinderGeometry(.032,.036,.012,10),strutLampGeo=new THREE.SphereGeometry(.012,6,4);
+const strutGeo=new THREE.CylinderGeometry(.007,.009,.17,6).rotateX(Math.PI/2),footGeo=new THREE.CylinderGeometry(.02,.023,.008,10),strutLampGeo=new THREE.SphereGeometry(.008,6,4);
 const strutMat=new THREE.MeshStandardMaterial({color:0x9aa3bd,metalness:.7,roughness:.35});
-// strut hinge angles: folded along the hull, and deployed about 26 degrees out from straight down
-const STRUT_UP=-(Math.PI-.32),STRUT_DOWN=-.45;
+// strut hinge angles: folded up and slightly inward so the whole strut sits inside the hull, and deployed about 26 degrees out from straight down
+const STRUT_UP=-(Math.PI+.3),STRUT_DOWN=-.45;
 const retroMat=new THREE.SpriteMaterial({map:glowTex('rgba(220,240,255,1)','rgba(120,190,255,.4)'),blending:THREE.AdditiveBlending,depthWrite:false,transparent:true});
 // pad dust: soft puffs tinted to the planet, spreading out across the launch pad
 function makeDust(w,P){w.dustS=w.padH/.15;const col=new THREE.Color(P.c2).lerp(new THREE.Color(0xf2efe8),.7);w.dust=[];
@@ -1336,12 +1336,12 @@ const W=PLANETS.map((P,i)=>{
   const orbit=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:0x3a4280,transparent:true,opacity:.55}));scene.add(orbit);
   const ship=new THREE.Mesh(shipGeo,shipMat);const sg=new THREE.Sprite(shipGlowMat);sg.scale.set(1.1,1.1,1);ship.add(sg);scene.add(ship);
   const flame=new THREE.Sprite(flameMat.clone());flame.position.z=-.36;ship.add(flame);
-  // four landing struts, hinged at the base rim: folded flat along the hull, swung down and out to land
+  // four landing struts, hinged just inside the hull near the base: folded away inside the body, swung down and out to land
   const struts=[];for(let k=0;k<4;k++){const pv=new THREE.Group();pv.rotation.z=k*Math.PI/2+Math.PI/4;ship.add(pv);
-    const hinge=new THREE.Group();hinge.position.set(.15,0,-.2);pv.add(hinge);
-    const leg=new THREE.Mesh(strutGeo,strutMat);leg.position.z=-.1225;hinge.add(leg);
-    const foot=new THREE.Mesh(footGeo,strutMat);foot.position.z=-.245;foot.rotation.x=Math.PI/2;hinge.add(foot);
-    const lamp=new THREE.Mesh(strutLampGeo,DM.amber);lamp.position.set(.012,0,-.12);hinge.add(lamp);
+    const hinge=new THREE.Group();hinge.position.set(.11,0,-.22);pv.add(hinge);
+    const leg=new THREE.Mesh(strutGeo,strutMat);leg.position.z=-.085;hinge.add(leg);
+    const foot=new THREE.Mesh(footGeo,strutMat);foot.position.z=-.17;foot.rotation.x=Math.PI/2;hinge.add(foot);
+    const lamp=new THREE.Mesh(strutLampGeo,DM.amber);lamp.position.set(.008,0,-.08);hinge.add(lamp);
     hinge.rotation.y=STRUT_UP;struts.push(hinge)}
   const retro=new THREE.Sprite(retroMat.clone());retro.position.z=.38;retro.scale.set(.34,.34,1);retro.material.opacity=0;ship.add(retro);
   const label=document.createElement('div');label.className='plabel';document.getElementById('labels').appendChild(label);
@@ -1369,7 +1369,7 @@ const STATION_SPIN=.04,RING_SPIN=.11,SPIN_TOTAL=STATION_SPIN+RING_SPIN,DOCK_R=1.
 const _q=new THREE.Quaternion(),_qi=new THREE.Quaternion(),_ai=new THREE.Vector3(),_ao=new THREE.Vector3(),_bp=new THREE.Vector3(),_side=new THREE.Vector3(),_od=new THREE.Vector3();
 const ss=x=>x*x*(3-2*x);
 function orbitDir(a,b,e,out){_q.setFromUnitVectors(a,b);_qi.identity().slerp(_q,e);return out.copy(a).applyQuaternion(_qi)}
-function shipPos(w,P,t,res,i){const L=P.lay,R0=P.size*2,land=P.size+(w.padH||0)+.42*.22,bump=.6+P.r*.04;
+function shipPos(w,P,t,res,i){const L=P.lay,R0=P.size*2,land=P.size+(w.padH||0)+.38*.22,bump=.6+P.r*.04;
   _ds.copy(w.pos).negate().normalize();_side.set(-_ds.z,0,_ds.x).normalize();
   _ai.copy(_ds).addScaledVector(_side,.55).normalize();_ao.copy(_ds).addScaledVector(_side,-.55).normalize();
   _bp.copy(PORT_DIR).applyQuaternion(w.mesh.quaternion);
