@@ -925,14 +925,49 @@ Object.assign(DM,{
   door:new THREE.MeshStandardMaterial({color:0x0c0e1a,roughness:.6})});
 const smokeMat=new THREE.SpriteMaterial({map:glowTex('rgba(200,205,220,.9)','rgba(160,165,185,.35)'),transparent:true,depthWrite:false});
 function onSurface(parent,R,lat,lon,s){const g=new THREE.Group();setOnSurface(g,R,surfDir(lat,lon),-.02*s);parent.add(g);return g}
+// Mining rover (forward is +z): panel-textured reflective body in the team's colour, six wheels on rocker arms with
+// tread rings and hubs, a glass cab with a frame and a roof solar panel, an open ore bin (the load shows while carrying),
+// a front arm with a drill bit that spins while mining, headlights, tail lights, an amber roof beacon that flashes
+// while mining, and an antenna with a tip light. Lights use the shared glow.
 function makeRover(s,bodyMat,crystalMat){const r=new THREE.Group();
-  const body=new THREE.Mesh(new THREE.BoxGeometry(.3*s,.14*s,.42*s),bodyMat);body.position.y=.12*s;r.add(body);
-  const cabin=new THREE.Mesh(new THREE.BoxGeometry(.22*s,.12*s,.14*s),DM.glass);cabin.position.set(0,.24*s,.12*s);r.add(cabin);
-  for(const x of[-.17,.17])for(const z of[-.14,.14]){const wh=new THREE.Mesh(new THREE.CylinderGeometry(.06*s,.06*s,.05*s,10),DM.dark);wh.rotation.z=Math.PI/2;wh.position.set(x*s,.06*s,z*s);r.add(wh)}
-  const lamp=new THREE.Mesh(new THREE.SphereGeometry(.035*s,8,6),DM.teal);lamp.position.set(0,.16*s,.22*s);r.add(lamp);
-  const load=new THREE.Mesh(new THREE.DodecahedronGeometry(.1*s),crystalMat);load.position.set(0,.25*s,-.1*s);r.add(load);
-  const arm=new THREE.Mesh(new THREE.BoxGeometry(.04*s,.04*s,.25*s),DM.hull);arm.position.set(.1*s,.18*s,.3*s);r.add(arm);
-  return{r,load,arm}}
+  if(!DM.roverDone){const t=hullTex(3,2,'#ececec','#a9aebb',false);[DM.rover,DM.rover2,DM.rover3].forEach(m=>{m.map=t.map;m.envMap=stEnv;m.envMapIntensity=.9;m.needsUpdate=true});
+    DM.tread=new THREE.MeshStandardMaterial({color:0x1a1d28,roughness:.9});DM.redLamp=new THREE.MeshStandardMaterial({color:0xff5a5a,emissive:0xff3b3b,emissiveIntensity:1.2});
+    DM.headLamp=new THREE.MeshStandardMaterial({color:0xfff4d8,emissive:0xfff1c8,emissiveIntensity:1.6});DM.roverDone=1}
+  // chassis and body
+  const chassis=new THREE.Mesh(new THREE.BoxGeometry(.26*s,.04*s,.46*s),DM.dark);chassis.position.y=.1*s;r.add(chassis);
+  const body=new THREE.Mesh(new THREE.BoxGeometry(.28*s,.11*s,.3*s),bodyMat);body.position.set(0,.175*s,-.03*s);r.add(body);
+  const nose=new THREE.Mesh(new THREE.BoxGeometry(.24*s,.07*s,.08*s),bodyMat);nose.position.set(0,.15*s,.16*s);nose.rotation.x=.35;r.add(nose);
+  // glass cab with a frame and a roof solar panel
+  const cab=new THREE.Mesh(new THREE.BoxGeometry(.2*s,.1*s,.13*s),DM.glass);cab.position.set(0,.28*s,.06*s);r.add(cab);
+  for(const x of[-.1,.1]){const post=new THREE.Mesh(new THREE.BoxGeometry(.012*s,.1*s,.012*s),DM.hull);post.position.set(x*s,.28*s,.125*s);r.add(post)}
+  const roof=new THREE.Mesh(new THREE.BoxGeometry(.22*s,.012*s,.15*s),DM.hull);roof.position.set(0,.335*s,.06*s);r.add(roof);
+  const sol=new THREE.Mesh(new THREE.BoxGeometry(.18*s,.008*s,.11*s),DM.solar);sol.position.set(0,.345*s,.06*s);r.add(sol);
+  // open ore bin at the back; the crystal load shows in it while carrying
+  const bin=new THREE.Group();bin.position.set(0,.23*s,-.13*s);r.add(bin);
+  const binF=new THREE.Mesh(new THREE.BoxGeometry(.24*s,.015*s,.16*s),DM.dark);bin.add(binF);
+  for(const [x,z,w,d] of[[-.115,0,.012,.16],[.115,0,.012,.16],[0,-.075,.24,.012],[0,.075,.24,.012]]){const wall=new THREE.Mesh(new THREE.BoxGeometry(w*s,.06*s,d*s),bodyMat);wall.position.set(x*s,.03*s,z*s);bin.add(wall)}
+  const load=new THREE.Group();load.position.y=.04*s;bin.add(load);
+  for(const [x,z,k] of[[0,0,.07],[-.05,.03,.05],[.05,-.03,.055]]){const c=new THREE.Mesh(new THREE.DodecahedronGeometry(k*s),crystalMat);c.position.set(x*s,0,z*s);load.add(c)}
+  // six wheels on rocker arms, with tread rings and spoked hubs
+  const wheels=[];
+  for(const x of[-.16,.16]){const rock=new THREE.Mesh(new THREE.BoxGeometry(.02*s,.02*s,.38*s),DM.hull);rock.position.set(x*s,.1*s,0);r.add(rock);
+    for(const z of[-.16,0,.16]){const wh=new THREE.Group();wh.position.set(x*1.12*s,.055*s,z*s);r.add(wh);
+      const tire=new THREE.Mesh(new THREE.CylinderGeometry(.055*s,.055*s,.045*s,14),DM.tread);tire.rotation.z=Math.PI/2;wh.add(tire);
+      const ring=new THREE.Mesh(new THREE.TorusGeometry(.055*s,.008*s,4,14),DM.dark);ring.rotation.y=Math.PI/2;wh.add(ring);
+      const hub=new THREE.Mesh(new THREE.CylinderGeometry(.025*s,.025*s,.05*s,8),DM.hull);hub.rotation.z=Math.PI/2;wh.add(hub);
+      for(let k=0;k<3;k++){const sp=new THREE.Mesh(new THREE.BoxGeometry(.052*s,.008*s,.09*s),DM.hull);sp.rotation.x=k*Math.PI/3;wh.add(sp)}
+      wheels.push(wh)}}
+  // front drill arm (it bobs while mining) with a spinning bit
+  const arm=new THREE.Group();arm.position.set(.08*s,.17*s,.2*s);r.add(arm);
+  const boom=new THREE.Mesh(new THREE.BoxGeometry(.035*s,.035*s,.18*s),DM.hull);boom.position.z=.08*s;arm.add(boom);
+  const bit=new THREE.Mesh(new THREE.ConeGeometry(.035*s,.1*s,8),DM.amber);bit.rotation.x=Math.PI/2;bit.position.z=.22*s;arm.add(bit);
+  // lights: headlights, tail lights, roof beacon, antenna tip
+  for(const x of[-.08,.08]){const hl=new THREE.Mesh(new THREE.SphereGeometry(.018*s,8,6),DM.headLamp);hl.position.set(x*s,.17*s,.2*s);r.add(hl);
+    const tl=new THREE.Mesh(new THREE.SphereGeometry(.014*s,8,6),DM.redLamp);tl.position.set(x*s,.17*s,-.215*s);r.add(tl)}
+  const beacon=new THREE.Mesh(new THREE.SphereGeometry(.022*s,8,6),DM.amber.clone());beacon.position.set(-.06*s,.36*s,.0);r.add(beacon);
+  const ant=new THREE.Mesh(new THREE.CylinderGeometry(.004*s,.004*s,.16*s,5),DM.hull);ant.position.set(.09*s,.42*s,-.02*s);r.add(ant);
+  const tipL=new THREE.Mesh(new THREE.SphereGeometry(.012*s,8,6),DM.teal);tipL.position.set(.09*s,.5*s,-.02*s);r.add(tipL);
+  return{r,load,arm,wheels,bit,beacon}}
 function addDepositsAndRovers(w,tier,parent){const s=w.facS,R=w.facR;
   TIER_DEP_LOC[tier].forEach(loc=>parent.add(trackMesh(catmull(branch2D(loc),8),R,s)));
   TIER_DEPS[tier].forEach((d,k)=>{const dep=new THREE.Group();setOnSurface(dep,R,d,-.03*s);
@@ -940,7 +975,7 @@ function addDepositsAndRovers(w,tier,parent){const s=w.facS,R=w.facR;
     parent.add(dep)});
   const bodyMat=[DM.rover,DM.rover2,DM.rover3][tier];
   for(let k=0;k<3;k++){const m=makeRover(s,bodyMat,w.crystalMat);parent.add(m.r);
-    w.rovers.push({g:m.r,load:m.load,arm:m.arm,route:routeDirs(TIER_DEP_LOC[tier][k]),period:15+k*1.9+tier*1.1,off:k*.33+tier*.17,tier})}}
+    w.rovers.push({g:m.r,load:m.load,arm:m.arm,wheels:m.wheels,bit:m.bit,beacon:m.beacon,route:routeDirs(TIER_DEP_LOC[tier][k]),period:15+k*1.9+tier*1.1,off:k*.33+tier*.17,tier})}}
 function buildFacility(w,i){const P=PLANETS[i],s=P.size*.16,R=P.size,g=new THREE.Group();w.mesh.add(g);
   w.fac=g;w.facR=R;w.facS=s;w.rovers=[];w.tiers=[];w.anim=[];
   const oreCol=new THREE.Color(ORES[P.mix[0][0]].c);w.crystalMat=new THREE.MeshStandardMaterial({color:oreCol,emissive:oreCol,emissiveIntensity:.55,roughness:.3,metalness:.2});
@@ -1197,7 +1232,10 @@ function animateSurface(w,i,dt){
     routePoint(rv.route,e,_b);const bob=mining?Math.abs(Math.sin(simTime*14))*.02*s:0;rv.g.position.copy(_b).multiplyScalar(R+bob);
     routePoint(rv.route,Math.min(1,Math.max(0,e+(outbound?.01:-.01))),_a);if(mining)routePoint(rv.route,Math.min(1,e+.01),_a);_a.sub(_b);
     if(_a.lengthSq()>1e-12)orient(rv.g,_b,_a);
-    rv.load.visible=carrying;rv.arm.rotation.x=mining?Math.sin(simTime*12)*.5:0});
+    rv.load.visible=carrying;rv.arm.rotation.x=mining?Math.sin(simTime*12)*.25:0;
+    // wheels roll while driving, the drill spins and the beacon flashes while mining
+    if(!mining)rv.wheels.forEach(wh=>wh.rotation.x+=dt*9);rv.bit.rotation.y+=mining?dt*30:0;
+    rv.beacon.material.emissiveIntensity=mining?((simTime*4+j*.3)%1<.5?2.2:.3):1});
 }
 
 const W=PLANETS.map((P,i)=>{
