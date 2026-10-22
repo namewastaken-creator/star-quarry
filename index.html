@@ -907,19 +907,26 @@ function stripMesh(dirs,R,s,width,mat){const pos=[],idx=[],t=new THREE.Vector3()
     pos.push(c.x+w.x,c.y+w.y,c.z+w.z,c.x-w.x,c.y-w.y,c.z-w.z);if(k){const i=k*2;idx.push(i-2,i-1,i,i-1,i+1,i)}});
   const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));geo.setIndex(idx);geo.computeVertexNormals();return new THREE.Mesh(geo,mat)}
 const roadMat=new THREE.MeshStandardMaterial({color:0x3a4060,metalness:.4,roughness:.7,polygonOffset:true,polygonOffsetFactor:-2,side:THREE.DoubleSide});
-function setHouse(g,R,s,[e,n],acc,k){const h=placeSet(g,R,e,n,s);h.rotateY(k*1.3);
-  const body=new THREE.Mesh(new THREE.BoxGeometry(.36*s,.24*s,.3*s),DM.hull);body.position.y=.12*s;h.add(body);
-  const roof=k%2?new THREE.Mesh(new THREE.ConeGeometry(.29*s,.2*s,4),acc):new THREE.Mesh(new THREE.CylinderGeometry(.16*s,.16*s,.38*s,10,1,false,0,Math.PI),acc);
-  if(k%2){roof.rotation.y=Math.PI/4;roof.position.y=.34*s}else{roof.rotation.z=Math.PI/2;roof.position.y=.24*s}h.add(roof);
-  for(const z of[-.152,.152]){const win=new THREE.Mesh(new THREE.BoxGeometry(.2*s,.06*s,.01*s),DM.window);win.position.set(0,.14*s,z*s);h.add(win)}
-  const door=new THREE.Mesh(new THREE.BoxGeometry(.01*s,.13*s,.08*s),DM.door);door.position.set(.181*s,.065*s,0);h.add(door)}
-function setTower(g,R,s,[e,n],hgt,acc,rad){const t=placeSet(g,R,e,n,s),r=(rad||.2)*s;
-  const body=new THREE.Mesh(new THREE.CylinderGeometry(r*.85,r,hgt*s,14),DM.hull);body.position.y=hgt*s/2;t.add(body);
-  for(let y=.25;y<hgt-.1;y+=.22){const band=new THREE.Mesh(new THREE.CylinderGeometry(r*(1-.15*y/hgt)+.004*s,r*(1-.15*y/hgt)+.004*s,.05*s,14,1,true),DM.window);band.position.y=y*s;t.add(band)}
-  const cap=new THREE.Mesh(new THREE.ConeGeometry(r*.95,.28*s,14),acc);cap.position.y=(hgt+.14)*s;t.add(cap);
-  const tip=new THREE.Mesh(new THREE.SphereGeometry(.035*s,8,6),DM.red);tip.position.y=(hgt+.3)*s;t.add(tip);return t}
+// a dome habitat on a low base, with a lit window band and a trim band in the planet's colour
+function setDome(g,R,s,[e,n],rad,domeMat,acc,noWin){const d=placeSet(g,R,e,n,s);
+  const base=new THREE.Mesh(new THREE.CylinderGeometry(rad*1.06*s,rad*1.1*s,.08*s,28),DM.pad);base.position.y=.04*s;d.add(base);
+  const dome=new THREE.Mesh(new THREE.SphereGeometry(rad*s,24,12,0,Math.PI*2,0,Math.PI/2),domeMat);dome.position.y=.08*s;d.add(dome);
+  const trimB=new THREE.Mesh(new THREE.TorusGeometry(rad*1.01*s,.02*s,6,36),acc);trimB.rotation.x=Math.PI/2;trimB.position.y=.1*s;d.add(trimB);
+  if(!noWin){const win=new THREE.Mesh(new THREE.TorusGeometry(rad*.93*s,.016*s,6,36),DM.window);win.rotation.x=Math.PI/2;win.position.y=(.08+rad*.38)*s;d.add(win)}
+  return d}
+// covered walkway between two buildings (centres a and b in settlement units, radii ra and rb at base scale)
+function setTube(g,R,s,a,ra,b,rb){const dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy),ux=dx/L,uy=dy/L,k=SET_SC*.92;
+  const A=setDir(a[0]+ux*ra*k,a[1]+uy*ra*k),B=setDir(b[0]-ux*rb*k,b[1]-uy*rb*k),pts=[];
+  for(let q=0;q<=10;q++)pts.push(slerpDir(A,B,q/10,new THREE.Vector3()).multiplyScalar(R+.1*s*SET_SC));
+  g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),20,.055*s*SET_SC,8,false),DM.tube))}
 function setLamp(g,R,s,[e,n]){const l=placeSet(g,R,e,n,s);const post=new THREE.Mesh(new THREE.CylinderGeometry(.012*s,.012*s,.3*s,5),DM.hull);post.position.y=.15*s;l.add(post);
   const bulb=new THREE.Mesh(new THREE.SphereGeometry(.03*s,8,6),DM.teal);bulb.position.y=.31*s;l.add(bulb)}
+// Settlement levels, all dome habitats around the plaza:
+// 1 Outpost: five barracks domes joined to the plaza, lamps and the road to the launch pad
+// 2 Town: four greenhouse pods between the barracks, each joined to a barracks dome
+// 3 City: the central spire, an entertainment dome (colour-cycling lights, spinning hologram) and a management dome
+//   (command cupola, turning dish), both joined to the barracks
+const BARRACKS=[126,198,270,342,54],PODS=[[162,126],[234,198],[306,270],[18,54]];
 function buildSettleLevel(w,i,k){const P=PLANETS[i],s=w.facS,R=w.facR,g=new THREE.Group();w.fac.add(g);w.settle[k]=g;
   if(!w.setAcc){w.setAcc=new THREE.MeshStandardMaterial({color:P.c2,metalness:.35,roughness:.45});
     w.setGlow=new THREE.MeshStandardMaterial({color:P.c2,emissive:P.c2,emissiveIntensity:1.1})}
@@ -928,26 +935,30 @@ function buildSettleLevel(w,i,k){const P=PLANETS[i],s=w.facS,R=w.facR,g=new THRE
     const plaza=placeSet(g,R,0,0,s);
     const deck=new THREE.Mesh(new THREE.CylinderGeometry(.6*s,.64*s,.06*s,32),DM.pad);deck.position.y=.03*s;plaza.add(deck);
     const rim=new THREE.Mesh(new THREE.TorusGeometry(.6*s,.025*s,6,40),glow);rim.rotation.x=Math.PI/2;rim.position.y=.065*s;plaza.add(rim);
-    const pole=new THREE.Mesh(new THREE.CylinderGeometry(.015*s,.015*s,.7*s,6),DM.hull);pole.position.y=.35*s;plaza.add(pole);
-    const flag=new THREE.Mesh(new THREE.BoxGeometry(.2*s,.12*s,.01*s),acc);flag.position.set(.1*s,.62*s,0);plaza.add(flag);
-    [126,198,270,342,54].forEach((a,j)=>setHouse(g,R,s,SET_AT(1.0,a),acc,j));
+    const fl=new THREE.Group();plaza.add(fl);
+    const pole=new THREE.Mesh(new THREE.CylinderGeometry(.015*s,.015*s,.7*s,6),DM.hull);pole.position.y=.35*s;fl.add(pole);
+    const flag=new THREE.Mesh(new THREE.BoxGeometry(.2*s,.12*s,.01*s),acc);flag.position.set(.1*s,.62*s,0);fl.add(flag);
+    BARRACKS.forEach(a=>{const d=setDome(g,R,s,SET_AT(1.0,a),.3,DM.hull,acc);
+      const vent=new THREE.Mesh(new THREE.CylinderGeometry(.05*s,.06*s,.06*s,10),DM.dark);vent.position.y=.4*s;d.add(vent);
+      setTube(g,R,s,SET_AT(0,0),.62,SET_AT(1.0,a),.3)});
     [162,234,306,18,70,110].forEach(a=>setLamp(g,R,s,SET_AT(.72,a)));
     // road from the launch pad's south edge straight to the plaza, lit on both sides
     {const A=new THREE.Vector3().copy(PORT_DIR).applyAxisAngle(new THREE.Vector3().crossVectors(PORT_DIR,SET_DIR).normalize(),1.15*.16),B=setDir(0,.75*SET_SC),dirs=[];
-     for(let k=0;k<=24;k++)dirs.push(slerpDir(A,B,k/24,new THREE.Vector3()));g.add(stripMesh(dirs,R,s,.24*SET_SC,roadMat));
-     for(let k=2;k<24;k+=4){const d=dirs[k],t=dirs[k+1].clone().sub(dirs[k-1]),side=new THREE.Vector3().crossVectors(d,t).normalize();
+     for(let q=0;q<=24;q++)dirs.push(slerpDir(A,B,q/24,new THREE.Vector3()));g.add(stripMesh(dirs,R,s,.24*SET_SC,roadMat));
+     for(let q=2;q<24;q+=4){const d=dirs[q],t=dirs[q+1].clone().sub(dirs[q-1]),side=new THREE.Vector3().crossVectors(d,t).normalize();
        for(const sd of[-1,1]){const ld=d.clone().addScaledVector(side,sd*.2*s/R*SET_SC).normalize(),l=new THREE.Group();setOnSurface(l,R,ld,-.01*s);
          const post=new THREE.Mesh(new THREE.CylinderGeometry(.012*s,.012*s,.28*s,5),DM.hull);post.position.y=.14*s;l.add(post);
          const bulb=new THREE.Mesh(new THREE.SphereGeometry(.03*s,8,6),DM.teal);bulb.position.y=.29*s;l.add(bulb);g.add(l)}}}
-    w.setFlag=flag}
+    w.setFlag=flag;w.setFlagG=fl}
   else if(k===1){
-    [180,250,320].forEach((a,j)=>setTower(g,R,s,SET_AT(1.65,a),.9+j*.2,acc));
-    [215,285,355].forEach((a,j)=>setHouse(g,R,s,SET_AT(1.9,a),acc,j+5));
-    const park=placeSet(g,R,...SET_AT(1.8,150),s);
-    const pb=new THREE.Mesh(new THREE.CylinderGeometry(.42*s,.44*s,.06*s,24),DM.pad);pb.position.y=.03*s;park.add(pb);
-    const pd=new THREE.Mesh(new THREE.SphereGeometry(.4*s,20,10,0,Math.PI*2,0,Math.PI/2),DM.green);pd.position.y=.06*s;park.add(pd);
-    const ring=[];for(let a=0;a<=360;a+=8)ring.push(setDir(...SET_AT(1.35,a)));g.add(stripMesh(ring,R,s,.1*SET_SC,roadMat))}
+    if(!DM.plant)DM.plant=new THREE.MeshStandardMaterial({color:0x3fae5a,roughness:.8,emissive:0x0c3a18});
+    PODS.forEach(([a,b],j)=>{const d=setDome(g,R,s,SET_AT(1.8,a),.4,DM.green,acc,true);
+      for(let q=0;q<6;q++){const pl=new THREE.Mesh(new THREE.ConeGeometry(.05*s,(.14+((q*7+j*3)%4)*.04)*s,6),DM.plant);const pa=q/6*Math.PI*2+j;pl.position.set(Math.cos(pa)*.2*s,.15*s,Math.sin(pa)*.2*s);d.add(pl)}
+      const lamp=new THREE.Mesh(new THREE.SphereGeometry(.04*s,8,6),glow);lamp.position.y=.42*s;d.add(lamp);
+      setTube(g,R,s,SET_AT(1.8,a),.4,SET_AT(1.0,b),.3)})}
   else{
+    w.setFlagG&&(w.setFlagG.visible=false);
+    // central spire
     const sp=placeSet(g,R,0,0,s);
     const base=new THREE.Mesh(new THREE.CylinderGeometry(.34*s,.42*s,.3*s,20),DM.dark);base.position.y=.15*s;sp.add(base);
     const shaft=new THREE.Mesh(new THREE.CylinderGeometry(.07*s,.22*s,2.5*s,16),DM.hull);shaft.position.y=1.55*s;sp.add(shaft);
@@ -956,13 +967,30 @@ function buildSettleLevel(w,i,k){const P=PLANETS[i],s=w.facS,R=w.facR,g=new THRE
     const hr=new THREE.Mesh(new THREE.TorusGeometry(.32*s,.02*s,6,36),glow);hr.rotation.x=Math.PI/2;halo.add(hr);
     for(let j=0;j<3;j++){const pod=new THREE.Mesh(new THREE.SphereGeometry(.045*s,8,6),DM.window);const a=j/3*Math.PI*2;pod.position.set(Math.cos(a)*.32*s,0,Math.sin(a)*.32*s);halo.add(pod)}
     const beacon=new THREE.Mesh(new THREE.SphereGeometry(.07*s,10,8),glow.clone());beacon.position.y=2.85*s;sp.add(beacon);
-    [195,235,270,305,340].forEach((a,j)=>setTower(g,R,s,SET_AT(2.45,a),1.3+((j*3)%5)*.12,acc,.18));
-    w.setHalo=halo;w.setBeacon=beacon}}
+    // entertainment dome: glass, colour-cycling light rings inside and around it, a spinning hologram on top
+    const fun=setDome(g,R,s,SET_AT(2.6,270),.65,DM.glass,acc,true);
+    const showMat=new THREE.MeshStandardMaterial({color:0xff66cc,emissive:0xff66cc,emissiveIntensity:1.5});
+    const stage=new THREE.Mesh(new THREE.CylinderGeometry(.3*s,.34*s,.1*s,24),DM.dark);stage.position.y=.13*s;fun.add(stage);
+    for(const [r,y] of[[.25,.25],[.4,.4],[.66,.1]]){const ring=new THREE.Mesh(new THREE.TorusGeometry(r*s,.022*s,6,36),showMat);ring.rotation.x=Math.PI/2;ring.position.y=y*s;fun.add(ring)}
+    const holo=new THREE.Mesh(new THREE.OctahedronGeometry(.13*s),showMat);holo.position.y=.95*s;fun.add(holo);
+    const holoRing=new THREE.Mesh(new THREE.TorusGeometry(.2*s,.012*s,6,28),showMat);holoRing.position.y=.95*s;fun.add(holoRing);
+    // management dome: command cupola, antenna mast with a turning dish, beacon
+    const mg=setDome(g,R,s,SET_AT(2.6,342),.55,DM.hull,acc);
+    const cup=new THREE.Mesh(new THREE.SphereGeometry(.2*s,16,8,0,Math.PI*2,0,Math.PI/2),DM.glass);cup.position.y=.58*s;mg.add(cup);
+    const cupRing=new THREE.Mesh(new THREE.TorusGeometry(.2*s,.02*s,6,24),glow);cupRing.rotation.x=Math.PI/2;cupRing.position.y=.59*s;mg.add(cupRing);
+    const mast=new THREE.Mesh(new THREE.CylinderGeometry(.02*s,.03*s,.5*s,6),DM.hull);mast.position.set(.3*s,.6*s,0);mg.add(mast);
+    const dishG=new THREE.Group();dishG.position.set(.3*s,.88*s,0);mg.add(dishG);
+    const dish=new THREE.Mesh(new THREE.SphereGeometry(.16*s,14,6,0,Math.PI*2,0,Math.PI/3.2),new THREE.MeshStandardMaterial({color:0xcfd6e6,metalness:.6,roughness:.3,side:THREE.DoubleSide}));dish.rotation.x=-Math.PI/2.4;dishG.add(dish);
+    const mb=new THREE.Mesh(new THREE.SphereGeometry(.04*s,8,6),DM.red);mb.position.set(-.25*s,.5*s,0);mg.add(mb);
+    setTube(g,R,s,SET_AT(2.6,270),.65,SET_AT(1.0,270),.3);setTube(g,R,s,SET_AT(2.6,342),.55,SET_AT(1.0,342),.3);
+    w.setHalo=halo;w.setBeacon=beacon;w.setShow=showMat;w.setHolo=holo;w.setHoloRing=holoRing;w.setDish=dishG}}
 function syncSettlement(w,i){const lv=settleLv(i);if(!w.settle)w.settle=[];
-  for(let k=0;k<3;k++){if(lv>k&&!w.settle[k])buildSettleLevel(w,i,k);if(w.settle[k])w.settle[k].visible=lv>k}}
+  for(let k=0;k<3;k++){if(lv>k&&!w.settle[k])buildSettleLevel(w,i,k);if(w.settle[k])w.settle[k].visible=lv>k}
+  if(w.setFlagG)w.setFlagG.visible=lv<3}
 function animateSettlement(w,dt){if(!w.settle)return;
   if(w.setFlag&&w.settle[0]&&w.settle[0].visible)w.setFlag.rotation.y=Math.sin(simTime*2)*.25;
-  if(w.setHalo&&w.settle[2]&&w.settle[2].visible){w.setHalo.rotation.y+=dt*.6;w.setBeacon.material.emissiveIntensity=1+Math.sin(simTime*2.2)}}
+  if(w.setHalo&&w.settle[2]&&w.settle[2].visible){w.setHalo.rotation.y+=dt*.6;w.setBeacon.material.emissiveIntensity=1+Math.sin(simTime*2.2);
+    w.setShow.emissive.setHSL((simTime*.08)%1,.9,.55);w.setShow.color.copy(w.setShow.emissive);w.setHolo.rotation.y+=dt*1.5;w.setHoloRing.rotation.x+=dt*.9;w.setDish.rotation.y+=dt*.7}}
 // Show the base tiers and rovers that match the number of teams hired.
 function syncBase(w,i){const n=S.planets[i].teams.length;if(!S.planets[i].u||!n)return;
   if(!w.fac)buildFacility(w,i);
