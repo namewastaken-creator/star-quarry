@@ -1369,6 +1369,15 @@ const STATION_SPIN=.04,RING_SPIN=.11,SPIN_TOTAL=STATION_SPIN+RING_SPIN,DOCK_R=1.
 const _q=new THREE.Quaternion(),_qi=new THREE.Quaternion(),_ai=new THREE.Vector3(),_ao=new THREE.Vector3(),_bp=new THREE.Vector3(),_side=new THREE.Vector3(),_od=new THREE.Vector3();
 const ss=x=>x*x*(3-2*x);
 function orbitDir(a,b,e,out){_q.setFromUnitVectors(a,b);_qi.identity().slerp(_q,e);return out.copy(a).applyQuaternion(_qi)}
+// Orbit transitions: the flight curves into and out of orbit along the orbit's direction of travel (quadratic Bezier),
+// so ships never turn sharply where the flight meets the orbit.
+const _tn=new THREE.Vector3(),_bc=new THREE.Vector3();
+// unit tangent at point a (on the planet's sphere) heading along the great circle towards b
+function tanAt(a,b,out){out.copy(b).addScaledVector(a,-a.dot(b));if(out.lengthSq()<1e-9)out.set(0,1,0);return out.normalize()}
+// curve from S to E that arrives travelling along T
+function bezIn(S,E,T,u,out){_bc.copy(E).addScaledVector(T,-S.distanceTo(E)*.45);const a=(1-u)*(1-u),b=2*(1-u)*u,c=u*u;return out.set(a*S.x+b*_bc.x+c*E.x,a*S.y+b*_bc.y+c*E.y,a*S.z+b*_bc.z+c*E.z)}
+// curve from S (leaving along T) to E
+function bezOut(S,T,E,u,out){_bc.copy(S).addScaledVector(T,S.distanceTo(E)*.45);const a=(1-u)*(1-u),b=2*(1-u)*u,c=u*u;return out.set(a*S.x+b*_bc.x+c*E.x,a*S.y+b*_bc.y+c*E.y,a*S.z+b*_bc.z+c*E.z)}
 function shipPos(w,P,t,res,i){const L=P.lay,R0=P.size*2,land=P.size+(w.padH||0)+.38*.22,bump=.6+P.r*.04;
   _ds.copy(w.pos).negate().normalize();_side.set(-_ds.z,0,_ds.x).normalize();
   _ai.copy(_ds).addScaledVector(_side,.55).normalize();_ao.copy(_ds).addScaledVector(_side,-.55).normalize();
@@ -1386,15 +1395,15 @@ function shipPos(w,P,t,res,i){const L=P.lay,R0=P.size*2,land=P.size+(w.padH||0)+
   if(t<L[0])return dockSeg(t/L[0],true);
   if(t<L[1]){const r=(t-L[0])/(L[1]-L[0]);w._mode=0;w._th=.7;
     if(r<.3){arc(alpha,beta,ss(r/.3));w._sc=.45;return res}
-    const r2=(r-.3)/.7;_od.copy(w.pos).addScaledVector(_ai,R0);res.lerpVectors(_near,_od,r2);res.y+=Math.sin(r2*Math.PI)*bump;w._sc=.45+.55*Math.min(1,r2/.3);return res}
-  if(t<L[2]){const e=ss((t-L[1])/(L[2]-L[1]));res.copy(w.pos).addScaledVector(orbitDir(_ai,_bp,e,_od),R0);w._sc=1-.55*e;w._mode=0;w._th=.45;return res}
-  if(t<L[3]){const q=(t-L[2])/(L[3]-L[2]);res.copy(w.pos).addScaledVector(_bp,R0+(land-R0)*(1-(1-q)*(1-q)));w._sc=.45-.23*q;w._mode=1;w._th=.8+.8*q;return res}
+    const r2=(r-.3)/.7;_od.copy(w.pos).addScaledVector(_ai,R0);bezIn(_near,_od,tanAt(_ai,_bp,_tn),ss(r2),res);res.y+=Math.pow(Math.sin(r2*Math.PI),2)*bump;w._sc=.45+.55*Math.min(1,r2/.3);return res}
+  if(t<L[2]){const x=(t-L[1])/(L[2]-L[1]),e=ss(x);res.copy(w.pos).addScaledVector(orbitDir(_ai,_bp,e,_od),R0);w._sc=1-.55*e;w._mode=0;w._th=.45;return res}
+  if(t<L[3]){const q=(t-L[2])/(L[3]-L[2]);res.copy(w.pos).addScaledVector(_bp,R0+(land-R0)*ss(q));w._sc=.45-.23*q;w._mode=1;w._th=.8+.8*q;return res}
   if(t<L[4]){res.copy(w.pos).addScaledVector(_bp,land);w._sc=.22;w._mode=1;w._th=0;return res}
-  if(t<L[5]){const q=(t-L[4])/(L[5]-L[4]);res.copy(w.pos).addScaledVector(_bp,land+(R0-land)*q*q);w._sc=.22+.23*q;w._mode=1;w._th=1.7-.9*q;return res}
-  if(t<L[6]){const e=ss((t-L[5])/(L[6]-L[5]));res.copy(w.pos).addScaledVector(orbitDir(_bp,_ao,e,_od),R0);w._sc=.45+.55*e;w._mode=0;w._th=.5;return res}
+  if(t<L[5]){const q=(t-L[4])/(L[5]-L[4]);res.copy(w.pos).addScaledVector(_bp,land+(R0-land)*ss(q));w._sc=.22+.23*q;w._mode=1;w._th=1.7-.9*q;return res}
+  if(t<L[6]){const x=(t-L[5])/(L[6]-L[5]),e=ss(x);res.copy(w.pos).addScaledVector(orbitDir(_bp,_ao,e,_od),R0);w._sc=.45+.55*e;w._mode=0;w._th=.5;return res}
   if(t<L[7]){const r=(t-L[6])/(L[7]-L[6]);w._mode=0;w._th=.7;
     if(r>.7){arc(beta,alpha,ss((r-.7)/.3));w._sc=.45;return res}
-    const r2=r/.7;_od.copy(w.pos).addScaledVector(_ao,R0);res.lerpVectors(_od,_near,r2);res.y+=Math.sin(r2*Math.PI)*bump;w._sc=.45+.55*Math.min(1,(1-r2)/.3);return res}
+    const r2=r/.7;_od.copy(w.pos).addScaledVector(_ao,R0);bezOut(_od,tanAt(_ao,_bp,_tn).negate(),_near,ss(r2),res);res.y+=Math.pow(Math.sin(r2*Math.PI),2)*bump;w._sc=.45+.55*Math.min(1,(1-r2)/.3);return res}
   return dockSeg((t-L[7])/(1-L[7]),false)}
 let seenFocus=-1;
 function updateWorld(dt){
@@ -1447,7 +1456,8 @@ function updateWorld(dt){
       else if(mode===2)tmp2.set(0,50,0).add(w.ship.position); // nose up (iris door, kept for later)
       else if(mode===3)tmp2.set(0,0,0); // docked: nose in the port's collar, turning with the ring
       else shipPos(w,P,Math.min(.9999,t+.003),tmp2,i);
-      w.ship.lookAt(tmp2);
+      _pm.lookAt(tmp2,w.ship.position,UP);_pq2.setFromRotationMatrix(_pm);
+      if(!w._qok){w.ship.quaternion.copy(_pq2);w._qok=1}else w.ship.quaternion.slerp(_pq2,1-Math.exp(-dt*(mode===3?12:5)));
       w.flame.material.opacity=th>0?1:0;w.flame.scale.setScalar(.2+.75*th*(.85+.15*Math.sin(simTime*45+i)));
       // landing struts: swing down late in the descent, stay down on the pad, fold away once the ship is clear after launch
       {const L=P.lay;let want=0;if(t>=L[2]&&t<L[3])want=ss(Math.min(1,Math.max(0,((t-L[2])/(L[3]-L[2])-.35)/.45)));else if(t>=L[3]&&t<L[4])want=1;
