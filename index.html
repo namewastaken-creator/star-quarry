@@ -873,8 +873,8 @@ const shipGeo=new THREE.ConeGeometry(.17,.55,6);shipGeo.rotateX(Math.PI/2);
 const shipMat=new THREE.MeshStandardMaterial({color:0xcfe9ff,metalness:.5,roughness:.3,emissive:0x5fd4c4,emissiveIntensity:.5});
 const retroMat=new THREE.SpriteMaterial({map:glowTex('rgba(220,240,255,1)','rgba(120,190,255,.4)'),blending:THREE.AdditiveBlending,depthWrite:false,transparent:true});
 // pad dust: soft puffs tinted to the planet, spreading out across the launch pad
-function makeDust(w,P){w.dustS=w.padH/.15;const col=new THREE.Color(P.c2).lerp(new THREE.Color(0xd8d4cc),.45);w.dust=[];
-  for(let k=0;k<14;k++){const sp=new THREE.Sprite(smokeMat.clone());sp.material.color=col;sp.material.opacity=0;w.port.add(sp);w.dust.push(sp)}}
+function makeDust(w,P){w.dustS=w.padH/.15;const col=new THREE.Color(P.c2).lerp(new THREE.Color(0xf2efe8),.7);w.dust=[];
+  for(let k=0;k<18;k++){const sp=new THREE.Sprite(smokeMat.clone());sp.material.color=col;sp.material.opacity=0;w.port.add(sp);w.dust.push(sp)}}
 const flameMat=new THREE.SpriteMaterial({map:glowTex('rgba(255,236,190,1)','rgba(255,150,60,.5)'),blending:THREE.AdditiveBlending,depthWrite:false});
 const shipGlowMat=new THREE.SpriteMaterial({map:glowTex('rgba(95,212,196,1)','rgba(95,212,196,.25)'),blending:THREE.AdditiveBlending,depthWrite:false});
 /* ===== Close-up surface detail: space port, mining facility, rover crews ===== */
@@ -1332,7 +1332,7 @@ const W=PLANETS.map((P,i)=>{
   const orbit=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:0x3a4280,transparent:true,opacity:.55}));scene.add(orbit);
   const ship=new THREE.Mesh(shipGeo,shipMat);const sg=new THREE.Sprite(shipGlowMat);sg.scale.set(1.1,1.1,1);ship.add(sg);scene.add(ship);
   const flame=new THREE.Sprite(flameMat.clone());flame.position.z=-.36;ship.add(flame);
-  const retro=new THREE.Sprite(retroMat.clone());retro.position.z=.34;retro.scale.set(.22,.22,1);retro.material.opacity=0;ship.add(retro);
+  const retro=new THREE.Sprite(retroMat.clone());retro.position.z=.38;retro.scale.set(.34,.34,1);retro.material.opacity=0;ship.add(retro);
   const label=document.createElement('div');label.className='plabel';document.getElementById('labels').appendChild(label);
   return{mesh,mat,ringM,orbit,ship,flame,retro,label,pos:new THREE.Vector3(),angle:P.a0,port:null,fac:null}});
 let simTime=0;
@@ -1367,8 +1367,8 @@ function shipPos(w,P,t,res,i){const L=P.lay,R0=P.size*2,land=P.size+(w.padH||0)+
   _near.set(Math.cos(beta)*SAFE_R,.2,Math.sin(beta)*SAFE_R);
   const arc=(from,to,e)=>{let d=to-from;d=Math.atan2(Math.sin(d),Math.cos(d));const a=from+d*e;return res.set(Math.cos(a)*SAFE_R,.2,Math.sin(a)*SAFE_R)};
   const dockSeg=(q,leaving)=>{ // q: 0..1 within a dock segment; 70% of it is spent berthed
-    const k=leaving?Math.max(0,(q-.7)/.3):Math.max(0,1-q/.3);res.lerpVectors(_dock,_appr,ss(k));w._sc=.45;w._mode=3;w._th=k>0&&k<1?.6:0;w._docked=k===0;
-    w._retro=leaving&&k>0&&k<1?Math.sin(k*Math.PI):0;return res};
+    const k=leaving?Math.max(0,(q-.7)/.3):Math.max(0,1-q/.3);res.lerpVectors(_dock,_appr,ss(k));w._sc=.45;w._mode=3;w._th=!leaving&&k>0&&k<1?.6:0;w._docked=k===0;
+    w._retro=leaving&&k>0&&k<1?Math.min(1,Math.sin(k*Math.PI)*1.6):0;return res};
   w._docked=false;w._retro=0;
   if(t<L[0])return dockSeg(t/L[0],true);
   if(t<L[1]){const r=(t-L[0])/(L[1]-L[0]);w._mode=0;w._th=.7;
@@ -1437,11 +1437,11 @@ function updateWorld(dt){
       w.ship.lookAt(tmp2);
       w.flame.material.opacity=th>0?1:0;w.flame.scale.setScalar(.2+.75*th*(.85+.15*Math.sin(simTime*45+i)));
       // faint reverse thrusters at the nose while backing out of the dock
-      w.retro.material.opacity=.4*w._retro*(.8+.2*Math.sin(simTime*50+i));
+      w.retro.material.opacity=.95*w._retro*(.85+.15*Math.sin(simTime*50+i));w.retro.scale.setScalar(.34*(.7+.3*w._retro));
       // dust and smoke on the pad, strongest near touchdown and lift-off
       {const L=P.lay;let dk=0;if(t>=L[2]&&t<L[3]){const q=(t-L[2])/(L[3]-L[2]);dk=Math.max(0,(q-.5)/.5)}else if(t>=L[3]&&t<L[4])dk=0;else if(t>=L[4]&&t<L[5]){const q=(t-L[4])/(L[5]-L[4]);dk=Math.max(0,1-q/.5)}
        if(w.port&&w.port.visible){if(!w.dust)makeDust(w,P);w.dust.forEach((sp,k)=>{const ph=(simTime*.55+k/w.dust.length)%1,a=k*2.4,r=(.25+ph*1.7)*w.dustS;
-         sp.position.set(Math.cos(a)*r,(.42+ph*.7)*w.dustS,Math.sin(a)*r);const sc=(.6+ph*1.5)*w.dustS;sp.scale.set(sc,sc,1);sp.material.opacity=.62*dk*Math.pow(1-ph,.7)})}}}
+         sp.position.set(Math.cos(a)*r,(.42+ph*.7)*w.dustS,Math.sin(a)*r);const sc=(.85+ph*2)*w.dustS;sp.scale.set(sc,sc,1);sp.material.opacity=.9*dk*Math.pow(1-ph,.6)})}}}
   });
   if(cam.focus>=0&&W[cam.focus]){const fi=cam.focus,d=colonyDir(fi);
     // look at the colony on the surface, from an angle so buildings read in 3D
