@@ -60,6 +60,11 @@ body{background:radial-gradient(120% 80% at 70% 10%,#151a3a 0%,#090b1a 45%,var(-
 .tabscroll::-webkit-scrollbar{display:none}
 .tab{flex:1 0 auto;background:none;border:0;color:var(--muted);font:700 13px var(--f-display);letter-spacing:.07em;text-transform:uppercase;padding:17px 9px 15px;cursor:pointer;position:relative;white-space:nowrap}
 .tab.on{color:var(--ink)}
+.tab.alert::before{content:"";position:absolute;top:11px;right:2px;width:7px;height:7px;border-radius:50%;background:var(--ore);box-shadow:0 0 6px var(--ore)}
+.evmeta{display:flex;flex-wrap:wrap;gap:6px;font:600 10px var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.evmeta span{border:1px solid var(--line);border-radius:3px;padding:2px 6px}
+.evgoal{font:600 13px var(--f-body);color:var(--ink)}
+.evrew{font-size:12px;color:var(--ship)}
 .tab.on::after{content:"";position:absolute;left:22%;right:22%;bottom:-1px;height:2px;background:var(--ore)}
 .tab[hidden]{display:none}
 #grip{flex:0 0 44px;background:none;border:0;cursor:pointer;display:grid;place-items:center}
@@ -177,6 +182,7 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
     <button class="tab" data-tab="smelter" type="button" hidden>Smelter</button>
     <button class="tab" data-tab="research" type="button">Research</button>
     <button class="tab" data-tab="probe" type="button">Probe</button>
+    <button class="tab" data-tab="events" type="button">Events</button>
     <button class="tab" data-tab="warp" type="button">Warp</button>
     </div>
     <button id="grip" type="button" aria-label="Collapse console"><i></i></button>
@@ -325,11 +331,11 @@ const researchReserve=o=>openResearch().reduce((m,r)=>Math.max(m,(r.ore.find(x=>
 // bars kept back from selling: the most of that bar any open research project needs
 const researchBarReserve=o=>openResearch().reduce((m,r)=>Math.max(m,r.bars&&r.bars[0]===o?r.bars[1]:0),0);
 const canResearch=r=>S.cash>=r.cost&&r.ore.every(([o,q])=>(S.inv[o]||0)>=q)&&(!r.bars||(S.bars[r.bars[0]]||0)>=r.bars[1]);
-function buyResearch(r){if(!canResearch(r))return false;S.cash-=r.cost;r.ore.forEach(([o,q])=>S.inv[o]-=q);if(r.bars)S.bars[r.bars[0]]-=r.bars[1];S.research[r.id]=1;return true}
+function buyResearch(r){if(!canResearch(r))return false;S.cash-=r.cost;r.ore.forEach(([o,q])=>S.inv[o]-=q);if(r.bars)S.bars[r.bars[0]]-=r.bars[1];S.research[r.id]=1;S.life.res++;return true}
 
 /* ===================== STATE ===================== */
 const KEY='starquarry_save_v1';
-function newRun(keep){keep=keep||{};return{v:1,econ:2,probe:{nextAt:Date.now()+ECON.PROBE_FIRST*1000,out:null,st:{launched:0,returned:0,value:0,best:null,byOre:{},log:[]}},probeLife:keep.probeLife||{returned:0,value:0},music:keep.music||{on:true,vol:.6},cash:0,dm:keep.dm||0,runEarned:0,lifetime:keep.lifetime||0,warps:keep.warps||0,
+function newRun(keep){keep=keep||{};return{v:1,econ:2,probe:{nextAt:Date.now()+ECON.PROBE_FIRST*1000,out:null,st:{launched:0,returned:0,value:0,best:null,byOre:{},log:[]}},probeLife:keep.probeLife||{returned:0,value:0},life:keep.life||newLife(),perm:keep.perm||newPerm(),ev:keep.ev||{taken:{}},music:keep.music||{on:true,vol:.6},cash:0,dm:keep.dm||0,runEarned:0,lifetime:keep.lifetime||0,warps:keep.warps||0,
  // Cinder's hauler starts already loaded and on its way home, so the first delivery comes quickly
  planets:PLANETS.map((p,i)=>({u:i===0,teams:i===0?[{n:0,t:{}}]:[],stock:0,t:i===0?.66:Math.random()*.4,load:i===0?8:0})),
  inv:{},bars:{},research:{},auto:{},slots:[{r:null,p:0,a:false},{r:null,p:0,a:false},{r:null,p:0,a:false}],
@@ -349,13 +355,14 @@ if(!S.music)S.music={on:true,vol:.6};
 if(!S.probe)S.probe={nextAt:Date.now()+ECON.PROBE_FIRST*1000,out:null};
 if(!S.probe.st)S.probe.st={launched:S.probe.out?1:0,returned:0,value:0,best:null,byOre:{},log:[]};
 if(!S.probeLife)S.probeLife={returned:0,value:0};
+if(!S.life)S.life=newLife();if(!S.perm)S.perm=newPerm();if(!S.ev)S.ev={taken:{}};
 function save(){S.last=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 
 /* ===================== ECONOMY ===================== */
 const has=id=>!!S.research[id];
 function rmult(k){let m=1;for(const r of RESEARCH)if(r[k]&&has(r.id))m*=r[k];return m}
 const odOn=()=>Date.now()<S.od.until;
-const valueMult=()=>rmult('value')*(1+.01*S.dm)*setG('gv');
+const valueMult=()=>rmult('value')*(1+.01*S.dm)*setG('gv')*perm('value');
 /* Mining teams: one per planet, up to 20 upgrades, each worth +0.25x on the trait it is assigned to. */
 const MINER_MAX=20,MINER_STEP=.25,TEAM_MAX=3;
 const TRAITS=[['m','Mining'],['s','Ship speed'],['c','Cargo']];
@@ -368,9 +375,9 @@ const PREFIX=['Flint','Rustline','Deepcut','Ironjaw','Ember','Shale','Hollow Poi
 const SUFFIX=['Crew','Gang','Company','Team','Diggers','Brigade','Union','Guild','Collective','Sappers','Hunters','Walkers'];
 const teamName=(i,j)=>j===0?MINER_NAMES[i%MINER_NAMES.length]:PREFIX[(i*7+j*9+3)%PREFIX.length]+' '+SUFFIX[(i*5+j*7)%SUFFIX.length];
 function hireTeam(i){const p=S.planets[i],j=p.teams.length;if(j>=TEAM_MAX)return false;const c=teamHireCost(i,j);if(S.cash<c)return false;
-  S.cash-=c;p.teams.push({n:0,t:{}});if(j===0){p.u=true;p.t=0}return true}
+  S.cash-=c;p.teams.push({n:0,t:{}});S.life.teams++;if(j===0){p.u=true;p.t=0;S.life.claims++}return true}
 function teamBuy(i,j,k){const tm=S.planets[i].teams[j];if(!tm||tm.n>=MINER_MAX||minerFree(tm)>0||!TRAITS.some(t=>t[0]===k))return false;
-  const c=teamUpCost(i,j);if(S.cash<c)return false;S.cash-=c;tm.n++;tm.t[k]=(tm.t[k]||0)+1;return true}
+  const c=teamUpCost(i,j);if(S.cash<c)return false;S.cash-=c;tm.n++;tm.t[k]=(tm.t[k]||0)+1;S.life.ups++;return true}
 const minerFree=mn=>mn.n-TRAITS.reduce((a,[k])=>a+(mn.t[k]||0),0);
 const settleLv=i=>(S.planets[i]&&S.planets[i].set)||0;
 const settleCost=i=>PLANETS[i].scale*SETTLE_COST[settleLv(i)];
@@ -385,21 +392,21 @@ function settleMults(){if(SM&&SM.S===S&&SM.v===settleVer)return SM;
 const setLoc=(i,k)=>{const l=settleMults().loc[i];return l?l[k]:1};
 const setG=k=>settleMults().g[k];
 function buySettle(i){const p=S.planets[i];if(p.teams.length<TEAM_MAX||settleLv(i)>=3)return false;const c=settleCost(i);if(S.cash<c)return false;
-  S.cash-=c;p.set=settleLv(i)+1;settleVer++;return true}
-function mineRate(i){return PLANETS[i].rate*rmult('mine')*minerT(i,'m')*setLoc(i,'m')*setG('gm')*(odOn()?2:1)}
-function shipSpeed(i){return ECON.SHIP_BASE*rmult('ship')*minerT(i,'s')*setLoc(i,'s')*setG('gs')*(odOn()?2:1)}
-function cargo(i){return PLANETS[i].cargo*rmult('cargo')*minerT(i,'c')*setLoc(i,'c')*setG('gc')}
+  S.cash-=c;p.set=settleLv(i)+1;settleVer++;S.life.settle++;return true}
+function mineRate(i){return PLANETS[i].rate*rmult('mine')*perm('mine')*minerT(i,'m')*setLoc(i,'m')*setG('gm')*(odOn()?2:1)}
+function shipSpeed(i){return ECON.SHIP_BASE*rmult('ship')*perm('ship')*minerT(i,'s')*setLoc(i,'s')*setG('gs')*(odOn()?2:1)}
+function cargo(i){return PLANETS[i].cargo*rmult('cargo')*perm('cargo')*minerT(i,'c')*setLoc(i,'c')*setG('gc')}
 const tripTime=i=>(2*PLANETS[i].r+ECON.SHIP_OVH*ECON.SHIP_BASE)/shipSpeed(i);
 const haul=i=>Math.min(mineRate(i),cargo(i)/tripTime(i));
 const avgValue=i=>PLANETS[i].mix.reduce((a,[o,f])=>a+ORES[o].v*f,0);
 const smeltSlots=()=>has('smelt')?1+(has('slot2')?1:0)+(has('slot3')?1:0):0;
-const smeltTime=o=>5*(1+o*.35)/(rmult('smelt')*setG('smelt'));
+const smeltTime=o=>5*(1+o*.35)/(rmult('smelt')*setG('smelt')*perm('smelt'));
 const reserve=o=>S.slots.slice(0,smeltSlots()).filter(s=>s.r===o).length*BAR_IN*2;
 function itemValue(key){const o=+key.slice(1);return (key[0]==='b'?ORES[o].v*BAR_MULT:ORES[o].v)*valueMult()*(settleMults().ore[o]||1)}
 function earn(x){S.cash+=x;S.runEarned+=x;S.lifetime+=x}
 function sellItem(key,keep){const store=key[0]==='b'?S.bars:S.inv,o=+key.slice(1),amt=Math.max(0,(store[o]||0)-(keep||0));if(amt<=0)return 0;store[o]-=amt;const v=amt*itemValue(key);earn(v);return v}
 function autoSell(){if(!has('auto'))return;for(const k in S.auto){if(!S.auto[k])continue;sellItem(k,k[0]==='o'?Math.max(reserve(+k.slice(1)),researchReserve(+k.slice(1))):researchBarReserve(+k.slice(1)))}}
-function deliver(i,units){for(const [o,f] of PLANETS[i].mix)S.inv[o]=(S.inv[o]||0)+units*f}
+function deliver(i,units){for(const [o,f] of PLANETS[i].mix){S.inv[o]=(S.inv[o]||0)+units*f;S.life.del[o]=(S.life.del[o]||0)+units*f}}
 function discovered(){const set=new Set();S.planets.forEach((p,i)=>{if(p.u)PLANETS[i].mix.forEach(([o])=>set.add(o))});return [...set].sort((a,b)=>a-b)}
 
 let pulse=0;
@@ -413,12 +420,12 @@ function step(dt){
       // very fast ships can finish several round trips in one frame
       const extra=Math.min(p.stock,cap*(n-1));p.stock-=extra;const got=p.load+extra;p.load=0;
       if(p.t>=.5){p.load=Math.min(cap,p.stock);p.stock-=p.load}
-      if(got>0){deliver(i,got);pulse=1}}
+      if(got>0){deliver(i,got);pulse=1;S.life.deliv+=n}}
   });
   const n=smeltSlots();
   for(let k=0;k<n;k++){const sl=S.slots[k];if(sl.r===null)continue;
     if(!sl.a){if((S.inv[sl.r]||0)>=BAR_IN){S.inv[sl.r]-=BAR_IN;sl.a=true;sl.p=0}else continue}
-    sl.p+=dt/smeltTime(sl.r);if(sl.p>=1){S.bars[sl.r]=(S.bars[sl.r]||0)+1;sl.a=false;sl.p=0}}
+    sl.p+=dt/smeltTime(sl.r);if(sl.p>=1){S.bars[sl.r]=(S.bars[sl.r]||0)+1;S.life.bars++;sl.a=false;sl.p=0}}
   autoSell();
 }
 /* Space probes: one launches from the station's iris every PROBE_EVERY seconds (the first PROBE_FIRST seconds into
@@ -426,7 +433,7 @@ function step(dt){
    Its haul is worth PROBE_SEC seconds of the combined mining of every claimed planet. Timed by the real clock,
    so probes keep flying while the game is closed (up to the offline earnings limit). */
 function totalMineValue(){let t=0;S.planets.forEach((p,i)=>{if(p.u)t+=mineRate(i)*avgValue(i)});return t}
-function probeReturn(){const pr=S.probe,o=pr.out.ore,qty=ECON.PROBE_SEC*totalMineValue()*setG('probe')/ORES[o].v*(.85+Math.random()*.3);
+function probeReturn(){const pr=S.probe,o=pr.out.ore,qty=ECON.PROBE_SEC*totalMineValue()*setG('probe')*perm('probe')/ORES[o].v*(.85+Math.random()*.3);
   {const st=pr.st,val=qty*ORES[o].v*valueMult(),at=pr.out.at+ECON.PROBE_FLY*1000;st.returned++;st.value+=val;st.byOre[o]=(st.byOre[o]||0)+qty;
    if(!st.best||val>st.best.v)st.best={o,q:qty,v:val};st.log.unshift({o,q:qty,v:val,t:at});st.log.length=Math.min(st.log.length,6);S.probeLife.returned++;S.probeLife.value+=val}
   S.inv[o]=(S.inv[o]||0)+qty;pr.out=null;autoSell();return[o,qty]}
@@ -441,9 +448,9 @@ function probeTick(now,quiet){const pr=S.probe,cap=(has('night')?24:8)*3600e3,go
 function offline(sec,announce){
   const cap=(has('night')?24:8)*3600;sec=Math.min(sec,cap);
   const before=S.cash;let units=0;const probes=probeTick(Date.now(),true).length;
-  S.planets.forEach((p,i)=>{if(!p.u)return;const u=haul(i)*sec;units+=u;deliver(i,u)});
+  S.planets.forEach((p,i)=>{if(!p.u)return;const u=haul(i)*sec;units+=u;deliver(i,u);S.life.deliv+=Math.floor(sec/tripTime(i))});
   const n=smeltSlots();
-  for(let k=0;k<n;k++){const sl=S.slots[k];if(sl.r===null)continue;const b=Math.floor(Math.min(sec/smeltTime(sl.r),(S.inv[sl.r]||0)/BAR_IN));S.inv[sl.r]-=b*BAR_IN;S.bars[sl.r]=(S.bars[sl.r]||0)+b}
+  for(let k=0;k<n;k++){const sl=S.slots[k];if(sl.r===null)continue;const b=Math.floor(Math.min(sec/smeltTime(sl.r),(S.inv[sl.r]||0)/BAR_IN));S.inv[sl.r]-=b*BAR_IN;S.bars[sl.r]=(S.bars[sl.r]||0)+b;S.life.bars+=b}
   autoSell();
   if(announce&&sec>30){const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60);
     toast(`Welcome back. In ${h?h+'h ':''}${m}m your fleet hauled ${fmt(units)} ore`+(probes?` and ${probes} probe${probes>1?'s':''} came home`:'')+(S.cash>before?`, earning ${fmt(S.cash-before)} credits.`:'. Sell it in the Market.'),6000)}
@@ -451,6 +458,83 @@ function offline(sec,announce){
 function incomeEstimate(){let t=0;S.planets.forEach((p,i)=>{if(p.u)t+=haul(i)*avgValue(i)});return t*valueMult()}
 const pendingDM=()=>Math.floor(ECON.DUST_A*Math.pow(Math.max(0,S.runEarned)/1e6,ECON.DUST_K));
 
+/* ===================== EVENTS =====================
+   Weekly missions. A new set of three is offered every Friday at 18:00 (local time) and you may accept one per week.
+   A mission has a short story, a goal sized to your progress when you accept it, and 3-5 days to finish.
+   The schedule is worked out from the date, so it needs no server: 12 mission kinds x 13 story settings = 156 events,
+   spread over a 52-week cycle so no event comes back for 52 weeks, and the three offered together always differ.
+   Rewards: slot 1 a permanent boost (kept through warps), slot 2 star dust, slot 3 free unlocks in the current galaxy. */
+const EV_KINDS=['credits','ore','deliv','probes','ups','teams','settle','bars','od','warp','claim','research'];
+const EV_THEMES=[
+ ['Ember Accord','The Ember Accord, Cinder’s oldest smelting guild,','is relighting forges that went cold in the last quake'],
+ ['Frostline Couriers','The Frostline Courier Union','is racing to stock its ice stations before the long dark'],
+ ['Duskhaven Watch','Duskhaven’s star-watchers','have spotted something drifting at the galaxy’s edge'],
+ ['Pale Cartographers','The Pale Cartographers','are redrawing the trade lanes after a solar storm'],
+ ['Rustline Salvage','Rustline Salvage Co.','has found a derelict freighter and wants it brought home'],
+ ['Sunpearl Exchange','The Sunpearl Trading House','is opening a new exchange and wants a reliable partner'],
+ ['Nightsilver Deal','A Nightsilver Syndicate broker','is offering a quiet deal on very good terms'],
+ ['Verdant Rings','The Verdant Rings Cooperative','is planting greenhouse colonies along the outer rings'],
+ ['Gloomhold Works','Gloomhold’s chief engineer','is testing a new deep-shaft design and needs partners'],
+ ['Tidejade Council','The Tidejade Lagoon Council','is rebuilding its sea walls after a tidal surge'],
+ ['Violet Archive','The Violet Crown Archive','is restoring a lost survey of the galaxy'],
+ ['Skyreach Trials','The Skyreach Pilots’ Guild','is holding its season trials'],
+ ['Haloite Pilgrims','A Haloite pilgrim fleet','is passing through on its way to the galactic rim']];
+const EV_TITLES={credits:['Treasury Run','Golden Ledger','Seed Capital','Strongbox'],ore:['Ore Rush','Heavy Haul','Deep Vein','Full Holds'],deliv:['Cargo Marathon','Supply Chain','Endless Convoy','Freight Week'],
+ probes:['Long Range Survey','Far Signals','Deep Scan','Star Charts'],ups:['Crew Drills','Sharper Picks','Tool Swap','Shift Training'],teams:['Hiring Drive','New Hands','Fresh Crews','Open Doors'],
+ settle:['New Homes','Raise the Domes','Groundbreaking','Hearth and Hull'],bars:['Furnace Week','Bar Rush','Cast Iron Will','Hot Metal'],od:['Redline','Full Burn','Engines Hot','Afterburn'],
+ warp:['Rebirth','Fold the Stars','New Dawn','Second Sky'],claim:['Frontier Claims','Stake the Flag','Uncharted','Outer Worlds'],research:['Archive Keys','Lost Formulas','Lab Nights','Blueprints']};
+const EV_DAYS_H={3:18,4:24,5:30};
+const EV_FIXED={probes:{3:30,4:40,5:50},ups:{3:20,4:28,5:36},teams:{3:2,4:3,5:4},settle:{3:1,4:2,5:2},bars:{3:150,4:200,5:260},od:{3:8,4:11,5:14},warp:{3:1,4:1,5:1},claim:{3:1,4:2,5:2},research:{3:2,4:3,5:4}};
+const EV_BOOSTS=['mine','ship','cargo','value','probe','smelt'],EV_BOOST_NAME={mine:'mining',ship:'ship speed',cargo:'cargo',value:'sale prices',probe:'probe hauls',smelt:'smelting speed'};
+function newLife(){return{del:{},deliv:0,bars:0,ups:0,teams:0,claims:0,settle:0,res:0,od:0}}
+function newPerm(){return{mine:1,ship:1,cargo:1,value:1,probe:1,smelt:1}}
+function perm(k){return(S.perm&&S.perm[k])||1}
+// the most recent Friday 18:00 (local) and the week number counted from Friday 2 January 2026
+function evWeekStart(now){const d=new Date(now),back=(d.getDay()-5+7)%7;let f=new Date(d.getFullYear(),d.getMonth(),d.getDate()-back,18,0,0);if(f.getTime()>now)f=new Date(f.getFullYear(),f.getMonth(),f.getDate()-7,18,0,0);return f.getTime()}
+const EV_ANCHOR=new Date(2026,0,2,18,0,0).getTime();
+const evWeek=now=>Math.round((evWeekStart(now)-EV_ANCHOR)/(7*864e5));
+const evNextAt=now=>{const f=new Date(evWeekStart(now));return new Date(f.getFullYear(),f.getMonth(),f.getDate()+7,18,0,0).getTime()};
+// week w, slot k -> one of 156 events; each kind meets each setting once per 52 weeks
+function evDef(w,k){const j=((w%52)+52)%52,jj=(j*19)%52,n=jj*3+k,kind=EV_KINDS[n%12],m=Math.floor(n/12),theme=(m+5*(n%3))%13,days=3+((n*7+jj)%3);
+  return{w,k,id:kind+':'+theme,kind,theme,days,title:EV_THEMES[theme][0]+' · '+EV_TITLES[kind][theme%4]}}
+function evNewestOre(){let o=0;S.planets.forEach((p,i)=>{if(p.u)PLANETS[i].mix.forEach(([x])=>{o=Math.max(o,x)})});return o}
+const niceN=x=>{x=Math.max(1,x);const p=Math.pow(10,Math.max(0,Math.floor(Math.log10(x))-1));return Math.ceil(x/p)*p};
+function evTarget(d){const H=EV_DAYS_H[d.days];
+  if(d.kind==='credits')return{target:niceN(Math.max(1e3,incomeEstimate()*3600*H))};
+  if(d.kind==='ore'){const o=evNewestOre();let r=0;S.planets.forEach((p,i)=>{if(p.u)PLANETS[i].mix.forEach(([x,f])=>{if(x===o)r+=haul(i)*f})});return{target:niceN(Math.max(100,r*3600*H)),ore:o}}
+  if(d.kind==='deliv'){let ph=0;S.planets.forEach((p,i)=>{if(p.u)ph+=3600/tripTime(i)});return{target:niceN(Math.max(30,ph*H*.6))}}
+  return{target:EV_FIXED[d.kind][d.days]}}
+function evProg(a){const L=S.life;return{credits:S.lifetime,ore:L.del[a.ore]||0,deliv:L.deliv,probes:S.probeLife.returned,ups:L.ups,teams:L.teams,settle:L.settle,bars:L.bars,od:L.od,warp:S.warps,claim:L.claims,research:L.res}[a.kind]}
+function evGoalText(kind,N,ore){const n=fmt(N),one=N===1,on=ore!=null&&ORES[ore]?ORES[ore].n:'';return{credits:`Earn ${n} credits.`,ore:`Haul ${n} ${on} ore home.`,deliv:`Complete ${n} hauler deliveries.`,probes:`Bring home ${n} probes.`,
+  ups:`Buy ${n} mining team upgrades.`,teams:`Hire ${n} mining teams.`,settle:`Build ${n} settlement level${one?'':'s'}.`,bars:`Smelt ${n} bars.`,od:`Fire Overdrive ${n} times.`,
+  warp:'Warp the galaxy once.',claim:`Claim ${n} new planet${one?'':'s'}.`,research:`Complete ${n} research projects.`}[kind]}
+function evStory(d,tg){const T=EV_THEMES[d.theme],ore=tg.ore!=null?ORES[tg.ore].n:'';
+  const need={credits:'they need a partner who can pay their way',ore:`they need ${ore}, and plenty of it`,deliv:'they need a fleet that never stops flying',probes:'they need the far reaches mapped',
+   ups:'they need crews that keep getting better',teams:'they need more hands on the ground',settle:'they need homes for their people',bars:'they need refined metal, not raw ore',
+   od:'they need a fleet willing to run hot',warp:'they need a quarry reborn among new stars',claim:'they need new worlds claimed and worked',research:'they need answers only research can give'}[d.kind];
+  const ask=['To see it through,','To make it work,','Before they can begin,','To pull it off,'][(d.theme+d.k)%4]+' '+need+'.';
+  return `${T[1]} ${T[2]}. ${ask}`}
+function evNeeds(kind){if(kind==='bars'&&!has('smelt'))return 'Needs the Smelter research.';if(kind==='warp'&&!S.planets[WARP_AT].u)return `Needs ${PLANETS[WARP_AT].n} claimed to unlock warping.`;return ''}
+function evReward(d){const D=d.days;
+  if(d.k===0){const b=EV_BOOSTS[((d.w%6)+6)%6],amt=D+0;return{type:'perm',b,amt,text:`Permanent +${amt}% ${EV_BOOST_NAME[b]}, kept through warps`}}
+  if(d.k===1){const amt={3:8,4:11,5:15}[D]+Math.floor((S.dm||0)*.03);return{type:'dust',amt,text:`${amt} star dust (+${amt}% sale prices)`}}
+  if(((d.w%2)+2)%2===0){const n=D===5?2:1;return{type:'res',amt:n,text:`${n} free research project${n>1?'s':''} in this galaxy (the cheapest open ones)`}}
+  const n={3:8,4:12,5:16}[D];return{type:'pts',amt:n,text:`${n} free mining team upgrade points in this galaxy`}}
+function evGive(r){
+  if(r.type==='perm'){S.perm[r.b]*=1+r.amt/100;settleVer++;return `Permanent +${r.amt}% ${EV_BOOST_NAME[r.b]}.`}
+  if(r.type==='dust'){S.dm+=r.amt;return `+${r.amt} star dust.`}
+  if(r.type==='res'){const got=[];for(let k=0;k<r.amt;k++){const o=openResearch().sort((a,b)=>a.cost-b.cost)[0];if(!o)break;S.research[o.id]=1;got.push(o.n)}
+    if(got.length)return `Free research: ${got.join(', ')}.`;S.dm+=8*r.amt;return `No research left, so +${8*r.amt} star dust instead.`}
+  if(r.type==='pts'){let left=r.amt;const tms=[];S.planets.forEach((p,i)=>{if(p.u)p.teams.forEach(tm=>tms.push(tm))});tms.reverse();
+    for(let guard=0;left>0&&guard<500;guard++){const t=tms.find(tm=>tm.n<MINER_MAX);if(!t)break;t.n++;left--;tms.push(tms.shift())}
+    const given=r.amt-left;if(left>0)S.dm+=Math.ceil(left/2);return `${given} free upgrade point${given===1?'':'s'} on your mining teams${left>0?` (+${Math.ceil(left/2)} star dust for the rest)`:''}. Tap the green buttons to place them.`}}
+function evAccept(k){const now=Date.now(),w=evWeek(now),E=S.ev;if(E.act&&(E.act.status==='active'||E.act.status==='done'))return false;if(E.taken[w])return false;
+  const d=evDef(w,k),tg=evTarget(d);E.taken[w]=1;
+  E.act=Object.assign({},d,tg,{story:evStory(d,tg),reward:evReward(d),acc:now,end:now+d.days*864e5,status:'active'});E.act.start=evProg(E.act);return true}
+function evCheck(){const a=S.ev&&S.ev.act;if(!a||a.status!=='active')return;
+  if(evProg(a)-a.start>=a.target){a.status='done';toast(`Mission complete: ${a.title}. Claim your reward in Events.`,5000);save()}
+  else if(Date.now()>a.end){a.status='failed';toast(`Mission failed: ${a.title} ran out of time.`,5000);save()}}
+function evClaim(){const a=S.ev.act;if(!a||a.status!=='done')return;const msg=evGive(a.reward);a.status='claimed';S.ev.log=(S.ev.log||[]);S.ev.log.unshift({t:a.title,at:Date.now()});S.ev.log.length=Math.min(S.ev.log.length,10);refreshWorld();toast('Reward: '+msg,5000);save()}
 /* ===================== FORMAT ===================== */
 const SUF=['K','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc','Ud','Dd','Td','Qad','Qid','Sxd','Spd','Ocd','Nod','Vg'];
 function fmt(n){if(!isFinite(n))return '∞';if(n<10)return (Math.floor(n*10)/10).toString();if(n<1000)return Math.floor(n).toString();let i=-1;while(n>=1000&&i<SUF.length-1){n/=1000;i++}return (n<10?n.toFixed(2):n<100?n.toFixed(1):Math.floor(n).toString())+SUF[i]}
@@ -1424,7 +1508,7 @@ function viewTeams(i,shipsBN){
   h+=`</div><div class="note" style="justify-content:space-between"><span>${full?'<b>Fully upgraded.</b>':'Red buttons fix the bottleneck.'}</span>
     <button class="btn ghost${armed('respec'+i+'_'+j)?' warn':''}" data-act="respec" data-p="${i}" data-j="${j}" ${tm.n-free>0?'':'disabled'} type="button" style="min-width:0">${armed('respec'+i+'_'+j)?'Tap to confirm':'Reassign points'}</button></div>`;
   return h+'</div>'}
-function viewProbe(){const pr=S.probe,st=pr.st,nw=Date.now(),est=ECON.PROBE_SEC*totalMineValue()*setG('probe')*valueMult();
+function viewProbe(){const pr=S.probe,st=pr.st,nw=Date.now(),est=ECON.PROBE_SEC*totalMineValue()*setG('probe')*perm('probe')*valueMult();
   const ago=t=>{const s=Math.max(0,(nw-t)/1000);return s<60?'just now':s<3600?Math.floor(s/60)+'m ago':Math.floor(s/3600)+'h '+Math.floor(s%3600/60)+'m ago'};
   let h=`<div class="head"><h2>Space probe</h2>${pr.out?`<button class="tog${cam.probe?' on':''}" data-act="pfollow" type="button">${cam.probe?'Following':'Follow probe'}</button>`:''}</div>`;
   if(pr.out){const f=Math.min(1,(nw-pr.out.at)/(ECON.PROBE_FLY*1000)),o=pr.out.ore,stage=f<.05?'Leaving the station':f>.95?'Docking through the iris':'Surveying the galaxy';
@@ -1490,6 +1574,31 @@ function viewResearch(){
   if(own.length)h+=`<h3>Completed</h3><div class="ores">${own.map(r=>`<button class="ore res" data-act="resinfo" data-id="${r.id}" type="button">${r.n}</button>`).join('')}</div>`;
   return h}
 
+// Events tab: the active mission (progress, time left, claim) and this week's three offers
+const evTime=ms=>{const m=Math.max(0,Math.floor(ms/6e4)),d=Math.floor(m/1440),h=Math.floor(m%1440/60),mi=m%60;return d?`${d}d ${h}h`:h?`${h}h ${mi}m`:`${mi}m`};
+function evBadge(){const t=document.querySelector('[data-tab="events"]');if(!t)return;const now=Date.now(),w=evWeek(now),E=S.ev,a=E.act;
+  const busy=a&&(a.status==='active');t.classList.toggle('alert',!!(a&&a.status==='done')||(!busy&&!E.taken[w]&&E.seen!==w))}
+function viewEvents(){const now=Date.now(),w=evWeek(now),E=S.ev,a=E.act;if(E.seen!==w&&tab==='events')E.seen=w;
+  let h=`<div class="head"><h2>Events</h2><span class="num" style="color:var(--muted);font-size:12px">New events in ${evTime(evNextAt(now)-now)}</span></div>`;
+  if(a&&(a.status==='active'||a.status==='done'||(a.status==='failed'&&now-a.end<864e5))){const got=Math.min(a.target,Math.max(0,evProg(a)-a.start)),pc=Math.min(100,got/a.target*100);
+    h+=`<div class="card"><div class="head"><h3>Current mission</h3><span class="num" style="font-size:12px;color:${a.status==='failed'?'var(--bad)':'var(--muted)'}">${a.status==='active'?evTime(a.end-now)+' left':a.status==='done'?'Complete':'Failed'}</span></div>
+      <div class="head"><span style="font:600 15px var(--f-body)">${a.title}</span></div><p style="font-size:12px">${a.story}</p>
+      <div class="evgoal">${evGoalText(a.kind,a.target,a.ore)}</div>
+      <div class="bar"><i style="width:${pc.toFixed(1)}%;background:var(--ship)"></i></div>
+      <div class="note"><span class="num">${fmt(got)} / ${fmt(a.target)}</span><span class="evrew">${a.reward.text}</span></div>
+      ${a.status==='done'?`<button class="btn wide" data-act="evclaim" type="button">Claim reward<small>${a.reward.text}</small></button>`:''}</div>`}
+  const blocked=a&&(a.status==='active'||a.status==='done'),taken=!!E.taken[w];
+  h+=`<h3>This week’s missions</h3>`;
+  for(let k=0;k<3;k++){const d=evDef(w,k),tg=evTarget(d),rw=evReward(d),need=evNeeds(d.kind),mine=a&&a.w===w&&a.k===k;
+    h+=`<div class="card"><div class="head"><span style="font:600 15px var(--f-body)">${d.title}</span></div>
+      <div class="evmeta"><span>${d.days} days</span><span>${['Permanent boost','Star dust','Free unlocks'][k]}</span></div>
+      <p style="font-size:12px">${evStory(d,tg)}</p><div class="evgoal">${evGoalText(d.kind,tg.target,tg.ore)}</div>
+      <div class="evrew">Reward: ${rw.text}</div>${need?`<p style="font-size:12px;color:var(--bad)">${need}</p>`:''}
+      <button class="btn${mine||taken||blocked?' ghost':''}" data-act="evaccept" data-k="${k}" ${taken||blocked?'disabled':''} type="button">${mine?'Accepted':taken?'Chosen this week':blocked?'Finish your current mission first':'Accept mission'}</button></div>`}
+  h+=`<p style="font-size:12px">Accept one mission a week. Goals are sized to your progress when you accept, and new missions arrive every Friday at 6 pm. Missions don’t repeat for at least a year.</p>`;
+  const pb=EV_BOOSTS.filter(b=>perm(b)>1.0001);
+  if(pb.length)h+=`<div class="card"><h3>Permanent event boosts</h3><div class="rows">${pb.map(b=>`<div class="row"><div class="txt"><span class="t">${EV_BOOST_NAME[b][0].toUpperCase()+EV_BOOST_NAME[b].slice(1)}</span><span class="s">×${perm(b).toFixed(3)}</span></div></div>`).join('')}</div></div>`;
+  return h}
 function viewWarp(){
   const ok=S.planets[WARP_AT].u,pd=pendingDM();
   let h=`<div class="head"><h2>Galaxy Warp</h2></div>
@@ -1523,7 +1632,7 @@ pbody.addEventListener('scroll',e=>{if(e.target.id==='pchips')chipNav()},{passiv
 function render(force){
   if((pressing||touchHold||performance.now()-lastScroll<500)&&!force)return;
   if(sheet.classList.contains('collapsed')&&!force)return;
-  const v={planet:viewPlanet,market:viewMarket,smelter:viewSmelter,research:viewResearch,probe:viewProbe,warp:viewWarp}[tab]();
+  const v={planet:viewPlanet,market:viewMarket,smelter:viewSmelter,research:viewResearch,probe:viewProbe,events:viewEvents,warp:viewWarp}[tab]();
   if(v!==lastHTML){const st=pbody.scrollTop,sl=[...pbody.querySelectorAll('.chips')].map(c=>c.scrollLeft);pbody.innerHTML=v;pbody.scrollTop=st;pbody.querySelectorAll('.chips').forEach((c,k)=>{if(sl[k])c.scrollLeft=sl[k]});lastHTML=v;
     if(tab==='planet'&&shownSel!==S.sel){shownSel=S.sel;centerSelChip()}chipNav()}
 }
@@ -1570,7 +1679,7 @@ musicUI();
     else{const p=req.call(de,{navigationUI:'hide'});if(p&&p.catch)p.catch(()=>toast('Full screen is not available here.'));try{screen.orientation&&screen.orientation.lock&&screen.orientation.lock('portrait').catch(()=>{})}catch(err){}}});
   const ch=()=>{ui();setTimeout(resize,200)};document.addEventListener('fullscreenchange',ch);document.addEventListener('webkitfullscreenchange',ch);
 })();
-$('od').addEventListener('click',()=>{if(odOn()||Date.now()<S.od.ready)return;S.od.until=Date.now()+OD_LEN*1000;S.od.ready=S.od.until+OD_CD*1000;toast('Overdrive engaged. Mines and ships run at double speed for 2 minutes.');save()});
+$('od').addEventListener('click',()=>{if(odOn()||Date.now()<S.od.ready)return;S.od.until=Date.now()+OD_LEN*1000;S.od.ready=S.od.until+OD_CD*1000;S.life.od++;toast('Overdrive engaged. Mines and ships run at double speed for 2 minutes.');save()});
 
 pbody.addEventListener('click',e=>{
   const b=e.target.closest('[data-act]');if(!b||b.disabled)return;const a=b.dataset.act;
@@ -1584,6 +1693,8 @@ pbody.addEventListener('click',e=>{
   else if(a==='focus'){focusPlanet(+b.dataset.p)}
   else if(a==='unfocus'){cam.focus=-1;recenter()}
   else if(a==='tsel'){teamSel[+b.dataset.p]=+b.dataset.j}
+  else if(a==='evaccept'){if(evAccept(+b.dataset.k)){toast('Mission accepted. Good luck out there.');save()}}
+  else if(a==='evclaim'){evClaim()}
   else if(a==='settle'){const i=+b.dataset.p,lv=settleLv(i);if(buySettle(i)){refreshWorld();toast(lv?`${SETTLE[i][0]} grew into a ${SETTLE_LV[lv]}.`:`${SETTLE[i][0]} founded on ${PLANETS[i].n}.`);save()}}
   else if(a==='hire'){const i=+b.dataset.p,j=S.planets[i].teams.length;if(hireTeam(i)){teamSel[i]=j;refreshWorld();
       if(j===0){{const f=fitDistance();if(f>cam.tr)cam.tr=f}toast(`The ${teamName(i,0)} claimed ${PLANETS[i].n}. A hauler is on its way.`);if(i===WARP_AT)toast('Galaxy Warp is now available in the Warp tab.',4000);if(cam.focus!==i)focusPlanet(i)}
@@ -1594,7 +1705,7 @@ pbody.addEventListener('click',e=>{
   else if(a==='auto'){S.auto[b.dataset.k]=!S.auto[b.dataset.k]}
   else if(a==='slot'){const sl=S.slots[+b.dataset.i],r=+b.dataset.r;if(sl.a&&sl.r!==null)S.inv[sl.r]=(S.inv[sl.r]||0)+BAR_IN;sl.r=r<0?null:r;sl.a=false;sl.p=0}
   else if(a==='res'){const r=RESEARCH.find(x=>x.id===b.dataset.id);if(buyResearch(r)){toast(r.n+' complete.');if(r.id==='smelt')toast('The Smelter tab is open. Pick an ore for your furnace.',4000);save()}}
-  else if(a==='warp'){if(!armed('warp')){arm={k:'warp',until:Date.now()+4000}}else{const g=pendingDM();S=newRun({dm:S.dm+g,lifetime:S.lifetime,warps:S.warps+1,music:S.music,probeLife:S.probeLife});arm=null;refreshWorld();recenter();save();toast(`Warped. +${fmt(g)} star dust. Everything now sells for +${fmt(S.dm)}%.`,4500);setTab('planet')}}
+  else if(a==='warp'){if(!armed('warp')){arm={k:'warp',until:Date.now()+4000}}else{const g=pendingDM();S=newRun({dm:S.dm+g,lifetime:S.lifetime,warps:S.warps+1,music:S.music,probeLife:S.probeLife,life:S.life,perm:S.perm,ev:S.ev});arm=null;refreshWorld();recenter();save();toast(`Warped. +${fmt(g)} star dust. Everything now sells for +${fmt(S.dm)}%.`,4500);setTab('planet')}}
   else if(a==='reset'){if(!armed('reset')){arm={k:'reset',until:Date.now()+4000}}else{S=newRun({music:S.music});arm=null;refreshWorld();save();toast('Save erased. Fresh start.');setTab('planet')}}
   pressing=false;render(true);hud();
 });
@@ -1608,7 +1719,7 @@ function frame(now){
   updateWorld(Math.min(dt,.25));renderer.render(scene,camera);placeLabels();
   // furnace progress bars move every frame, not just when the panel redraws
   if(tab==='smelter')document.querySelectorAll('[data-smelt]').forEach(el=>{const sl=S.slots[+el.dataset.smelt];if(sl)el.style.width=(sl.a?sl.p*100:0).toFixed(2)+'%'});
-  uiT+=dt;if(uiT>.25){uiT=0;hud();render(false);
+  uiT+=dt;if(uiT>.25){uiT=0;evCheck();evBadge();hud();render(false);
     W.forEach((w,i)=>{if(S.planets[i].u){const t=planetLabel(i);if(w.label.innerHTML!==t){w.label.innerHTML=t;w.lw=0}}})}
   saveT+=dt;if(saveT>5){saveT=0;save()}
   requestAnimationFrame(frame)}
