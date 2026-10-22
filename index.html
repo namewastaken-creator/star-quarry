@@ -180,7 +180,6 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
 <div id="modal" hidden><div class="box" role="dialog" aria-modal="true" aria-labelledby="mtitle"><span class="tag">Research complete</span><h2 id="mtitle"></h2><p id="mdesc" style="color:var(--ink)"></p><div id="meff"></div><span class="num" id="mcost" style="font-size:12px;color:var(--muted)"></span><button class="btn ghost wide" id="mclose" type="button">Close</button></div></div>
 <section id="sheet">
   <nav class="tabbar chipnav" id="tabs">
-    <button class="cnav" data-hs="-1" type="button" aria-label="Scroll tabs left">‹</button>
     <div class="tabscroll" id="tabscroll">
     <button class="tab on" data-tab="planet" type="button">Planet</button>
     <button class="tab" data-tab="market" type="button">Market</button>
@@ -190,7 +189,6 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
     <button class="tab" data-tab="events" type="button">Events</button>
     <button class="tab" data-tab="warp" type="button">Warp</button>
     </div>
-    <button class="cnav" data-hs="1" type="button" aria-label="Scroll tabs right">›</button>
     <button id="grip" type="button" aria-label="Collapse console"><i></i></button>
   </nav>
   <div id="pbody"></div>
@@ -1599,7 +1597,8 @@ $('toast').addEventListener('click',()=>{clearTimeout(toast.h);hideToast()});
 function setTab(t){tab=t;document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));pbody.scrollTop=0;render(true);
   const on=document.querySelector('.tab.on'),sc=$('tabscroll');if(on&&sc&&sc.scrollWidth>sc.clientWidth)sc.scrollLeft=on.offsetLeft-(sc.clientWidth-on.offsetWidth)/2}
 function toggleSheet(){sheet.classList.toggle('collapsed');$('grip').setAttribute('aria-label',sheet.classList.contains('collapsed')?'Expand console':'Collapse console');setTimeout(resize,260)}
-$('tabs').addEventListener('click',e=>{const b=e.target.closest('.tab');if(b){if(sheet.classList.contains('collapsed'))toggleSheet();setTab(b.dataset.tab)}if(e.target.closest('#grip'))toggleSheet()});
+// a mouse drag along the tab row scrolls it; releasing over a tab doesn't switch tabs
+$('tabs').addEventListener('click',e=>{const b=e.target.closest('.tab');if(b&&chipDragged)return;if(b){if(sheet.classList.contains('collapsed'))toggleSheet();setTab(b.dataset.tab)}if(e.target.closest('#grip'))toggleSheet()});
 let touchHold=false,lastScroll=0;
 pbody.addEventListener('pointerdown',()=>pressing=true);
 pbody.addEventListener('input',e=>{if(e.target.id==='vol'){S.music.vol=+e.target.value/100;const n=e.target.nextElementSibling;if(n)n.textContent=e.target.value;Music.setVolume();if(S.music.vol>0&&!S.music.on){S.music.on=true;Music.play();musicUI()}}});
@@ -1615,9 +1614,9 @@ const armed=k=>arm&&arm.k===k&&Date.now()<arm.until;
 function oreChip(o,f){return `<span class="ore"><i style="background:${ORES[o].c}"></i>${ORES[o].n}${f!=null?` <span class="num" style="color:var(--muted)">${Math.round(f*100)}%</span>`:''}</span>`}
 function viewPlanet(){
   const i=S.sel,P=PLANETS[i],p=S.planets[i],firstLocked=S.planets.findIndex(x=>!x.u);
-  let chips='<div class="chipnav" id="pnav"><button class="cnav" data-hs="-1" type="button" aria-label="Scroll planets left">‹</button><div class="chips" id="pchips">';
+  let chips='<div class="chipnav" id="pnav"><div class="chips" id="pchips">';
   S.planets.forEach((x,k)=>{if(x.u||k===firstLocked)chips+=`<button class="chip${k===i?' on':''}${x.u?'':' lock'}" data-act="sel" data-p="${k}" type="button">${PLANETS[k].n}</button>`});
-  chips+='</div><button class="cnav" data-hs="1" type="button" aria-label="Scroll planets right">›</button></div>';
+  chips+='</div></div>';
   let h=chips+`<div class="head"><h2>${P.n}</h2><span class="num" style="color:var(--muted);font-size:12px">Orbit ${i+1} · ${P.r.toFixed(1)} AU</span><button class="tog${cam.focus!==i||cam.track?' on':''}" data-act="${cam.focus===i&&cam.track?'unfocus':'focus'}" data-p="${i}" type="button">${cam.focus===i?(cam.track?'Back to galaxy':(p.u?'Center colony':'Re-center')):'Close-up'}</button></div>
   <div class="ores">${P.mix.map(([o,f])=>oreChip(o,f)).join('')}</div>`;
   if(!p.u){const c=teamHireCost(i,0);h+=`<p>A survey drone has mapped ${P.n}. Hire a mining team to claim it and start mining ${P.mix.map(([o])=>ORES[o].n.toLowerCase()).join(' and ')}.</p>
@@ -1777,9 +1776,9 @@ function viewWarp(){
 // planet button row: arrows, edge fades, selected planet kept in view, mouse drag and wheel on computers
 let shownSel=-1;
 /* Horizontal lists: every list that can run past the edge (tabs, planets, teams) uses the same scroller:
-   ‹ › arrows that show only when it doesn't fit and dim at the ends, faded edges where more is hidden,
-   swipe on touch, and drag or mouse wheel with a mouse. Wrapping lists (ore chips etc.) never overflow. */
-function hscroll(inner,label){return `<div class="chipnav"><button class="cnav" data-hs="-1" type="button" aria-label="Scroll ${label} left">‹</button><div class="chips">${inner}</div><button class="cnav" data-hs="1" type="button" aria-label="Scroll ${label} right">›</button></div>`}
+   faded edges where more is hidden, swipe on touch, and drag or mouse wheel with a mouse (no arrow buttons).
+   Wrapping lists (ore chips etc.) never overflow. */
+function hscroll(inner,label){return `<div class="chipnav" aria-label="${label}"><div class="chips">${inner}</div></div>`}
 const hsScroller=nav=>nav.querySelector(':scope > .chips, :scope > .tabscroll');
 function chipNav(){document.querySelectorAll('.chipnav').forEach(nav=>{const c=hsScroller(nav);if(!c)return;const max=c.scrollWidth-c.clientWidth;
   nav.classList.toggle('fits',max<=2);nav.classList.toggle('more-l',max>2&&c.scrollLeft>2);nav.classList.toggle('more-r',max>2&&c.scrollLeft<max-2);
