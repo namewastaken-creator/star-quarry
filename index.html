@@ -243,7 +243,7 @@ const GALAXY_SPIN=.012;
 PLANETS.forEach((p,i)=>{p.r=ORBIT_R[i];p.speed=GALAXY_SPIN;p.a0=ORBIT_A[i];});
 /* Economy. Planet output comes only from its mining teams (and research / star dust).
    Each planet's base output is scaled to its claim price so every new planet is worth claiming. */
-const ECON={DUST_A:2,DUST_K:.2,EXP:.7,PAY:3.9,SCALE_MIN:100,HIRE:[1,4,30],UP_BASE:.12,UP_GROW:1.32,TEAM_X:[1,6,40],SHIP_BASE:.8,SHIP_OVH:16,DOCK_T:3,PROBE_EVERY:300,PROBE_FLY:180,PROBE_FIRST:60,PROBE_SEC:90,CARGO_FIT:.9};
+const ECON={DUST_A:2,DUST_K:.2,EXP:.7,PAY:3.4,SCALE_MIN:100,HIRE:[1,4,30],UP_BASE:.12,UP_GROW:1.32,TEAM_X:[1,6,40],SHIP_BASE:.8,SHIP_OVH:16,DOCK_T:3,PROBE_EVERY:300,PROBE_FLY:180,PROBE_FIRST:60,PROBE_SEC:90,CARGO_FIT:.9};
 // overflow: surplus ore is sold every OVER_EVERY seconds at OVER_PRICE of the normal price
 const OVER_EVERY=600,OVER_PRICE=.25;
 PLANETS.forEach((p,i)=>{const avg=p.mix.reduce((a,[o,f])=>a+ORES[o].v*f,0);
@@ -401,9 +401,28 @@ const setG=k=>settleMults().g[k];
 function buySettle(i){const p=S.planets[i];if(p.teams.length<TEAM_MAX||settleLv(i)>=3)return false;const c=settleCost(i);if(S.cash<c)return false;
   S.cash-=c;p.set=settleLv(i)+1;settleVer++;S.life.settle++;return true}
 function mineRate(i){return PLANETS[i].rate*rmult('mine')*perm('mine')*minerT(i,'m')*setLoc(i,'m')*setG('gm')*(odOn()?2:1)}
-function shipSpeed(i){return ECON.SHIP_BASE*rmult('ship')*perm('ship')*minerT(i,'s')*setLoc(i,'s')*setG('gs')*(odOn()?2:1)}
+/* Ship speed vs cargo:
+   - team Ship speed points (and a settlement's local ship upgrade) only speed up the flight between station and planet;
+   - each team Cargo point adds hold space but makes the ship heavier: flight speed / (1 + CARGO_MASS x cargo points);
+   - galaxy-wide speed (research, event boosts, settlement perks, Overdrive) speeds up the whole trip, handling included.
+   So near planets (short flights, trips mostly docking and landing) favour Cargo, and far planets (long flights) favour Ship speed. */
+const CARGO_MASS=.06;
+function shipG(i){return rmult('ship')*perm('ship')*setG('gs')*(odOn()?2:1)}
+function shipL(i){return minerT(i,'s')*setLoc(i,'s')/(1+CARGO_MASS*teamPts(i,'c'))}
+function shipSpeed(i){return ECON.SHIP_BASE*shipG(i)*shipL(i)}
+const handleTime=i=>ECON.SHIP_OVH/shipG(i);
+const cruiseTime=i=>2*PLANETS[i].r/shipSpeed(i);
+// hauling capacity if this planet had ds more Ship speed points and dc more Cargo points
+function haulCapWith(i,ds,dc){const s0=teamPts(i,'s'),c0=teamPts(i,'c'),sp=shipSpeed(i)*(1+MINER_STEP*(s0+ds))/(1+MINER_STEP*s0)*(1+CARGO_MASS*c0)/(1+CARGO_MASS*(c0+dc)),
+  cg=cargo(i)*(1+MINER_STEP*(c0+dc))/(1+MINER_STEP*c0),tt=2*PLANETS[i].r/sp+ECON.SHIP_OVH/shipG(i);return cg/tt}
+// which of Ship speed ('s') or Cargo ('c') adds more hauling for one point
+const bestHaulTrait=i=>haulCapWith(i,1,0)>=haulCapWith(i,0,1)?'s':'c';
+// the ship's on-screen timeline (fractions of the trip) follows the current flight and handling times
+function layFor(i){const P=PLANETS[i],g=shipG(i),cr=PLANETS[i].r/shipSpeed(i),D=ECON.DOCK_T/g;
+  const seg=[D,cr,2.5/g,1.5/g,2/g,1.5/g,2.5/g,cr],tot=seg.reduce((a,b)=>a+b,0)+D;let acc=0;for(let k=0;k<8;k++){acc+=seg[k];P.lay[k]=acc/tot}
+  P.berth0=P.lay[7]+.3*(1-P.lay[7]);P.berthLen=(1-P.berth0)+.7*P.lay[0]}
 function cargo(i){return PLANETS[i].cargo*rmult('cargo')*perm('cargo')*minerT(i,'c')*setLoc(i,'c')*setG('gc')}
-const tripTime=i=>(2*PLANETS[i].r+ECON.SHIP_OVH*ECON.SHIP_BASE)/shipSpeed(i);
+const tripTime=i=>cruiseTime(i)+handleTime(i);
 const haul=i=>Math.min(mineRate(i),cargo(i)/tripTime(i));
 const avgValue=i=>PLANETS[i].mix.reduce((a,[o,f])=>a+ORES[o].v*f,0);
 const smeltSlots=()=>has('smelt')?1+(has('slot2')?1:0)+(has('slot3')?1:0):0;
@@ -1395,7 +1414,7 @@ function updateWorld(dt){
    const e=ss(irisOpen);irisBlades.forEach(b=>{b.position.x=.15+.19*e;b.scale.x=1-.55*e});
    irisRim.material.emissiveIntensity=.9+e*1.2;irisGlow.material.opacity=.08+e*.6}
   
-  W.forEach((w,i)=>{if(!w.mesh.visible)return;const P=PLANETS[i];
+  W.forEach((w,i)=>{if(!w.mesh.visible)return;const P=PLANETS[i];if(S.planets[i].u)layFor(i);
     w.angle+=dt*P.speed;w.pos.set(Math.cos(w.angle)*P.r,0,Math.sin(w.angle)*P.r);w.mesh.position.copy(w.pos);w.mesh.rotation.y+=dt*.05;
     const camD=camera.position.distanceTo(w.pos),near=camD<P.size*18&&S.planets[i].u;
     if(w.port)w.port.visible=near;if(w.fac)w.fac.visible=near;
@@ -1622,12 +1641,12 @@ function viewPlanet(){
   <div class="ores">${P.mix.map(([o,f])=>oreChip(o,f)).join('')}</div>`;
   if(!p.u){const c=teamHireCost(i,0);h+=`<p>A survey drone has mapped ${P.n}. Hire a mining team to claim it and start mining ${P.mix.map(([o])=>ORES[o].n.toLowerCase()).join(' and ')}.</p>
     <button class="btn wide" data-act="hire" data-p="${i}" ${S.cash>=c?'':'disabled'} type="button">Hire the ${teamName(i,0)} and claim ${P.n}<small>${fmt(c)} credits</small></button>`;return h}
-  const rate=mineRate(i),hl=haul(i),T=tripTime(i),shipsBN=hl<rate*.97,BN='<span class="bn">Bottleneck</span>';
+  const rate=mineRate(i),hl=haul(i),T=tripTime(i),shipsBN=hl<rate*.97,BN='<span class="bn">Bottleneck</span>',bt=bestHaulTrait(i);
   const mult=k=>`×${minerT(i,k).toFixed(2)} from teams`+(setLoc(i,k)!==1?` · ×${setLoc(i,k).toFixed(1)} settlement`:'');
   h+=`<div class="rows">
    <div class="row"><div class="txt"><span class="t">Mine rate${shipsBN?'':BN}</span><span class="s">${fmt(rate)} ore/s · ${mult('m')}</span></div></div>
-   <div class="row"><div class="txt"><span class="t">Ship speed${shipsBN?BN:''}</span><span class="s">${shipSpeed(i).toFixed(1)} AU/s · trip ${T.toFixed(1)}s · ${mult('s')}</span></div></div>
-   <div class="row"><div class="txt"><span class="t">Cargo hold${shipsBN?BN:''}</span><span class="s">${fmt(cargo(i))} ore/trip · ${mult('c')}</span></div></div></div>
+   <div class="row"><div class="txt"><span class="t">Ship speed${shipsBN&&bt==='s'?BN:''}</span><span class="s">${shipSpeed(i).toFixed(1)} AU/s · trip ${T.toFixed(1)}s (flight ${cruiseTime(i).toFixed(1)}s + handling ${handleTime(i).toFixed(1)}s) · ${mult('s')}</span></div></div>
+   <div class="row"><div class="txt"><span class="t">Cargo hold${shipsBN&&bt==='c'?BN:''}</span><span class="s">${fmt(cargo(i))} ore/trip · ${mult('c')}</span></div></div></div>
   <div class="note"><span>Hauling <b class="num">${fmt(hl)}/s</b> of ${fmt(rate)}/s mined.</span><span>Stockpile <b class="num">${fmt(p.stock)}</b></span></div>`
    +(rate>hl*1.005?`<div class="note" style="border-color:var(--bad)"><span style="color:var(--bad)"><b class="num">${Math.round((1-hl/rate)*100)}%</b> of mined ore can’t be hauled (${rate-hl<10?(rate-hl).toFixed(2):fmt(rate-hl)}/s). Ships are the bottleneck.</span><span>Overflow <b class="num">${fmt(p.over||0)}</b> · sells at 25% in ${fmtTime(Math.max(0,(S.overAt-Date.now())/1000))}</span></div>`:'')
    +viewTeams(i,shipsBN)+viewSettlement(i);
@@ -1657,8 +1676,10 @@ function viewTeams(i,shipsBN){
     <div class="bar"><i style="width:${(tm.n/MINER_MAX*100).toFixed(1)}%;background:var(--ship)"></i></div>
     ${free>0?`<div class="note"><b style="color:var(--ship)">${free} free point${free>1?'s':''} to place.</b><span>Tap a green button.</span></div>`:''}
     <div class="rows">`;
-  TRAITS.forEach(([k,name])=>{const pts=tm.t[k]||0,hot=(k==='m')!==shipsBN;
-    h+=`<div class="row"><div class="txt"><span class="t">${name}</span><span class="s">+${(MINER_STEP*pts).toFixed(2)}× · ${pts} point${pts===1?'':'s'}${k==='m'&&shipsBN?' · <span style="color:var(--bad)">won’t raise income until ships catch up</span>':''}</span></div>
+  // red marks the fix: Mining when ships keep up, otherwise whichever of Ship speed or Cargo adds more hauling here
+  const bt=bestHaulTrait(i),why={s:'speeds up the flight only',c:`heavier ship: −${Math.round(CARGO_MASS*100)}% flight speed per point`};
+  TRAITS.forEach(([k,name])=>{const pts=tm.t[k]||0,hot=k==='m'?!shipsBN:(shipsBN&&k===bt);
+    h+=`<div class="row"><div class="txt"><span class="t">${name}</span><span class="s">+${(MINER_STEP*pts).toFixed(2)}× · ${pts} point${pts===1?'':'s'}${k==='m'&&shipsBN?' · <span style="color:var(--bad)">won’t raise income until ships catch up</span>':''}${k!=='m'?' · '+why[k]:''}</span></div>
       ${free>0?`<button class="btn ship${hot?' bnr':''}" data-act="assign" data-p="${i}" data-j="${j}" data-k="${k}" type="button" aria-label="Add a free point to ${name}">+${MINER_STEP}×<small>Free</small></button>`
         :full?`<button class="btn ship" disabled type="button">Maxed<small>${MINER_MAX} / ${MINER_MAX}</small></button>`
         :`<button class="btn ship${hot?' bnr':''}" data-act="mbuy" data-p="${i}" data-j="${j}" data-k="${k}" ${S.cash>=uc?'':'disabled'} type="button" aria-label="Upgrade ${name} for ${fmt(uc)} credits">+${MINER_STEP}×<small>${fmt(uc)}</small></button>`}</div>`});
