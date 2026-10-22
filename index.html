@@ -1396,11 +1396,17 @@ function shipPos(w,P,t,res,i){const L=P.lay,R0=P.size*2,land=P.size+(w.padH||0)+
   if(t<L[1]){const r=(t-L[0])/(L[1]-L[0]);w._mode=0;w._th=.7;
     if(r<.3){arc(alpha,beta,ss(r/.3));w._sc=.45;return res}
     const r2=(r-.3)/.7;_od.copy(w.pos).addScaledVector(_ai,R0);bezIn(_near,_od,tanAt(_ai,_bp,_tn),ss(r2),res);res.y+=Math.pow(Math.sin(r2*Math.PI),2)*bump;w._sc=.45+.55*Math.min(1,r2/.3);return res}
-  if(t<L[2]){const x=(t-L[1])/(L[2]-L[1]),e=ss(x);res.copy(w.pos).addScaledVector(orbitDir(_ai,_bp,e,_od),R0);w._sc=1-.55*e;w._mode=0;w._th=.45;return res}
-  if(t<L[3]){const q=(t-L[2])/(L[3]-L[2]);res.copy(w.pos).addScaledVector(_bp,R0+(land-R0)*ss(q));w._sc=.45-.23*q;w._mode=1;w._th=.8+.8*q;return res}
+  // orbit in + descent as one curve: the ship starts lowering towards the pad while it is still finishing its turn
+  // round the planet, so there is no corner at the top of the descent
+  if(t<L[3]){const u=(t-L[1])/(L[3]-L[1]),e=ss(Math.min(1,u/.62)),k=ss(Math.max(0,(u-.38)/.62));
+    res.copy(w.pos).addScaledVector(orbitDir(_ai,_bp,e,_od),R0+(land-R0)*k);
+    w._sc=t<L[2]?1-.55*ss((t-L[1])/(L[2]-L[1])):.45-.23*((t-L[2])/(L[3]-L[2]));w._mode=k>.06?1:0;w._th=.45+1.15*k;return res}
   if(t<L[4]){res.copy(w.pos).addScaledVector(_bp,land);w._sc=.22;w._mode=1;w._th=0;return res}
-  if(t<L[5]){const q=(t-L[4])/(L[5]-L[4]);res.copy(w.pos).addScaledVector(_bp,land+(R0-land)*ss(q));w._sc=.22+.23*q;w._mode=1;w._th=1.7-.9*q;return res}
-  if(t<L[6]){const x=(t-L[5])/(L[6]-L[5]),e=ss(x);res.copy(w.pos).addScaledVector(orbitDir(_bp,_ao,e,_od),R0);w._sc=.45+.55*e;w._mode=0;w._th=.5;return res}
+  // ascent + orbit out as one curve: the ship starts swinging round the planet before its climb has finished,
+  // so there is no corner at the top of the climb
+  if(t<L[6]){const u=(t-L[4])/(L[6]-L[4]),k=ss(Math.min(1,u/.62)),e=ss(Math.max(0,(u-.38)/.62));
+    res.copy(w.pos).addScaledVector(orbitDir(_bp,_ao,e,_od),land+(R0-land)*k);
+    w._sc=t<L[5]?.22+.23*((t-L[4])/(L[5]-L[4])):.45+.55*ss((t-L[5])/(L[6]-L[5]));w._mode=e<.06?1:0;w._th=1.7-1.2*e;return res}
   if(t<L[7]){const r=(t-L[6])/(L[7]-L[6]);w._mode=0;w._th=.7;
     if(r>.7){arc(beta,alpha,ss((r-.7)/.3));w._sc=.45;return res}
     const r2=r/.7;_od.copy(w.pos).addScaledVector(_ao,R0);bezOut(_od,tanAt(_ao,_bp,_tn).negate(),_near,ss(r2),res);res.y+=Math.pow(Math.sin(r2*Math.PI),2)*bump;w._sc=.45+.55*Math.min(1,(1-r2)/.3);return res}
