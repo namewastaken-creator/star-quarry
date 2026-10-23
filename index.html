@@ -114,7 +114,18 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
 .row .txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .row .t{font:600 15px var(--f-body)}
 .row .s{font:500 12px var(--f-data);color:var(--muted);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
-.row.trow{min-height:90px;box-sizing:border-box}
+.row.trow{min-height:118px;box-sizing:border-box;align-items:center}
+.row.trow .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .s.l1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;overflow-wrap:normal}
+.flow{border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--card);display:flex;flex-direction:column;gap:8px}
+.flowh{display:flex;justify-content:space-between;gap:8px;font:500 12px var(--f-data);color:var(--muted);font-variant-numeric:tabular-nums}
+.flowh b{color:var(--ink)}
+.flown{display:flex;flex-direction:column;font:500 12px var(--f-body);color:var(--muted);line-height:1.35}
+.flown span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.flown b{color:var(--ink)}
+.flowbar{display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--panel2)}
+.flowbar .ok{background:var(--ship);box-shadow:0 0 8px rgba(95,212,196,.5)}
+.flowbar .lost{background:repeating-linear-gradient(45deg,var(--bad) 0 4px,rgba(255,122,122,.35) 4px 8px)}
 /* planet read-outs and notes keep a fixed size so changing numbers or wording never shifts the cards below */
 .row .s.l2{line-height:1.35;height:2.7em;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .row .s.l3{line-height:1.35;height:4.05em;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
@@ -1718,15 +1729,8 @@ function viewPlanet(){
   <div class="ores">${P.mix.map(([o,f])=>oreChip(o,f)).join('')}</div>`;
   if(!p.u){const c=teamHireCost(i,0);h+=`<p>A survey drone has mapped ${P.n}. Hire a mining team to claim it and start mining ${P.mix.map(([o])=>ORES[o].n.toLowerCase()).join(' and ')}.</p>
     <button class="btn wide" data-act="hire" data-p="${i}" ${S.cash>=c?'':'disabled'} type="button">Hire the ${teamName(i,0)} and claim ${P.n}<small>${fmt(c)} credits</small></button>`;return h}
-  const rate=mineRate(i),hl=haul(i),T=tripTime(i),shipsBN=hl<rate*.97,BN='<span class="bn">Bottleneck</span>',bt=bestHaulTrait(i);
-  const mult=k=>`×${minerT(i,k).toFixed(2)} from teams`+(setLoc(i,k)!==1?` · ×${setLoc(i,k).toFixed(1)} settlement`:'');
-  h+=`<div class="rows">
-   <div class="row"><div class="txt"><span class="t">Mine rate</span><span class="s l2">${fmt(rate)} ore/s · ${mult('m')}</span></div></div>
-   <div class="row"><div class="txt"><span class="t">Ship speed${shipsBN&&bt==='s'?BN:''}</span><span class="s l3">${shipSpeed(i).toFixed(1)} AU/s · trip ${T.toFixed(1)}s (flight ${cruiseTime(i).toFixed(1)}s + handling ${handleTime(i).toFixed(1)}s) · ${mult('s')}</span></div></div>
-   <div class="row"><div class="txt"><span class="t">Cargo hold${shipsBN&&bt==='c'?BN:''}</span><span class="s l2">${fmt(cargo(i))} ore/trip · ${mult('c')}</span></div></div></div>
-  <div class="note"><span>Hauling <b class="num">${fmt(hl)}/s</b> of ${fmt(rate)}/s mined.</span><span>Stockpile <b class="num">${fmt(p.stock)}</b></span></div>`
-   +(rate>hl*1.005?`<div class="note fix" style="border-color:var(--bad)"><span style="color:var(--bad)"><b class="num">${Math.round((1-hl/rate)*100)}%</b> of mined ore can’t be hauled (${rate-hl<10?(rate-hl).toFixed(2):fmt(rate-hl)}/s). Ships are the bottleneck.</span><span>Overflow <b class="num">${fmt(p.over||0)}</b> · sells at 25% in ${fmtTime(Math.max(0,(S.overAt-Date.now())/1000))}</span></div>`:`<div class="note fix"><span style="color:var(--good)">Ships are keeping up. All mined ore is being hauled.</span><span>Overflow <b class="num">${fmt(p.over||0)}</b></span></div>`)
-   +viewTeams(i,shipsBN)+viewSettlement(i);
+  const rate=mineRate(i),hl=haul(i),shipsBN=hl<rate*.97;
+  h+=flowStrip(i,rate,hl)+viewTeams(i,shipsBN,rate,hl)+viewSettlement(i);
   return h}
 // the hire button sits under the Mining teams card's title, and the settlement button under the Settlement card's title
 function hireBtn(i){const p=S.planets[i],n=p.teams.length;if(n>=TEAM_MAX)return '';const c=teamHireCost(i,n);
@@ -1744,20 +1748,40 @@ function viewSettlement(i){const p=S.planets[i],[nm,ups]=SETTLE[i],lv=settleLv(i
   return h+'</div></div>'}
 
 const teamSel={};
-function viewTeams(i,shipsBN){
+// small rates keep two decimals so a trickle never reads 0/s
+function rf(v){return v<10?(Math.round(v*100)/100).toFixed(2):fmt(v)}
+/* mined vs hauled at a glance: teal is what the ships carry, red stripes are ore piling up as overflow */
+function flowStrip(i,rate,hl){const p=S.planets[i],lost=rate>hl*1.005,pc=rate>0?Math.min(100,hl/rate*100):100;
+  return `<div class="flow"><div class="flowh"><span>Mined <b class="num">${rf(rate)}/s</b></span><span>Hauled <b class="num">${rf(hl)}/s</b></span></div>
+    <div class="flowbar" role="img" aria-label="${Math.round(pc)}% of mined ore is hauled"><i class="ok" style="width:${pc.toFixed(1)}%"></i><i class="lost" style="width:${(100-pc).toFixed(1)}%"></i></div>
+    <div class="flown">${lost?`<span style="color:var(--bad)"><b class="num">${Math.round((1-hl/rate)*100)}%</b> can’t be hauled · ${rf(rate-hl)}/s piling up</span>`:`<span style="color:var(--good)">Ships are keeping up.</span>`}
+      <span>Stockpile <b class="num">${fmt(p.stock)}</b> · Overflow <b class="num">${fmt(p.over||0)}</b>${lost?` · 25% sale in ${fmtTime(Math.max(0,(S.overAt-Date.now())/1000))}`:''}</span></div></div>`}
+function viewTeams(i,shipsBN,rate,hl){
   const p=S.planets[i],n=p.teams.length;let j=Math.min(teamSel[i]||0,n-1);
   let h=`<div class="card miner"><div class="head"><h3>Mining teams</h3><span class="num" style="font-size:12px;color:var(--muted)">${n} / ${TEAM_MAX} hired</span></div>`+hireBtn(i);
   if(n>1)h+=hscroll(p.teams.map((tm,k)=>`<button class="chip${k===j?' on':''}" data-act="tsel" data-p="${i}" data-j="${k}" type="button">${embIcon(i,k,14)}${teamName(i,k)}</button>`).join(''),'teams');
-  const tm=p.teams[j],free=minerFree(tm),full=tm.n>=MINER_MAX,uc=full?0:teamUpCost(i,j);
+  const tm=p.teams[j],free=minerFree(tm),full=tm.n>=MINER_MAX,uc=full?0:teamUpCost(i,j),canUp=free>0||!full;
   h+=`<div class="head"><span style="font:600 15px var(--f-body)">${embIcon(i,j,20)}${teamName(i,j)}</span><span class="num" style="font-size:12px;color:var(--muted)">${tm.n} / ${MINER_MAX} upgrades</span></div>
     <div class="bar"><i style="width:${(tm.n/MINER_MAX*100).toFixed(1)}%;background:var(--ship)"></i></div>
     <div class="note fix1">${free>0?`<b style="color:var(--ship)">${free} free point${free>1?'s':''} to place.</b><span>Tap a green button.</span>`:`<span>No free points to place.</span>`}</div>
     <div class="rows">`;
+  // what one more point on this team would give: add it, measure, take it back
+  const nextWith=(k,f)=>{tm.t[k]=(tm.t[k]||0)+1;const v=f();tm.t[k]--;return v};
+  // ship capacity: what the ships could carry per second if the mines kept up
+  const cap=()=>cargo(i)/tripTime(i),cap0=cap(),T=tripTime(i),bt=bestHaulTrait(i),BN='<span class="bn">Bottleneck</span>',arrow=(a,b,u)=>`${a} → <b style="color:var(--ink)">${b}</b>${u}`;
+  const rows={
+    m:{name:'Mine rate',val:`${rf(rate)} ore/s`,
+       next:()=>{const r2=nextWith('m',()=>mineRate(i));return `Next: ${arrow(rf(rate),rf(r2),' ore/s')}`+(shipsBN?` · <span style="color:var(--bad)">income capped at ${rf(hl)}/s</span>`:'')}},
+    s:{name:'Ship speed',val:`${shipSpeed(i).toFixed(1)} AU/s · trip ${T.toFixed(1)}s`,
+       next:()=>{const [t2,h2]=nextWith('s',()=>[tripTime(i),cap()]);return `Next: trip ${arrow(T.toFixed(1),t2.toFixed(1),'s')} · capacity ${arrow(rf(cap0),rf(h2),'/s')}`}},
+    c:{name:'Cargo hold',val:`${fmt(cargo(i))} ore/trip · −${Math.round(CARGO_MASS*100)}% flight/pt`,
+       next:()=>{const [c2,h2]=nextWith('c',()=>[cargo(i),cap()]);return `Next: ${arrow(fmt(cargo(i)),fmt(c2),' ore/trip')} · capacity ${arrow(rf(cap0),rf(h2),'/s')}`}}};
   // red marks the fix: Mining when ships keep up, otherwise whichever of Ship speed or Cargo adds more hauling here
-  const bt=bestHaulTrait(i),why={m:shipsBN?'<span style="color:var(--bad)">won’t raise income until ships catch up</span>':'more ore mined per second',s:'speeds up the flight only',c:`heavier ship: −${Math.round(CARGO_MASS*100)}% flight speed per point`};
-  TRAITS.forEach(([k,name])=>{const pts=tm.t[k]||0,hot=k==='m'?!shipsBN:(shipsBN&&k===bt);
-    /* every trait row has the same shape (name, value line, two-line note) so the three panes stay the same size */
-    h+=`<div class="row trow"><div class="txt"><span class="t">${name}</span><span class="s">+${(MINER_STEP*pts).toFixed(2)}× · ${pts} point${pts===1?'':'s'}</span><span class="s s2">${why[k]}</span></div>
+  TRAITS.forEach(([k,name])=>{const R=rows[k],pts=tm.t[k]||0,hot=k==='m'?!shipsBN:(shipsBN&&k===bt),loc=setLoc(i,k);
+    /* each row: planet total, team share, what the next point does, and the button; fixed height so nothing jumps */
+    h+=`<div class="row trow"><div class="txt"><span class="t">${R.name}${k!=='m'&&shipsBN&&bt===k?BN:''}</span><span class="s l1">${R.val}</span>
+      <span class="s l1">Teams ×${minerT(i,k).toFixed(2)}${loc!==1?` · settlement ×${loc.toFixed(1)}`:''} · ${teamName(i,j)} ${pts} pt${pts===1?'':'s'}</span>
+      <span class="s s2">${canUp?R.next():'This team is fully upgraded.'}</span></div>
       ${free>0?`<button class="btn ship${hot?' bnr':''}" data-act="assign" data-p="${i}" data-j="${j}" data-k="${k}" type="button" aria-label="Add a free point to ${name}">+${MINER_STEP}×<small>Free</small></button>`
         :full?`<button class="btn ship" disabled type="button">Maxed<small>${MINER_MAX} / ${MINER_MAX}</small></button>`
         :`<button class="btn ship${hot?' bnr':''}" data-act="mbuy" data-p="${i}" data-j="${j}" data-k="${k}" ${S.cash>=uc?'':'disabled'} type="button" aria-label="Upgrade ${name} for ${fmt(uc)} credits">+${MINER_STEP}×<small>${fmt(uc)}</small></button>`}</div>`});
