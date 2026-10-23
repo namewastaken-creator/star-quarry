@@ -1,1 +1,1 @@
-{"name": "Beta 1.0.29", "n": 29, "notes": "Smelter's Research needs list drops projects whose bars are already in stock, and says None needed at this time when nothing is waiting"}
+{"name": "Beta 1.0.30", "n": 30, "notes": "Smelter's Research needs shows one row per bar type with your total bars against what's still needed, bar types being smelted first, so the count rises as bars are made"}
