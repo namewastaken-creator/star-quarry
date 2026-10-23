@@ -1,1 +1,1 @@
-{"name": "Beta 1.0.32", "n": 32, "notes": "Research tab: hover or tap an ore to see which planets mine it (bars say which ore to smelt and where it's mined)"}
+{"name": "Beta 1.0.33", "n": 33, "notes": "Ore tips say not discovered yet (with no planet named) for ores whose first planet hasn't been scanned, and the same for their bars; only scanned planets are named"}
