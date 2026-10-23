@@ -68,10 +68,12 @@ body{background:radial-gradient(120% 80% at 70% 10%,#151a3a 0%,#090b1a 45%,var(-
 .card.evdone{border-color:rgba(134,227,154,.55);box-shadow:inset 0 0 0 1px rgba(134,227,154,.18)}
 .evstamp{display:inline-flex;align-items:center;gap:5px;font:700 10px var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--good);border:1px solid rgba(134,227,154,.6);border-radius:4px;padding:3px 7px;background:rgba(134,227,154,.08);white-space:nowrap}
 .evstamp.fail{color:var(--bad);border-color:rgba(255,122,122,.55);background:rgba(255,122,122,.07)}
-.evun{display:flex;gap:8px;align-items:stretch}
-.evun .btn{flex:1}
-.evi{flex:0 0 auto;width:40px;border-radius:50%;aspect-ratio:1;align-self:center;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font:italic 700 15px Georgia,serif;cursor:pointer;padding:0}
-.evi.on,.evi:hover{color:var(--ship);border-color:var(--ship)}
+.btn.ghost.evunb{position:relative;color:var(--muted);width:100%;padding-right:46px;padding-left:46px}
+.evi{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;width:26px;height:26px;border-radius:50%;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font:italic 700 14px Georgia,serif;text-transform:none;letter-spacing:0;cursor:pointer;padding:0}
+.btn.evunb .evi{position:absolute;right:8px;top:50%;transform:translateY(-50%)}
+.evi.on,.evi:hover,.btn.evunb:hover .evi,.btn.evunb[aria-expanded="true"] .evi{color:var(--ship);border-color:var(--ship)}
+.evsrc{display:flex;flex-direction:column;gap:8px;padding:10px 12px;background:var(--card)}
+.evsrc .card{margin:0}
 .evwhy{font-size:12px;color:var(--muted);border-left:2px solid var(--ship);padding:2px 0 2px 9px;margin:0}
 .evstamp.run{color:var(--ship);border-color:rgba(95,212,196,.5);background:rgba(95,212,196,.07)}
 .tab.on::after{content:"";position:absolute;left:22%;right:22%;bottom:-1px;height:2px;background:var(--ore)}
@@ -581,7 +583,14 @@ function evAccept(k){const now=Date.now(),w=evWeek(now),E=S.ev;if(E.act&&(E.act.
 function evCheck(){const a=S.ev&&S.ev.act;if(!a||a.status!=='active')return;
   if(evProg(a)-a.start>=a.target){a.status='done';toast(`Mission complete: ${a.title}. Claim your reward in Events.`,5000);save()}
   else if(Date.now()>a.end){a.status='failed';toast(`Mission failed: ${a.title} ran out of time.`,5000);save()}}
-function evClaim(){const a=S.ev.act;if(!a||a.status!=='done')return;const msg=evGive(a.reward);a.status='claimed';S.ev.log=(S.ev.log||[]);S.ev.log.unshift({t:a.title,at:Date.now()});S.ev.log.length=Math.min(S.ev.log.length,10);refreshWorld();toast('Reward: '+msg,5000);save()}
+function evSnap(a,at){return{b:a.reward.b,title:a.title,days:a.days,k:a.k,story:a.story,goal:a.target!=null?evGoalText(a.kind,a.target,a.ore):'',target:a.target,reward:a.reward.text,at}}
+/* older saves: rebuild boost sources from the claim log by matching titles of past permanent-boost missions */
+function evBackfill(){const E=S.ev;if(E.srcV)return;E.srcV=1;E.src=E.src||[];
+  for(const x of (E.log||[])){if(!x||!x.t||E.src.some(y=>y.title===x.t&&Math.abs(y.at-x.at)<6e4))continue;
+    for(let w=evWeek(x.at);w>evWeek(x.at)-3;w--){const d=evDef(w,0);if(d.title!==x.t)continue;const r=evReward(d);let st='';try{st=evStory(d,evTarget(d))}catch(e){}
+      E.src.push({b:r.b,title:d.title,days:d.days,k:0,story:st,goal:'',reward:r.text,at:x.at});break}}
+  E.src.sort((p,q)=>q.at-p.at)}
+function evClaim(){const a=S.ev.act;if(!a||a.status!=='done')return;const msg=evGive(a.reward);a.status='claimed';if(a.reward.type==='perm'){S.ev.src=S.ev.src||[];S.ev.src.unshift(evSnap(a,Date.now()))}S.ev.log=(S.ev.log||[]);S.ev.log.unshift({t:a.title,at:Date.now()});S.ev.log.length=Math.min(S.ev.log.length,10);refreshWorld();toast('Reward: '+msg,5000);save()}
 /* ===================== FORMAT ===================== */
 const SUF=['K','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc','Ud','Dd','Td','Qad','Qid','Sxd','Spd','Ocd','Nod','Vg'];
 function fmt(n){if(!isFinite(n))return '∞';if(n<10)return (Math.floor(n*10)/10).toString();if(n<1000)return Math.floor(n).toString();let i=-1;while(n>=1000&&i<SUF.length-1){n/=1000;i++}return (n<10?n.toFixed(2):n<100?n.toFixed(1):Math.floor(n).toString())+SUF[i]}
@@ -1667,7 +1676,7 @@ const Music=(()=>{
 
 /* ===================== UI ===================== */
 const $=id=>document.getElementById(id);
-const pbody=$('pbody');let evInfo=-1;let tab='planet',pressing=false,lastHTML='',arm=null;
+const pbody=$('pbody');let evInfo=-1,evBInfo='';let tab='planet',pressing=false,lastHTML='',arm=null;
 function hideToast(){const t=$('toast');t.classList.remove('show');clearTimeout(toast.h2);toast.h2=setTimeout(()=>{if(!t.classList.contains('show'))t.hidden=true},320)}
 function toast(msg,ms){const t=$('toast');t.textContent=msg;t.hidden=false;clearTimeout(toast.h2);requestAnimationFrame(()=>t.classList.add('show'));clearTimeout(toast.h);toast.h=setTimeout(hideToast,Math.min(ms||2200,4000))}
 $('toast').addEventListener('click',()=>{clearTimeout(toast.h);hideToast()});
@@ -1824,7 +1833,7 @@ function viewEvents(){const now=Date.now(),w=evWeek(now),E=S.ev,a=E.act;if(E.see
       top=fin?`<span class="evstamp">✓ Completed</span>`:st==='failed'?`<span class="evstamp fail">✕ Failed</span>`:`<span class="evstamp run">In progress · ${evTime(m.end-now)} left</span>`;
       body=`<div class="bar"><i style="width:${pc.toFixed(1)}%;background:${fin?'var(--good)':st==='failed'?'var(--bad)':'var(--ship)'}"></i></div><div class="note"><span class="num">${fmt(got)} / ${fmt(m.target)}</span></div>`;
       btn=st==='done'?`<button class="btn wide" data-act="evclaim" type="button">Claim reward<small>${m.reward.text}</small></button>`:st==='claimed'?`<button class="btn ghost wide" disabled type="button">Reward claimed</button>`:st==='failed'?`<button class="btn ghost wide" disabled type="button">Mission failed</button>`:''}
-    else if(why){btn=`<div class="evun"><button class="btn ghost" disabled type="button">Unavailable</button><button class="evi${evInfo===k?' on':''}" data-act="evinfo" data-k="${k}" type="button" aria-label="Why is this unavailable?" aria-expanded="${evInfo===k}">i</button></div>${evInfo===k?`<p class="evwhy">${why}</p>`:''}`}
+    else if(why){btn=`<button class="btn ghost evunb" data-act="evinfo" data-k="${k}" type="button" aria-expanded="${evInfo===k}" aria-label="Unavailable. Tap to see why.">Unavailable<span class="evi" aria-hidden="true">i</span></button>${evInfo===k?`<p class="evwhy">${why}</p>`:''}`}
     else btn=`<button class="btn" data-act="evaccept" data-k="${k}" type="button">Accept mission</button>`;
     return `<div class="card${fin?' evdone':''}"><div class="head"><span style="font:600 15px var(--f-body)">${d.title}</span>${top}</div>
       <div class="evmeta"><span>${d.days} days</span><span>${['Permanent boost','Star dust','Free unlocks'][d.k]}</span></div>
@@ -1835,7 +1844,13 @@ function viewEvents(){const now=Date.now(),w=evWeek(now),E=S.ev,a=E.act;if(E.see
   for(let k=0;k<3;k++){const d=evDef(w,k),mine=cur&&cur.k===k;h+=mine?card(d,null,null,'',k,cur):(()=>{const tg=evTarget(d);return card(d,tg,evReward(d),evNeeds(d.kind),k,null)})()}
   h+=`<p style="font-size:12px">Accept one mission a week. Goals are sized to your progress when you accept, and new missions arrive every Friday at 6 pm. Missions don’t repeat for at least a year.</p>`;
   const pb=EV_BOOSTS.filter(b=>perm(b)>1.0001);
-  if(pb.length)h+=`<div class="card"><h3>Permanent event boosts</h3><div class="rows">${pb.map(b=>`<div class="row"><div class="txt"><span class="t">${EV_BOOST_NAME[b][0].toUpperCase()+EV_BOOST_NAME[b].slice(1)}</span><span class="s">×${perm(b).toFixed(3)}</span></div></div>`).join('')}</div></div>`;
+  if(pb.length){evBackfill();
+    const src=b=>(E.src||[]).filter(x=>x.b===b),dt=t=>new Date(t).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
+    const mc=x=>`<div class="card evdone"><div class="head"><span style="font:600 15px var(--f-body)">${x.title}</span><span class="evstamp">✓ Completed ${dt(x.at)}</span></div>
+      <div class="evmeta"><span>${x.days} days</span><span>Permanent boost</span></div>${x.story?`<p style="font-size:12px">${x.story}</p>`:''}${x.goal?`<div class="evgoal">${x.goal}</div>`:''}
+      ${x.target!=null?`<div class="bar"><i style="width:100%;background:var(--good)"></i></div><div class="note"><span class="num">${fmt(x.target)} / ${fmt(x.target)}</span></div>`:''}<div class="evrew">Reward: ${x.reward}</div></div>`;
+    h+=`<div class="card"><h3>Permanent event boosts</h3><div class="rows">${pb.map(b=>{const L=src(b),open=evBInfo===b;
+      return `<div class="row"><div class="txt"><span class="t">${EV_BOOST_NAME[b][0].toUpperCase()+EV_BOOST_NAME[b].slice(1)}</span><span class="s">×${perm(b).toFixed(3)}</span></div><button class="evi${open?' on':''}" data-act="evbinfo" data-b="${b}" type="button" aria-expanded="${open}" aria-label="Which mission gave this boost?">i</button></div>${open?`<div class="evsrc">${L.length?L.map(mc).join(''):`<p class="evwhy">This boost came from a mission finished before mission records were kept.</p>`}</div>`:''}`}).join('')}</div></div>`}
   return h}
 function viewWarp(){
   const ok=S.planets[WARP_AT].u,pd=pendingDM();
@@ -1942,6 +1957,7 @@ pbody.addEventListener('click',e=>{
   else if(a==='evaccept'){if(evAccept(+b.dataset.k)){toast('Mission accepted. Good luck out there.');save()}}
   else if(a==='evclaim'){evClaim()}
   else if(a==='evinfo'){evInfo=evInfo===+b.dataset.k?-1:+b.dataset.k}
+  else if(a==='evbinfo'){evBInfo=evBInfo===b.dataset.b?'':b.dataset.b}
   else if(a==='settle'){const i=+b.dataset.p,lv=settleLv(i);if(buySettle(i)){refreshWorld();toast(lv?`${SETTLE[i][0]} grew into a ${SETTLE_LV[lv]}.`:`${SETTLE[i][0]} founded on ${PLANETS[i].n}.`);save()}}
   else if(a==='hire'){const i=+b.dataset.p,j=S.planets[i].teams.length;if(hireTeam(i)){teamSel[i]=j;refreshWorld();
       if(j===0){{const f=fitDistance();if(f>cam.tr)cam.tr=f}toast(`The ${teamName(i,0)} claimed ${PLANETS[i].n}. A hauler is on its way.`);if(i===WARP_AT)toast('Galaxy Warp is now available in the Warp tab.',4000);if(cam.focus!==i)focusPlanet(i)}
