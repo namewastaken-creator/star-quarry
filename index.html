@@ -140,6 +140,10 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
 .btn.ghost{background:none;border:1px solid var(--line);color:var(--ink)}
 .btn.ghost:disabled{color:#4a5075}
 .btn.ship{background:var(--ship);color:#052523}
+.pm{display:flex;flex-direction:column-reverse;gap:5px;flex:0 0 auto;width:92px}
+.pm .btn{min-width:0;width:100%}
+.pm .pmm{flex-direction:row;justify-content:center;gap:6px;padding:4px 6px;font-size:16px;line-height:1}
+.pm .pmm small{font-size:10px;white-space:nowrap}
 .btn.ship.bnr{background:var(--bad);color:#2b0606}
 .btn.ship.bnr:disabled{background:#3a1d26;color:#ffb3b3;box-shadow:inset 0 0 0 1px var(--bad)}
 .btn.up{background:#232849;color:var(--ink);border:1px solid #343a66}
@@ -272,7 +276,7 @@ PLANETS.forEach((p,i)=>{p.r=ORBIT_R[i];p.speed=GALAXY_SPIN;p.a0=ORBIT_A[i];});
 /* Economy. Planet output comes only from its mining teams (and research / star dust).
    Each planet's base output is scaled to its claim price so every new planet is worth claiming. */
 // game version: bumped by bump.py on every publish (n is the build number used for update checks)
-const APP_VER={name:'Beta 1.0.7',n:7};
+const APP_VER={name:'Beta 1.0.8',n:8};
 // update checks read version.json straight from the GitHub repository
 const UPD_URL='https://raw.githubusercontent.com/namewastaken-creator/star-quarry/main/version.json';
 const ECON={DUST_A:2,DUST_K:.2,EXP:.7,PAY:2.9,SCALE_MIN:100,HIRE:[1,4,30],UP_BASE:.12,UP_GROW:1.32,TEAM_X:[1,6,40],SHIP_BASE:.8,SHIP_OVH:28,DOCK_T:5,PROBE_EVERY:300,PROBE_FLY:180,PROBE_FIRST:60,PROBE_SEC:90,CARGO_FIT:.9};
@@ -1791,7 +1795,7 @@ function viewTeams(i,shipsBN,rate,hl){
   const tm=p.teams[j],free=minerFree(tm),full=tm.n>=MINER_MAX,uc=full?0:teamUpCost(i,j),canUp=free>0||!full;
   h+=`<div class="head"><span style="font:600 15px var(--f-body)">${embIcon(i,j,20)}${teamName(i,j)}</span><span class="num" style="font-size:12px;color:var(--muted)">${tm.n} / ${MINER_MAX} upgrades</span></div>
     <div class="bar"><i style="width:${(tm.n/MINER_MAX*100).toFixed(1)}%;background:var(--ship)"></i></div>
-    <div class="note fix1">${free>0?`<b style="color:var(--ship)">${free} free point${free>1?'s':''} to place.</b><span>Tap a green button.</span>`:`<span>No free points to place.</span>`}</div>
+    <div class="note fix1">${free>0?`<b style="color:var(--ship)">${free} free point${free>1?'s':''} to place.</b><span>Tap + to place.</span>`:`<span>No free points to place.</span>`}</div>
     <div class="rows">`;
   // what one more point on this team would give: add it, measure, take it back
   const nextWith=(k,f)=>{tm.t[k]=(tm.t[k]||0)+1;const v=f();tm.t[k]--;return v};
@@ -1810,11 +1814,10 @@ function viewTeams(i,shipsBN,rate,hl){
     h+=`<div class="row trow"><div class="txt"><span class="t">${R.name}${k!=='m'&&shipsBN&&bt===k?BN:''}</span><span class="s l1">${R.val}</span>
       <span class="s l1">Teams ×${minerT(i,k).toFixed(2)}${loc!==1?` · settlement ×${loc.toFixed(1)}`:''} · ${teamName(i,j)} ${pts} pt${pts===1?'':'s'}</span>
       <span class="s s2">${canUp?R.next():'This team is fully upgraded.'}</span></div>
-      ${free>0?`<button class="btn ship${hot?' bnr':''}" data-act="assign" data-p="${i}" data-j="${j}" data-k="${k}" type="button" aria-label="Add a free point to ${name}">+${MINER_STEP}×<small>Free</small></button>`
+      <div class="pm"><button class="btn ghost pmm" data-act="unassign" data-p="${i}" data-j="${j}" data-k="${k}" ${pts>0?'':'disabled'} type="button" aria-label="Take a point back from ${name}">−<small>${pts} pt${pts===1?'':'s'}</small></button>${free>0?`<button class="btn ship${hot?' bnr':''}" data-act="assign" data-p="${i}" data-j="${j}" data-k="${k}" type="button" aria-label="Add a free point to ${name}">+${MINER_STEP}×<small>Free</small></button>`
         :full?`<button class="btn ship" disabled type="button">Maxed<small>${MINER_MAX} / ${MINER_MAX}</small></button>`
-        :`<button class="btn ship${hot?' bnr':''}" data-act="mbuy" data-p="${i}" data-j="${j}" data-k="${k}" ${S.cash>=uc?'':'disabled'} type="button" aria-label="Upgrade ${name} for ${fmt(uc)} credits">+${MINER_STEP}×<small>${fmt(uc)}</small></button>`}</div>`});
-  h+=`</div><div class="note" style="justify-content:space-between"><span>${full?'<b>Fully upgraded.</b>':'Red buttons fix the bottleneck.'}</span>
-    <button class="btn ghost${armed('respec'+i+'_'+j)?' warn':''}" data-act="respec" data-p="${i}" data-j="${j}" ${tm.n-free>0?'':'disabled'} type="button" style="min-width:0">${armed('respec'+i+'_'+j)?'Tap to confirm':'Reassign points'}</button></div>`;
+        :`<button class="btn ship${hot?' bnr':''}" data-act="mbuy" data-p="${i}" data-j="${j}" data-k="${k}" ${S.cash>=uc?'':'disabled'} type="button" aria-label="Upgrade ${name} for ${fmt(uc)} credits">+${MINER_STEP}×<small>${fmt(uc)}</small></button>`}</div></div>`});
+  h+=`</div><div class="note"><span>${full?'<b>Fully upgraded.</b> ':''}Red buttons fix the bottleneck. − takes a point back to place again for free.</span></div>`;
   return h+'</div>'}
 function viewProbe(){const pr=S.probe,st=pr.st,nw=Date.now(),est=ECON.PROBE_SEC*totalMineValue()*setG('probe')*perm('probe')*valueMult();
   const ago=t=>{const s=Math.max(0,(nw-t)/1000);return s<60?'just now':s<3600?Math.floor(s/60)+'m ago':Math.floor(s/3600)+'h '+Math.floor(s%3600/60)+'m ago'};
@@ -2081,7 +2084,8 @@ pbody.addEventListener('click',e=>{
       else toast(`The ${teamName(i,j)} joined ${PLANETS[i].n}.`);save()}}
   else if(a==='mbuy'){if(teamBuy(+b.dataset.p,+b.dataset.j,b.dataset.k))save()}
   else if(a==='assign'){const tm=S.planets[+b.dataset.p].teams[+b.dataset.j];if(tm&&minerFree(tm)>0&&TRAITS.some(t=>t[0]===b.dataset.k)){tm.t[b.dataset.k]=(tm.t[b.dataset.k]||0)+1;save()}}
-  else if(a==='respec'){const i=+b.dataset.p,j=+b.dataset.j,key='respec'+i+'_'+j;if(!armed(key)){arm={k:key,until:Date.now()+4000}}else{S.planets[i].teams[j].t={};arm=null;toast('Points returned. Place them again.');save()}}
+  // − on a trait: the point goes back to the team's free points (no cost), ready to place on any trait
+  else if(a==='unassign'){const tm=S.planets[+b.dataset.p].teams[+b.dataset.j],k=b.dataset.k;if(tm&&(tm.t[k]||0)>0){tm.t[k]--;save()}}
   else if(a==='auto'){S.auto[b.dataset.k]=!S.auto[b.dataset.k]}
   else if(a==='slot'){const sl=S.slots[+b.dataset.i],r=+b.dataset.r;if(sl.a&&sl.r!==null)S.inv[sl.r]=(S.inv[sl.r]||0)+BAR_IN;sl.r=r<0?null:r;sl.a=false;sl.p=0}
   else if(a==='res'){const r=RESEARCH.find(x=>x.id===b.dataset.id);if(buyResearch(r)){toast(r.n+' complete.');if(r.id==='smelt')toast('The Smelter tab is open. Pick an ore for your furnace.',4000);save()}}
