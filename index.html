@@ -118,6 +118,11 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
 .row .t{font:600 15px var(--f-body)}
 .row .s{font:500 12px var(--f-data);color:var(--muted);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .row.trow{min-height:90px;box-sizing:border-box}
+/* planet read-outs and notes keep a fixed size so changing numbers or wording never shifts the cards below */
+.row .s.l2{line-height:1.35;height:2.7em;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.row .s.l3{line-height:1.35;height:4.05em;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+.note.fix{line-height:1.35;min-height:4.75em;align-content:flex-start;align-items:flex-start}
+.note.fix1{line-height:1.35;min-height:1.35em}
 .row.trow .s2{line-height:1.35;height:2.7em;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:normal}
 .btn{background:var(--ore);color:#2a1700;border:0;border-radius:6px;padding:9px 12px;font:700 14px var(--f-display);letter-spacing:.06em;text-transform:uppercase;cursor:pointer;min-width:96px;display:flex;flex-direction:column;align-items:center;line-height:1.1;font-variant-numeric:tabular-nums}
 .btn small{font:500 11px var(--f-data);letter-spacing:0;text-transform:none;opacity:.85}
@@ -1712,11 +1717,11 @@ function viewPlanet(){
   const rate=mineRate(i),hl=haul(i),T=tripTime(i),shipsBN=hl<rate*.97,BN='<span class="bn">Bottleneck</span>',bt=bestHaulTrait(i);
   const mult=k=>`×${minerT(i,k).toFixed(2)} from teams`+(setLoc(i,k)!==1?` · ×${setLoc(i,k).toFixed(1)} settlement`:'');
   h+=`<div class="rows">
-   <div class="row"><div class="txt"><span class="t">Mine rate</span><span class="s">${fmt(rate)} ore/s · ${mult('m')}</span></div></div>
-   <div class="row"><div class="txt"><span class="t">Ship speed${shipsBN&&bt==='s'?BN:''}</span><span class="s">${shipSpeed(i).toFixed(1)} AU/s · trip ${T.toFixed(1)}s (flight ${cruiseTime(i).toFixed(1)}s + handling ${handleTime(i).toFixed(1)}s) · ${mult('s')}</span></div></div>
-   <div class="row"><div class="txt"><span class="t">Cargo hold${shipsBN&&bt==='c'?BN:''}</span><span class="s">${fmt(cargo(i))} ore/trip · ${mult('c')}</span></div></div></div>
+   <div class="row"><div class="txt"><span class="t">Mine rate</span><span class="s l2">${fmt(rate)} ore/s · ${mult('m')}</span></div></div>
+   <div class="row"><div class="txt"><span class="t">Ship speed${shipsBN&&bt==='s'?BN:''}</span><span class="s l3">${shipSpeed(i).toFixed(1)} AU/s · trip ${T.toFixed(1)}s (flight ${cruiseTime(i).toFixed(1)}s + handling ${handleTime(i).toFixed(1)}s) · ${mult('s')}</span></div></div>
+   <div class="row"><div class="txt"><span class="t">Cargo hold${shipsBN&&bt==='c'?BN:''}</span><span class="s l2">${fmt(cargo(i))} ore/trip · ${mult('c')}</span></div></div></div>
   <div class="note"><span>Hauling <b class="num">${fmt(hl)}/s</b> of ${fmt(rate)}/s mined.</span><span>Stockpile <b class="num">${fmt(p.stock)}</b></span></div>`
-   +(rate>hl*1.005?`<div class="note" style="border-color:var(--bad)"><span style="color:var(--bad)"><b class="num">${Math.round((1-hl/rate)*100)}%</b> of mined ore can’t be hauled (${rate-hl<10?(rate-hl).toFixed(2):fmt(rate-hl)}/s). Ships are the bottleneck.</span><span>Overflow <b class="num">${fmt(p.over||0)}</b> · sells at 25% in ${fmtTime(Math.max(0,(S.overAt-Date.now())/1000))}</span></div>`:'')
+   +(rate>hl*1.005?`<div class="note fix" style="border-color:var(--bad)"><span style="color:var(--bad)"><b class="num">${Math.round((1-hl/rate)*100)}%</b> of mined ore can’t be hauled (${rate-hl<10?(rate-hl).toFixed(2):fmt(rate-hl)}/s). Ships are the bottleneck.</span><span>Overflow <b class="num">${fmt(p.over||0)}</b> · sells at 25% in ${fmtTime(Math.max(0,(S.overAt-Date.now())/1000))}</span></div>`:`<div class="note fix"><span style="color:var(--good)">Ships are keeping up. All mined ore is being hauled.</span><span>Overflow <b class="num">${fmt(p.over||0)}</b></span></div>`)
    +viewTeams(i,shipsBN)+viewSettlement(i);
   return h}
 // the hire button sits under the Mining teams card's title, and the settlement button under the Settlement card's title
@@ -1742,7 +1747,7 @@ function viewTeams(i,shipsBN){
   const tm=p.teams[j],free=minerFree(tm),full=tm.n>=MINER_MAX,uc=full?0:teamUpCost(i,j);
   h+=`<div class="head"><span style="font:600 15px var(--f-body)">${embIcon(i,j,20)}${teamName(i,j)}</span><span class="num" style="font-size:12px;color:var(--muted)">${tm.n} / ${MINER_MAX} upgrades</span></div>
     <div class="bar"><i style="width:${(tm.n/MINER_MAX*100).toFixed(1)}%;background:var(--ship)"></i></div>
-    ${free>0?`<div class="note"><b style="color:var(--ship)">${free} free point${free>1?'s':''} to place.</b><span>Tap a green button.</span></div>`:''}
+    <div class="note fix1">${free>0?`<b style="color:var(--ship)">${free} free point${free>1?'s':''} to place.</b><span>Tap a green button.</span>`:`<span>No free points to place.</span>`}</div>
     <div class="rows">`;
   // red marks the fix: Mining when ships keep up, otherwise whichever of Ship speed or Cargo adds more hauling here
   const bt=bestHaulTrait(i),why={m:shipsBN?'<span style="color:var(--bad)">won’t raise income until ships catch up</span>':'more ore mined per second',s:'speeds up the flight only',c:`heavier ship: −${Math.round(CARGO_MASS*100)}% flight speed per point`};
