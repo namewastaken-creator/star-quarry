@@ -32,7 +32,9 @@ body{background:radial-gradient(120% 80% at 70% 10%,#151a3a 0%,#090b1a 45%,var(-
 #hud{position:fixed;top:0;left:0;right:0;padding-top:calc(env(safe-area-inset-top,0px) + 10px);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;gap:12px;align-items:flex-start;justify-content:space-between;pointer-events:none;background:linear-gradient(#05060dcc,#05060d00);padding-bottom:18px}
 .cash{display:flex;flex-direction:column;gap:2px;min-width:0}
 .cash .lbl{font:600 10px var(--f-display);letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
-.cash .val{font:700 30px/1 var(--f-display);color:var(--ore);font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.cash .val{font:700 30px/1 var(--f-display);color:var(--ore);font-variant-numeric:tabular-nums;letter-spacing:.01em;pointer-events:auto;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+.cash .val small{font:600 15px/1 var(--f-display);letter-spacing:.04em;margin-left:5px;color:var(--ore)}
+.cash .val:focus-visible{outline:2px solid var(--ship);outline-offset:3px;border-radius:3px}
 .cash .rate{font:500 12px var(--f-data);color:var(--muted);font-variant-numeric:tabular-nums}
 .cash .probe{color:var(--ship);font-size:11px;pointer-events:auto;background:none;border:0;padding:4px 0;margin:-4px 0;text-align:left;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px}
 .cash .probe:focus-visible{outline:2px solid var(--ship);outline-offset:2px}
@@ -190,7 +192,7 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
 <div id="hud">
   <div class="cash">
     <span class="lbl">Credits</span>
-    <span class="val" id="cash">0</span>
+    <span class="val" id="cash" role="button" tabindex="0" aria-label="Credits. Tap to switch between short and full number names.">0</span>
     <span class="rate" id="rate">≈ 0 /s</span>
     <button class="rate probe" id="probeInfo" type="button"></button>
     <button class="rate probe odl" id="od" type="button"></button>
@@ -270,7 +272,7 @@ PLANETS.forEach((p,i)=>{p.r=ORBIT_R[i];p.speed=GALAXY_SPIN;p.a0=ORBIT_A[i];});
 /* Economy. Planet output comes only from its mining teams (and research / star dust).
    Each planet's base output is scaled to its claim price so every new planet is worth claiming. */
 // game version: bumped by bump.py on every publish (n is the build number used for update checks)
-const APP_VER={name:'Beta 1.0.4',n:4};
+const APP_VER={name:'Beta 1.0.5',n:5};
 // update checks read version.json straight from the GitHub repository
 const UPD_URL='https://raw.githubusercontent.com/namewastaken-creator/star-quarry/main/version.json';
 const ECON={DUST_A:2,DUST_K:.2,EXP:.7,PAY:2.9,SCALE_MIN:100,HIRE:[1,4,30],UP_BASE:.12,UP_GROW:1.32,TEAM_X:[1,6,40],SHIP_BASE:.8,SHIP_OVH:28,DOCK_T:5,PROBE_EVERY:300,PROBE_FLY:180,PROBE_FIRST:60,PROBE_SEC:90,CARGO_FIT:.9};
@@ -616,6 +618,9 @@ function evBackfill(){const E=S.ev;if(E.srcV)return;E.srcV=1;E.src=E.src||[];
 function evClaim(){const a=S.ev.act;if(!a||a.status!=='done')return;const msg=evGive(a.reward);a.status='claimed';if(a.reward.type==='perm'){S.ev.src=S.ev.src||[];S.ev.src.unshift(evSnap(a,Date.now()))}S.ev.log=(S.ev.log||[]);S.ev.log.unshift({t:a.title,at:Date.now()});S.ev.log.length=Math.min(S.ev.log.length,10);refreshWorld();toast('Reward: '+msg,5000);save()}
 /* ===================== FORMAT ===================== */
 const SUF=['K','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc','Ud','Dd','Td','Qad','Qid','Sxd','Spd','Ocd','Nod','Vg'];
+// full number names for the credits display (tap the amount to switch)
+const SUF_WORD=['thousand','million','billion','trillion','quadrillion','quintillion','sextillion','septillion','octillion','nonillion','decillion','undecillion','duodecillion','tredecillion','quattuordecillion','quindecillion','sexdecillion','septendecillion','octodecillion','novemdecillion','vigintillion'];
+function fmtWords(n){if(!isFinite(n))return '∞';if(n<1000)return Math.floor(n).toString();let i=-1;while(n>=1000&&i<SUF_WORD.length-1){n/=1000;i++}return (n<10?n.toFixed(2):n<100?n.toFixed(1):Math.floor(n).toString())+' '+SUF_WORD[i]}
 function fmt(n){if(!isFinite(n))return '∞';if(n<10)return (Math.floor(n*10)/10).toString();if(n<1000)return Math.floor(n).toString();let i=-1;while(n>=1000&&i<SUF.length-1){n/=1000;i++}return (n<10?n.toFixed(2):n<100?n.toFixed(1):Math.floor(n).toString())+SUF[i]}
 function fmtTime(s){s=Math.ceil(s);return s>=60?Math.floor(s/60)+'m '+String(s%60).padStart(2,'0')+'s':s+'s'}
 
@@ -1950,7 +1955,7 @@ function render(force){
     if(tab==='planet'&&shownSel!==S.sel){shownSel=S.sel;centerSelChip()}chipNav()}
 }
 function hud(){
-  $('cash').textContent=fmt(S.cash);$('rate').textContent='≈ '+fmt(incomeEstimate())+' /s';
+  {const c=$('cash'),t=S.words?fmtWords(S.cash):fmt(S.cash);if(c.dataset.t!==t){c.dataset.t=t;if(S.words){const k=t.lastIndexOf(' ');c.innerHTML=k>0?t.slice(0,k)+'<small>'+t.slice(k+1)+'</small>':t}else c.textContent=t}}$('rate').textContent='≈ '+fmt(incomeEstimate())+' /s';
   $('dm').textContent=S.dm?`✦ ${fmt(S.dm)} star dust`:'';
   {const pr=S.probe,nw=Date.now();$('probeInfo').textContent=pr.out?`◈ Probe out · back in ${fmtTime(Math.max(0,pr.out.at+ECON.PROBE_FLY*1000-nw)/1000)}`:`◈ Next probe in ${fmtTime(Math.max(0,pr.nextAt-nw)/1000)}`}
   const od=$('od'),now=Date.now();
@@ -2036,6 +2041,7 @@ musicUI();
     else{const p=req.call(de,{navigationUI:'hide'});if(p&&p.catch)p.catch(()=>toast('Full screen is not available here.'));try{screen.orientation&&screen.orientation.lock&&screen.orientation.lock('portrait').catch(()=>{})}catch(err){}}});
   const ch=()=>{ui();setTimeout(resize,200)};document.addEventListener('fullscreenchange',ch);document.addEventListener('webkitfullscreenchange',ch);
 })();
+{const c=$('cash'),flip=()=>{S.words=!S.words;c.dataset.t='';hud();save()};c.addEventListener('click',flip);c.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();flip()}})}
 $('od').addEventListener('click',()=>{if(odOn()||Date.now()<S.od.ready)return;S.od.until=Date.now()+OD_LEN*1000;S.od.ready=S.od.until+OD_CD*1000;S.life.od++;toast(`Overdrive engaged. Mines and ships run at double speed for ${Math.round(OD_LEN/60)} minutes.`);save()});
 
 pbody.addEventListener('click',e=>{
