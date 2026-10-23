@@ -1826,7 +1826,7 @@ function viewResearch(){
   if(!open.length)h+='<div class="empty">Every project is complete.</div>';
   /* finished projects: green cards with a Completed tag, matching completed event missions */
   if(own.length)h+=`<h3>Completed</h3><div class="grid">${own.map(r=>{const paid=[fmt(r.cost)+' credits'].concat(r.ore.map(([o,q])=>fmt(q)+' '+ORES[o].n),r.bars?[fmt(r.bars[1])+' '+ORES[r.bars[0]].n+' bars']:[]).join(' · ');
-    return `<div class="card evdone"><div class="t" style="font:600 15px var(--f-body)">${r.n}</div><div class="evmeta"><span class="evstamp">✓ Completed</span></div><p>${r.d}</p><div class="evrew">Paid: ${paid}</div></div>`}).join('')}</div>`;
+    return `<div class="card evdone"><div class="t" style="font:600 15px var(--f-body)">${r.n}</div><p>${r.d}</p><div class="evrew">Paid: ${paid}</div></div>`}).join('')}</div>`;
   return h}
 
 // Events tab: the active mission (progress, time left, claim) and this week's three offers
@@ -1841,7 +1841,7 @@ function viewEvents(){const now=Date.now(),w=evWeek(now),E=S.ev,a=E.act;if(E.see
   const card=(d,tg,rw,need,k,m)=>{const st=m&&m.status,fin=st==='done'||st==='claimed';
     let top='',body='',btn='';
     if(m){const got=fin?m.target:Math.min(m.target,Math.max(0,evProg(m)-m.start)),pc=Math.min(100,got/m.target*100);
-      top=fin?`<span class="evstamp">✓ Completed</span>`:st==='failed'?`<span class="evstamp fail">✕ Failed</span>`:`<span class="evstamp run">In progress · ${evTime(m.end-now)} left</span>`;
+      top=fin?'':st==='failed'?`<span class="evstamp fail">✕ Failed</span>`:`<span class="evstamp run">In progress · ${evTime(m.end-now)} left</span>`;
       body=`<div class="bar"><i style="width:${pc.toFixed(1)}%;background:${fin?'var(--good)':st==='failed'?'var(--bad)':'var(--ship)'}"></i></div><div class="note"><span class="num">${fmt(got)} / ${fmt(m.target)}</span></div>`;
       btn=st==='done'?`<button class="btn wide" data-act="evclaim" type="button">Claim reward<small>${m.reward.text}</small></button>`:st==='claimed'?`<button class="btn ghost wide" disabled type="button">Reward claimed</button>`:st==='failed'?`<button class="btn ghost wide" disabled type="button">Mission failed</button>`:''}
     else if(why){btn=`<button class="btn ghost evunb" data-act="evinfo" data-k="${k}" type="button" aria-expanded="${evInfo===k}" aria-label="Unavailable. Tap to see why.">Unavailable<span class="evi" aria-hidden="true">i</span></button>${evInfo===k?`<p class="evwhy">${why}</p>`:''}`}
@@ -1858,7 +1858,7 @@ function viewEvents(){const now=Date.now(),w=evWeek(now),E=S.ev,a=E.act;if(E.see
   if(pb.length){evBackfill();
     const src=b=>(E.src||[]).filter(x=>x.b===b),dt=t=>new Date(t).toLocaleDateString(undefined,new Date(t).getFullYear()===new Date().getFullYear()?{month:'short',day:'numeric'}:{month:'short',day:'numeric',year:'numeric'});
     const mc=x=>`<div class="card evdone"><div class="head"><span style="font:600 15px var(--f-body)">${x.title}</span></div>
-      <div class="evmeta"><span>${x.days} days</span><span>Permanent boost</span><span class="evstamp">✓ Completed</span></div>${x.story?`<p style="font-size:12px">${x.story}</p>`:''}${x.goal?`<div class="evgoal">${x.goal}</div>`:''}
+      <div class="evmeta"><span>${x.days} days</span><span>Permanent boost</span></div>${x.story?`<p style="font-size:12px">${x.story}</p>`:''}${x.goal?`<div class="evgoal">${x.goal}</div>`:''}
       ${x.target!=null?`<div class="bar"><i style="width:100%;background:var(--good)"></i></div><div class="note"><span class="num">${fmt(x.target)} / ${fmt(x.target)}</span><span>Finished ${dt(x.at)}</span></div>`:`<div class="note"><span>Finished ${dt(x.at)}</span></div>`}<div class="evrew">Reward: ${x.reward}</div></div>`;
     h+=`<div class="card"><h3>Permanent event boosts</h3><div class="rows">${pb.map(b=>{const L=src(b),open=evBInfo===b;
       return `<div class="row"><div class="txt"><span class="t">${EV_BOOST_NAME[b][0].toUpperCase()+EV_BOOST_NAME[b].slice(1)}</span><span class="s">×${perm(b).toFixed(3)}</span></div><button class="evi${open?' on':''}" data-act="evbinfo" data-b="${b}" type="button" aria-expanded="${open}" aria-label="Which mission gave this boost?">i</button></div>${open?`<div class="evsrc">${L.length?L.map(mc).join(''):`<p class="evwhy">This boost came from a mission finished before mission records were kept.</p>`}</div>`:''}`}).join('')}</div></div>`}
