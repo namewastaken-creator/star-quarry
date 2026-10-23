@@ -52,7 +52,7 @@ body{background:radial-gradient(120% 80% at 70% 10%,#151a3a 0%,#090b1a 45%,var(-
 #od.odl:disabled{color:var(--muted);cursor:default;text-decoration:none}
 
 /* Sheet */
-#sheet{position:fixed;left:0;right:0;bottom:0;background:var(--panel);border-top:1px solid var(--line);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);display:flex;flex-direction:column;height:46%;padding-bottom:env(safe-area-inset-bottom,0px);transition:height .25s ease}
+#sheet{position:fixed;left:0;right:0;bottom:0;background:var(--panel);border-top:1px solid var(--line);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);display:flex;flex-direction:column;height:62%;padding-bottom:env(safe-area-inset-bottom,0px);transition:height .25s ease}
 #sheet.collapsed{height:calc(56px + env(safe-area-inset-bottom,0px))}
 #sheet.collapsed #pbody{display:none}
 .tabbar{display:flex;align-items:stretch;border-bottom:1px solid var(--line);padding-left:max(4px,env(safe-area-inset-left,0px));padding-right:max(4px,env(safe-area-inset-right,0px))}
@@ -78,9 +78,6 @@ body{background:radial-gradient(120% 80% at 70% 10%,#151a3a 0%,#090b1a 45%,var(-
 .evmeta span.evstamp.run{color:var(--ship);border-color:rgba(95,212,196,.5);background:rgba(95,212,196,.07)}
 .tab.on::after{content:"";position:absolute;left:22%;right:22%;bottom:-1px;height:2px;background:var(--ore)}
 .tab[hidden]{display:none}
-#grip{flex:0 0 44px;background:none;border:0;cursor:pointer;display:grid;place-items:center}
-#grip i{width:10px;height:10px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg) translate(-2px,-2px);transition:transform .2s}
-#sheet.collapsed #grip i{transform:rotate(-135deg) translate(-2px,-2px)}
 #pbody>*{flex-shrink:0}
 #pbody{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding-block:12px 18px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:12px;-webkit-overflow-scrolling:touch}
 
@@ -174,7 +171,7 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
 .ore.res{cursor:pointer;font:inherit;font-size:12px;font-weight:500}
 .ore.res::after{content:"i";font:600 10px var(--f-data);color:var(--muted);border:1px solid var(--line);border-radius:50%;width:14px;height:14px;display:inline-grid;place-items:center;margin-left:2px}
 @media (min-width:760px){#sheet{left:auto;width:430px;right:16px;bottom:16px;border:1px solid var(--line);border-radius:12px;height:min(640px,calc(100% - 120px))}}
-@media (prefers-reduced-motion:reduce){#sheet,#toast,#grip i{transition:none}}
+@media (prefers-reduced-motion:reduce){#sheet,#toast{transition:none}}
 </style></head><body>
 
 <canvas id="scene"></canvas>
@@ -207,7 +204,6 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
     <button class="tab" data-tab="events" type="button">Events</button>
     <button class="tab" data-tab="warp" type="button">Warp</button>
     </div>
-    <button id="grip" type="button" aria-label="Collapse console"><i></i></button>
   </nav>
   <div id="pbody"></div>
 </section>
@@ -1584,7 +1580,7 @@ function endPtr(e){const wasTap=tap&&ptrs.size===1&&performance.now()-tap.t<350;
 canvas.addEventListener('pointerup',endPtr);canvas.addEventListener('pointercancel',e=>{ptrs.delete(e.pointerId);tap=null;g2=null});
 canvas.addEventListener('wheel',e=>{e.preventDefault();cam.tr=clampR(cam.tr*(1+Math.sign(e.deltaY)*.1))},{passive:false});
 const ray=new THREE.Raycaster();
-let lastPick={i:-1,t:0};
+let lastPick={i:-1,t:0},closeT=0;
 function pick(x,y){const v=new THREE.Vector2(x/window.innerWidth*2-1,-(y/window.innerHeight)*2+1);ray.setFromCamera(v,camera);
   // the station: a tap inside its on-screen footprint (ring radius, at least 28px)
   {tmp.set(0,0,0).project(camera);const sx=(tmp.x+1)/2*innerWidth,sy=(1-tmp.y)/2*innerHeight;tmp2.set(1.5,0,0).project(camera);
@@ -1594,8 +1590,13 @@ function pick(x,y){const v=new THREE.Vector2(x/window.innerWidth*2-1,-(y/window.
      const now=performance.now();if(lastPick.i===-2&&now-lastPick.t<450){focusStation();lastPick.i=-9}else lastPick={i:-2,t:now};return}}
   const hits=ray.intersectObjects(W.filter(w=>w.mesh.visible).map(w=>w.mesh),false);
   let i=hits.length?hits[0].object.userData.i:-1;
+  if(i<0)W.forEach((w,k)=>{if(i>=0||!w.mesh.visible||!w.label||w.label.style.display==='none')return;const r=w.label.getBoundingClientRect();if(r.width&&x>=r.left-6&&x<=r.right+6&&y>=r.top-6&&y<=r.bottom+6)i=k});
   if(i<0){let best=1e9;W.forEach((w,k)=>{if(!w.mesh.visible)return;tmp.copy(w.pos).project(camera);const sx=(tmp.x+1)/2*window.innerWidth,sy=(1-tmp.y)/2*window.innerHeight,d=Math.hypot(sx-x,sy-y);if(d<40&&d<best){best=d;i=k}})}
-  if(i>=0){const now=performance.now();if(lastPick.i===i&&now-lastPick.t<450){focusPlanet(i);lastPick.i=-1}else{lastPick={i,t:now};S.sel=i;refreshWorld()}setTab('planet');if(sheet.classList.contains('collapsed'))toggleSheet()}}
+  if(i>=0){const now=performance.now();clearTimeout(closeT);
+    if(lastPick.i===i&&now-lastPick.t<450){focusPlanet(i);lastPick.i=-1;setTab('planet');if(sheet.classList.contains('collapsed'))toggleSheet();return}
+    const again=S.sel===i&&tab==='planet'&&!sheet.classList.contains('collapsed');lastPick={i,t:now};
+    if(again){closeT=setTimeout(()=>{if(!sheet.classList.contains('collapsed'))toggleSheet()},460);return}
+    S.sel=i;refreshWorld();setTab('planet');if(sheet.classList.contains('collapsed'))toggleSheet()}}
 
 /* ===================== MUSIC =====================
    Original calm techno, synthesized live with the Web Audio API.
@@ -1689,9 +1690,9 @@ function toast(msg,ms){const t=$('toast');t.textContent=msg;t.hidden=false;clear
 $('toast').addEventListener('click',()=>{clearTimeout(toast.h);hideToast()});
 function setTab(t){tab=t;document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));pbody.scrollTop=0;render(true);
   const on=document.querySelector('.tab.on'),sc=$('tabscroll');if(on&&sc&&sc.scrollWidth>sc.clientWidth)sc.scrollLeft=on.offsetLeft-(sc.clientWidth-on.offsetWidth)/2}
-function toggleSheet(){sheet.classList.toggle('collapsed');$('grip').setAttribute('aria-label',sheet.classList.contains('collapsed')?'Expand console':'Collapse console');setTimeout(resize,260)}
+function toggleSheet(){sheet.classList.toggle('collapsed');setTimeout(resize,260)}
 // a mouse drag along the tab row scrolls it; releasing over a tab doesn't switch tabs
-$('tabs').addEventListener('click',e=>{const b=e.target.closest('.tab');if(b&&chipDragged)return;if(b){if(sheet.classList.contains('collapsed'))toggleSheet();setTab(b.dataset.tab)}if(e.target.closest('#grip'))toggleSheet()});
+$('tabs').addEventListener('click',e=>{const b=e.target.closest('.tab');if(b&&chipDragged)return;if(b){if(sheet.classList.contains('collapsed'))toggleSheet();setTab(b.dataset.tab)}});
 let touchHold=false,lastScroll=0;
 pbody.addEventListener('pointerdown',()=>pressing=true);
 pbody.addEventListener('input',e=>{if(e.target.id==='vol'){S.music.vol=+e.target.value/100;const n=e.target.nextElementSibling;if(n)n.textContent=e.target.value;Music.setVolume();if(S.music.vol>0&&!S.music.on){S.music.on=true;Music.play();musicUI()}}});
