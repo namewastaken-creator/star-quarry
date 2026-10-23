@@ -1710,7 +1710,7 @@ function viewPlanet(){
   const rate=mineRate(i),hl=haul(i),T=tripTime(i),shipsBN=hl<rate*.97,BN='<span class="bn">Bottleneck</span>',bt=bestHaulTrait(i);
   const mult=k=>`×${minerT(i,k).toFixed(2)} from teams`+(setLoc(i,k)!==1?` · ×${setLoc(i,k).toFixed(1)} settlement`:'');
   h+=`<div class="rows">
-   <div class="row"><div class="txt"><span class="t">Mine rate${shipsBN?'':BN}</span><span class="s">${fmt(rate)} ore/s · ${mult('m')}</span></div></div>
+   <div class="row"><div class="txt"><span class="t">Mine rate</span><span class="s">${fmt(rate)} ore/s · ${mult('m')}</span></div></div>
    <div class="row"><div class="txt"><span class="t">Ship speed${shipsBN&&bt==='s'?BN:''}</span><span class="s">${shipSpeed(i).toFixed(1)} AU/s · trip ${T.toFixed(1)}s (flight ${cruiseTime(i).toFixed(1)}s + handling ${handleTime(i).toFixed(1)}s) · ${mult('s')}</span></div></div>
    <div class="row"><div class="txt"><span class="t">Cargo hold${shipsBN&&bt==='c'?BN:''}</span><span class="s">${fmt(cargo(i))} ore/trip · ${mult('c')}</span></div></div></div>
   <div class="note"><span>Hauling <b class="num">${fmt(hl)}/s</b> of ${fmt(rate)}/s mined.</span><span>Stockpile <b class="num">${fmt(p.stock)}</b></span></div>`
