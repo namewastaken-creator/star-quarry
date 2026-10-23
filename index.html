@@ -1692,7 +1692,10 @@ function setTab(t){tab=t;document.querySelectorAll('.tab').forEach(b=>b.classLis
   const on=document.querySelector('.tab.on'),sc=$('tabscroll');if(on&&sc&&sc.scrollWidth>sc.clientWidth)sc.scrollLeft=on.offsetLeft-(sc.clientWidth-on.offsetWidth)/2}
 function toggleSheet(){sheet.classList.toggle('collapsed');setTimeout(resize,260)}
 // a mouse drag along the tab row scrolls it; releasing over a tab doesn't switch tabs
-$('tabs').addEventListener('click',e=>{const b=e.target.closest('.tab');if(b&&chipDragged)return;if(b){if(sheet.classList.contains('collapsed'))toggleSheet();setTab(b.dataset.tab)}});
+$('tabs').addEventListener('click',e=>{const b=e.target.closest('.tab');if(b&&chipDragged)return;if(b){const shut=sheet.classList.contains('collapsed');
+    // tapping the open tab again closes the console; any tab opens it
+    if(!shut&&b.dataset.tab===tab){toggleSheet();return}
+    if(shut)toggleSheet();setTab(b.dataset.tab)}});
 let touchHold=false,lastScroll=0;
 pbody.addEventListener('pointerdown',()=>pressing=true);
 pbody.addEventListener('input',e=>{if(e.target.id==='vol'){S.music.vol=+e.target.value/100;const n=e.target.nextElementSibling;if(n)n.textContent=e.target.value;Music.setVolume();if(S.music.vol>0&&!S.music.on){S.music.on=true;Music.play();musicUI()}}});
