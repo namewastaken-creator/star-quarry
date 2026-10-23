@@ -66,8 +66,8 @@ body{background:radial-gradient(120% 80% at 70% 10%,#151a3a 0%,#090b1a 45%,var(-
 .evgoal{font:600 13px var(--f-body);color:var(--ink)}
 .evrew{font-size:12px;color:var(--ship)}
 .card.evdone{border-color:rgba(134,227,154,.55);box-shadow:inset 0 0 0 1px rgba(134,227,154,.18)}
-.evstamp{display:inline-flex;align-items:center;gap:5px;font:700 10px var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--good);border:1px solid rgba(134,227,154,.6);border-radius:4px;padding:3px 7px;background:rgba(134,227,154,.08);white-space:nowrap}
-.evstamp.fail{color:var(--bad);border-color:rgba(255,122,122,.55);background:rgba(255,122,122,.07)}
+.evmeta span.evstamp{color:var(--good);border-color:rgba(134,227,154,.6);background:rgba(134,227,154,.08);white-space:nowrap}
+.evmeta span.evstamp.fail{color:var(--bad);border-color:rgba(255,122,122,.55);background:rgba(255,122,122,.07)}
 .btn.ghost.evunb{position:relative;color:var(--muted);width:100%;padding-right:46px;padding-left:46px}
 .evi{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;width:26px;height:26px;border-radius:50%;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font:italic 700 14px Georgia,serif;text-transform:none;letter-spacing:0;cursor:pointer;padding:0}
 .btn.evunb .evi{position:absolute;right:8px;top:50%;transform:translateY(-50%)}
@@ -75,7 +75,7 @@ body{background:radial-gradient(120% 80% at 70% 10%,#151a3a 0%,#090b1a 45%,var(-
 .evsrc{display:flex;flex-direction:column;gap:8px;padding:10px 12px;background:var(--card)}
 .evsrc .card{margin:0}
 .evwhy{font-size:12px;color:var(--muted);border-left:2px solid var(--ship);padding:2px 0 2px 9px;margin:0}
-.evstamp.run{color:var(--ship);border-color:rgba(95,212,196,.5);background:rgba(95,212,196,.07)}
+.evmeta span.evstamp.run{color:var(--ship);border-color:rgba(95,212,196,.5);background:rgba(95,212,196,.07)}
 .tab.on::after{content:"";position:absolute;left:22%;right:22%;bottom:-1px;height:2px;background:var(--ore)}
 .tab[hidden]{display:none}
 #grip{flex:0 0 44px;background:none;border:0;cursor:pointer;display:grid;place-items:center}
@@ -1835,8 +1835,8 @@ function viewEvents(){const now=Date.now(),w=evWeek(now),E=S.ev,a=E.act;if(E.see
       btn=st==='done'?`<button class="btn wide" data-act="evclaim" type="button">Claim reward<small>${m.reward.text}</small></button>`:st==='claimed'?`<button class="btn ghost wide" disabled type="button">Reward claimed</button>`:st==='failed'?`<button class="btn ghost wide" disabled type="button">Mission failed</button>`:''}
     else if(why){btn=`<button class="btn ghost evunb" data-act="evinfo" data-k="${k}" type="button" aria-expanded="${evInfo===k}" aria-label="Unavailable. Tap to see why.">Unavailable<span class="evi" aria-hidden="true">i</span></button>${evInfo===k?`<p class="evwhy">${why}</p>`:''}`}
     else btn=`<button class="btn" data-act="evaccept" data-k="${k}" type="button">Accept mission</button>`;
-    return `<div class="card${fin?' evdone':''}"><div class="head"><span style="font:600 15px var(--f-body)">${d.title}</span>${top}</div>
-      <div class="evmeta"><span>${d.days} days</span><span>${['Permanent boost','Star dust','Free unlocks'][d.k]}</span></div>
+    return `<div class="card${fin?' evdone':''}"><div class="head"><span style="font:600 15px var(--f-body)">${d.title}</span></div>
+      <div class="evmeta"><span>${d.days} days</span><span>${['Permanent boost','Star dust','Free unlocks'][d.k]}</span>${top}</div>
       <p style="font-size:12px">${m?m.story:evStory(d,tg)}</p><div class="evgoal">${m?evGoalText(m.kind,m.target,m.ore):evGoalText(d.kind,tg.target,tg.ore)}</div>
       ${body}<div class="evrew">Reward: ${m?m.reward.text:rw.text}</div>${need&&!m?`<p style="font-size:12px;color:var(--bad)">${need}</p>`:''}${btn}</div>`};
   if(a&&a.w!==w&&(a.status==='active'||a.status==='done'||(a.status==='failed'&&now-a.end<864e5))){h+=`<h3>Last week’s mission</h3>`+card(a,null,null,'',-1,a)}
@@ -1845,10 +1845,10 @@ function viewEvents(){const now=Date.now(),w=evWeek(now),E=S.ev,a=E.act;if(E.see
   h+=`<p style="font-size:12px">Accept one mission a week. Goals are sized to your progress when you accept, and new missions arrive every Friday at 6 pm. Missions don’t repeat for at least a year.</p>`;
   const pb=EV_BOOSTS.filter(b=>perm(b)>1.0001);
   if(pb.length){evBackfill();
-    const src=b=>(E.src||[]).filter(x=>x.b===b),dt=t=>new Date(t).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
-    const mc=x=>`<div class="card evdone"><div class="head"><span style="font:600 15px var(--f-body)">${x.title}</span><span class="evstamp">✓ Completed ${dt(x.at)}</span></div>
-      <div class="evmeta"><span>${x.days} days</span><span>Permanent boost</span></div>${x.story?`<p style="font-size:12px">${x.story}</p>`:''}${x.goal?`<div class="evgoal">${x.goal}</div>`:''}
-      ${x.target!=null?`<div class="bar"><i style="width:100%;background:var(--good)"></i></div><div class="note"><span class="num">${fmt(x.target)} / ${fmt(x.target)}</span></div>`:''}<div class="evrew">Reward: ${x.reward}</div></div>`;
+    const src=b=>(E.src||[]).filter(x=>x.b===b),dt=t=>new Date(t).toLocaleDateString(undefined,new Date(t).getFullYear()===new Date().getFullYear()?{month:'short',day:'numeric'}:{month:'short',day:'numeric',year:'numeric'});
+    const mc=x=>`<div class="card evdone"><div class="head"><span style="font:600 15px var(--f-body)">${x.title}</span></div>
+      <div class="evmeta"><span>${x.days} days</span><span>Permanent boost</span><span class="evstamp">✓ Completed</span></div>${x.story?`<p style="font-size:12px">${x.story}</p>`:''}${x.goal?`<div class="evgoal">${x.goal}</div>`:''}
+      ${x.target!=null?`<div class="bar"><i style="width:100%;background:var(--good)"></i></div><div class="note"><span class="num">${fmt(x.target)} / ${fmt(x.target)}</span><span>Finished ${dt(x.at)}</span></div>`:`<div class="note"><span>Finished ${dt(x.at)}</span></div>`}<div class="evrew">Reward: ${x.reward}</div></div>`;
     h+=`<div class="card"><h3>Permanent event boosts</h3><div class="rows">${pb.map(b=>{const L=src(b),open=evBInfo===b;
       return `<div class="row"><div class="txt"><span class="t">${EV_BOOST_NAME[b][0].toUpperCase()+EV_BOOST_NAME[b].slice(1)}</span><span class="s">×${perm(b).toFixed(3)}</span></div><button class="evi${open?' on':''}" data-act="evbinfo" data-b="${b}" type="button" aria-expanded="${open}" aria-label="Which mission gave this boost?">i</button></div>${open?`<div class="evsrc">${L.length?L.map(mc).join(''):`<p class="evwhy">This boost came from a mission finished before mission records were kept.</p>`}</div>`:''}`}).join('')}</div></div>`}
   return h}
