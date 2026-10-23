@@ -142,8 +142,10 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
 .btn.ship{background:var(--ship);color:#052523}
 .pm{display:flex;flex-direction:column-reverse;gap:5px;flex:0 0 auto;width:92px}
 .pm .btn{min-width:0;width:100%}
-.pm .pmm{flex-direction:row;justify-content:center;gap:6px;padding:4px 6px;font-size:16px;line-height:1}
+.pm .pmm{flex-direction:row;justify-content:center;gap:6px;padding:6px;font-size:13px;line-height:1}
 .pm .pmm small{font-size:10px;white-space:nowrap}
+.row.trow .bn{margin-left:5px;letter-spacing:.05em;padding:1px 4px;font-size:9px}
+.ptc{margin-left:6px;font:500 12px var(--f-data);color:var(--muted);font-variant-numeric:tabular-nums}
 .btn.ship.bnr{background:var(--bad);color:#2b0606}
 .btn.ship.bnr:disabled{background:#3a1d26;color:#ffb3b3;box-shadow:inset 0 0 0 1px var(--bad)}
 .btn.up{background:#232849;color:var(--ink);border:1px solid #343a66}
@@ -276,7 +278,7 @@ PLANETS.forEach((p,i)=>{p.r=ORBIT_R[i];p.speed=GALAXY_SPIN;p.a0=ORBIT_A[i];});
 /* Economy. Planet output comes only from its mining teams (and research / star dust).
    Each planet's base output is scaled to its claim price so every new planet is worth claiming. */
 // game version: bumped by bump.py on every publish (n is the build number used for update checks)
-const APP_VER={name:'Beta 1.0.10',n:10};
+const APP_VER={name:'Beta 1.0.11',n:11};
 // update checks read version.json straight from the GitHub repository
 const UPD_URL='https://raw.githubusercontent.com/namewastaken-creator/star-quarry/main/version.json';
 const ECON={DUST_A:2,DUST_K:.2,EXP:.7,PAY:2.9,SCALE_MIN:100,HIRE:[1,4,30],UP_BASE:.12,UP_GROW:1.32,TEAM_X:[1,6,40],SHIP_BASE:.8,SHIP_OVH:28,DOCK_T:5,PROBE_EVERY:300,PROBE_FLY:180,PROBE_FIRST:60,PROBE_SEC:90,CARGO_FIT:.9};
@@ -1804,19 +1806,19 @@ function viewTeams(i,shipsBN,rate,hl){
   const rows={
     m:{name:'Mine rate',val:`${rf(rate)} ore/s`,
        next:()=>{const r2=nextWith('m',()=>mineRate(i));return `Next: ${arrow(rf(rate),rf(r2),' ore/s')}`+(shipsBN?` · <span style="color:var(--bad)">income capped at ${rf(hl)}/s</span>`:'')}},
-    s:{name:'Ship speed',val:`${shipSpeed(i).toFixed(1)} AU/s · trip ${T.toFixed(1)}s`,
+    s:{name:'Speed',val:`${shipSpeed(i).toFixed(1)} AU/s · trip ${T.toFixed(1)}s`,
        next:()=>{const [t2,h2]=nextWith('s',()=>[tripTime(i),cap()]);return `Next: trip ${arrow(T.toFixed(1),t2.toFixed(1),'s')} · capacity ${arrow(rf(cap0),rf(h2),'/s')}`}},
-    c:{name:'Cargo hold',val:`${fmt(cargo(i))} ore/trip · −${Math.round(CARGO_MASS*100)}% flight/pt`,
+    c:{name:'Cargo',val:`${fmt(cargo(i))} ore/trip · −${Math.round(CARGO_MASS*100)}% flight/pt`,
        next:()=>{const [c2,h2]=nextWith('c',()=>[cargo(i),cap()]);return `Next: ${arrow(fmt(cargo(i)),fmt(c2),' ore/trip')} · capacity ${arrow(rf(cap0),rf(h2),'/s')}`}}};
   // red marks the fix: Mining when ships keep up, otherwise whichever of Ship speed or Cargo adds more hauling here
   TRAITS.forEach(([k,name])=>{const R=rows[k],pts=tm.t[k]||0,hot=k==='m'?!shipsBN:(shipsBN&&k===bt),loc=setLoc(i,k);
     /* each row: planet total, team share, what the next point does, and the button; fixed height so nothing jumps */
-    h+=`<div class="row trow"><div class="txt"><span class="t">${R.name}${k!=='m'&&shipsBN&&bt===k?BN:''}</span><span class="s l1">${R.val}</span>
-      <span class="s l1">Teams ×${minerT(i,k).toFixed(2)}${loc!==1?` · settlement ×${loc.toFixed(1)}`:''} · ${teamName(i,j)} ${pts} pt${pts===1?'':'s'}</span>
+    h+=`<div class="row trow"><div class="txt"><span class="t">${R.name}<span class="ptc">${pts}/${MINER_MAX}</span>${k!=='m'&&shipsBN&&bt===k?BN:''}</span><span class="s l1">${R.val}</span>
+      <span class="s l1">Teams ×${minerT(i,k).toFixed(2)}${loc!==1?` · settlement ×${loc.toFixed(1)}`:''} · ${teamName(i,j)}</span>
       <span class="s s2">${canUp?R.next():'This team is fully upgraded.'}</span></div>
-      <div class="pm"><button class="btn ghost pmm" data-act="unassign" data-p="${i}" data-j="${j}" data-k="${k}" ${pts>0?'':'disabled'} type="button" aria-label="Take a point back from ${name}">−<small>${pts} pt${pts===1?'':'s'}</small></button>${free>0?`<button class="btn ship${hot?' bnr':''}" data-act="assign" data-p="${i}" data-j="${j}" data-k="${k}" type="button" aria-label="Add a free point to ${name}">+${MINER_STEP}<small>Free</small></button>`
+      <div class="pm"><button class="btn ghost pmm" data-act="unassign" data-p="${i}" data-j="${j}" data-k="${k}" ${pts>0?'':'disabled'} type="button" aria-label="Take a point back from ${name}">− ${MINER_STEP}</button>${free>0?`<button class="btn ship${hot?' bnr':''}" data-act="assign" data-p="${i}" data-j="${j}" data-k="${k}" type="button" aria-label="Add a free point to ${name}">+ ${MINER_STEP}<small>Free</small></button>`
         :full?`<button class="btn ship" disabled type="button">Maxed<small>${MINER_MAX} / ${MINER_MAX}</small></button>`
-        :`<button class="btn ship${hot?' bnr':''}" data-act="mbuy" data-p="${i}" data-j="${j}" data-k="${k}" ${S.cash>=uc?'':'disabled'} type="button" aria-label="Upgrade ${name} for ${fmt(uc)} credits">+${MINER_STEP}<small>${fmt(uc)}</small></button>`}</div></div>`});
+        :`<button class="btn ship${hot?' bnr':''}" data-act="mbuy" data-p="${i}" data-j="${j}" data-k="${k}" ${S.cash>=uc?'':'disabled'} type="button" aria-label="Upgrade ${name} for ${fmt(uc)} credits">+ ${MINER_STEP}<small>${fmt(uc)}</small></button>`}</div></div>`});
   h+=`</div><div class="note"><span>${full?'<b>Fully upgraded.</b> ':''}The red button is the most efficient upgrade.</span></div>`;
   return h+'</div>'}
 function viewProbe(){const pr=S.probe,st=pr.st,nw=Date.now(),est=ECON.PROBE_SEC*totalMineValue()*setG('probe')*perm('probe')*valueMult();
