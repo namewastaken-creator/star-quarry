@@ -167,9 +167,9 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
 #toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 86px);transform:translateX(-50%);background:var(--panel2);border:1px solid var(--line);color:var(--ink);padding:10px 14px;border-radius:8px;font:500 13px var(--f-body);max-width:min(92vw,420px);text-align:center;opacity:0;transition:opacity .3s;pointer-events:auto;cursor:pointer;line-height:1.4;z-index:20}
 #toast.show{opacity:1}
 @media (max-width:759px){#toast{top:auto;bottom:calc(46% + 14px)}}
-#modal{position:fixed;inset:0;z-index:30;background:rgba(3,4,10,.62);display:grid;place-items:center;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-#modal .box{width:min(100%,360px);background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:10px;box-shadow:0 18px 50px rgba(0,0,0,.5)}
-#modal .tag{font:600 11px var(--f-display);letter-spacing:.16em;text-transform:uppercase;color:var(--good)}
+#modal,#upd{position:fixed;inset:0;z-index:30;background:rgba(3,4,10,.62);display:grid;place-items:center;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#modal .box,#upd .box{width:min(100%,360px);background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:10px;box-shadow:0 18px 50px rgba(0,0,0,.5)}
+#modal .tag,#upd .tag{font:600 11px var(--f-display);letter-spacing:.16em;text-transform:uppercase;color:var(--good)}
 #modal .eff{display:flex;justify-content:space-between;gap:10px;font:500 13px var(--f-body);color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
 #modal .eff span:last-child{color:var(--ink);font-family:var(--f-data)}
 .needs{display:flex;flex-direction:column;gap:5px}
@@ -203,6 +203,7 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
   </div>
 </div>
 <div id="toast" role="status" hidden></div>
+<div id="upd" hidden><div class="box" role="dialog" aria-modal="true" aria-labelledby="utitle" aria-describedby="udesc"><span class="tag" style="color:var(--ship)">Update available</span><h2 id="utitle"></h2><p id="udesc" style="color:var(--ink)"></p><p id="unote" style="font-size:12px"></p><button class="btn wide" id="uyes" type="button">Update now</button><button class="btn ghost wide" id="uno" type="button">Not now</button></div></div>
 <div id="modal" hidden><div class="box" role="dialog" aria-modal="true" aria-labelledby="mtitle"><span class="tag">Research complete</span><h2 id="mtitle"></h2><p id="mdesc" style="color:var(--ink)"></p><div id="meff"></div><span class="num" id="mcost" style="font-size:12px;color:var(--muted)"></span><button class="btn ghost wide" id="mclose" type="button">Close</button></div></div>
 <section id="sheet">
   <nav class="tabbar chipnav" id="tabs">
@@ -268,6 +269,9 @@ const GALAXY_SPIN=.012;
 PLANETS.forEach((p,i)=>{p.r=ORBIT_R[i];p.speed=GALAXY_SPIN;p.a0=ORBIT_A[i];});
 /* Economy. Planet output comes only from its mining teams (and research / star dust).
    Each planet's base output is scaled to its claim price so every new planet is worth claiming. */
+// game version: bumped by bump.py on every publish (n is the build number used for update checks)
+const APP_VER={name:'Beta 1.0.1',n:1};
+const UPD_URL='https://namewastaken-creator.github.io/star-quarry/version.json';
 const ECON={DUST_A:2,DUST_K:.2,EXP:.7,PAY:2.9,SCALE_MIN:100,HIRE:[1,4,30],UP_BASE:.12,UP_GROW:1.32,TEAM_X:[1,6,40],SHIP_BASE:.8,SHIP_OVH:28,DOCK_T:5,PROBE_EVERY:300,PROBE_FLY:180,PROBE_FIRST:60,PROBE_SEC:90,CARGO_FIT:.9};
 // overflow: surplus ore is sold every OVER_EVERY seconds at OVER_PRICE of the normal price
 const OVER_EVERY=600,OVER_PRICE=.25;
@@ -1910,6 +1914,7 @@ function viewWarp(){
    <p style="font-size:12px">Original music made by the game as it plays. Free to use, no licence needed.</p></div>
    <p>Star Quarry has no ads, no purchases and no premium currency. Every boost, including Overdrive, is free and earned by playing.</p>
    <button class="btn ghost wide${armed('reset')?' warn':''}" data-act="reset" type="button">${armed('reset')?'Tap again to erase your save':'Erase save and start over'}</button>`;
+  h+=viewVersion();
   return h}
 
 // planet button row: arrows, edge fades, selected planet kept in view, mouse drag and wheel on computers
@@ -1960,6 +1965,39 @@ function showResearch(id){const r=RESEARCH.find(x=>x.id===id);if(!r)return;
   $('meff').innerHTML=eff;$('mcost').textContent='Cost '+fmt(r.cost)+' credits + '+r.ore.map(([o,q])=>fmt(q)+' '+ORES[o].n).join(' + ')+(r.bars?' + '+fmt(r.bars[1])+' '+ORES[r.bars[0]].n+' bars':'');
   $('modal').hidden=false;$('mclose').focus()}
 function closeModal(){$('modal').hidden=true}
+/* ===================== VERSION AND UPDATES =====================
+   The published site has version.json ({name,n}). The game checks it 20 s after loading, every 30 minutes and when
+   it comes back to the foreground. A newer build asks once; "Not now" stays quiet until the game is reloaded. */
+const UPD={st:'idle',at:0,remote:null,declined:false,asked:false};
+const IS_APP=location.hostname==='appassets.androidplatform.net';
+function updURL(){return (location.hostname.endsWith('github.io')?'version.json':UPD_URL)+'?t='+Date.now()}
+function updCheck(manual){if(UPD.st==='checking')return;UPD.st='checking';if(manual)render(true);
+  fetch(updURL(),{cache:'no-store'}).then(r=>r.ok?r.json():Promise.reject()).then(v=>{UPD.at=Date.now();UPD.remote=v;
+    UPD.st=v&&v.n>APP_VER.n?'new':'current';
+    if(UPD.st==='new'&&(manual||(!UPD.declined&&!UPD.asked)))updShow(manual);
+    else if(manual&&UPD.st==='current')toast(`You're on the latest version, ${APP_VER.name}.`)})
+  .catch(()=>{UPD.st='fail';UPD.at=Date.now();if(manual)toast("Couldn't check for updates. Check your connection and try again.")})
+  .finally(()=>{if(tab==='warp')render(true)})}
+function updShow(manual){const v=UPD.remote;if(!v)return;UPD.asked=true;
+  $('utitle').textContent=`Star Quarry ${v.name}`;
+  $('udesc').textContent=`A new version is ready. You're playing ${APP_VER.name}.`;
+  if(IS_APP){$('unote').textContent='The Android app updates when you install its newest build. Your progress stays on this device.';$('uyes').hidden=true;$('uno').textContent='OK'}
+  else{$('unote').textContent='Your progress is saved first, then the game reloads with the new version. It only takes a moment.';$('uyes').hidden=false;$('uno').textContent='Not now'}
+  $('upd').hidden=false;$('uyes').hidden?$('uno').focus():$('uyes').focus()}
+function updClose(){$('upd').hidden=true}
+$('uyes').addEventListener('click',()=>{try{localStorage.setItem('sq_updfrom',APP_VER.name)}catch(e){}save();$('uyes').disabled=true;$('uyes').firstChild.textContent='Updating…';setTimeout(()=>location.reload(),150)});
+$('uno').addEventListener('click',()=>{updClose();if(!UPD.declined){UPD.declined=true;
+  toast(IS_APP?`Got it. You'll keep playing ${APP_VER.name} until you install the new build.`:`No problem. You'll keep playing ${APP_VER.name}. We won't ask again until the game is reloaded, and you can update any time from the Warp tab.`,6000)}});
+$('upd').addEventListener('click',e=>{if(e.target.id==='upd')$('uno').click()});
+setTimeout(()=>updCheck(false),20000);setInterval(()=>updCheck(false),30*60*1000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Date.now()-UPD.at>5*60*1000)updCheck(false)});
+// after an update: say which version is now running
+try{const f=localStorage.getItem('sq_updfrom');if(f){localStorage.removeItem('sq_updfrom');if(f!==APP_VER.name)setTimeout(()=>toast(`Updated to ${APP_VER.name}. Your progress came with you.`,5000),1500)}}catch(e){}
+function viewVersion(){const ago=UPD.at?Math.max(0,Math.floor((Date.now()-UPD.at)/60000)):0,when=UPD.at?(ago<1?'just now':ago<60?ago+'m ago':Math.floor(ago/60)+'h ago'):'';
+  const line=UPD.st==='checking'?'Checking for updates…':UPD.st==='new'?`<span style="color:var(--ship)">${UPD.remote.name} is available.</span>${UPD.declined?' You chose to update later.':''}`:UPD.st==='current'?`Up to date · checked ${when}`:UPD.st==='fail'?`Couldn't reach the update server · ${when}`:'Checks for updates automatically.';
+  return `<div class="card"><h3>Version</h3><div class="stat"><span>Star Quarry</span><span>${APP_VER.name}</span></div><p style="font-size:12px">${line}</p>
+    ${UPD.st==='new'?`<button class="btn wide" data-act="updnow" type="button">${IS_APP?'About this update':'Update to '+UPD.remote.name}</button>`:`<button class="btn ghost wide" data-act="updcheck" type="button" ${UPD.st==='checking'?'disabled':''}>Check for updates</button>`}
+    <p style="font-size:12px">This game is in beta. Things may change between versions, and your progress carries over.</p></div>`}
 $('mclose').addEventListener('click',closeModal);
 $('modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
@@ -2011,6 +2049,8 @@ pbody.addEventListener('click',e=>{
   else if(a==='slot'){const sl=S.slots[+b.dataset.i],r=+b.dataset.r;if(sl.a&&sl.r!==null)S.inv[sl.r]=(S.inv[sl.r]||0)+BAR_IN;sl.r=r<0?null:r;sl.a=false;sl.p=0}
   else if(a==='res'){const r=RESEARCH.find(x=>x.id===b.dataset.id);if(buyResearch(r)){toast(r.n+' complete.');if(r.id==='smelt')toast('The Smelter tab is open. Pick an ore for your furnace.',4000);save()}}
   else if(a==='warp'){if(!armed('warp')){arm={k:'warp',until:Date.now()+4000}}else{const g=pendingDM();S=newRun({dm:S.dm+g,lifetime:S.lifetime,warps:S.warps+1,music:S.music,probeLife:S.probeLife,life:S.life,perm:S.perm,ev:S.ev});arm=null;refreshWorld();recenter();save();toast(`Warped. +${fmt(g)} star dust. Everything now sells for +${fmt(S.dm)}%.`,4500);setTab('planet')}}
+  else if(a==='updcheck'){updCheck(true)}
+  else if(a==='updnow'){updShow(true)}
   else if(a==='reset'){if(!armed('reset')){arm={k:'reset',until:Date.now()+4000}}else{S=newRun({music:S.music});arm=null;refreshWorld();save();toast('Save erased. Fresh start.');setTab('planet')}}
   pressing=false;render(true);hud();
 });
