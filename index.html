@@ -474,7 +474,9 @@ function step(dt){
     if(!p.u)return;
     // the stockpile holds one cargo load (ships still leave full whenever mining outpaces them); ore beyond it goes
     // straight to the overflow store (sold every 10 minutes at a 75% discount), so any surplus shows up there at once
-    const rate=mineRate(i),lim=cargo(i),ns=p.stock+rate*dt;if(ns>lim){p.over=(p.over||0)+ns-lim;p.stock=lim}else p.stock=ns;
+    // when ships have room to spare, the stockpile tops up from the overflow, so spare capacity carries it off at full price
+    const rate=mineRate(i),lim=cargo(i),ns=p.stock+rate*dt;if(ns>lim){p.over=(p.over||0)+ns-lim;p.stock=lim}
+    else if(p.over>0){const take=Math.min(p.over,lim-ns);p.stock=ns+take;p.over-=take}else p.stock=ns;
     const prev=p.t,cap=cargo(i);p.t+=dt/tripTime(i);
     if(prev<.5&&p.t>=.5){p.load=Math.min(cap,p.stock);p.stock-=p.load}
     if(p.t>=1){const n=Math.floor(p.t);p.t-=n;
@@ -510,7 +512,9 @@ function probeTick(now,quiet){const pr=S.probe,cap=(has('night')?24:8)*3600e3,go
 function offline(sec,announce){
   const cap=(has('night')?24:8)*3600;sec=Math.min(sec,cap);
   const before=S.cash;let units=0;const probes=probeTick(Date.now(),true).length;
-  S.planets.forEach((p,i)=>{if(!p.u)return;const u=haul(i)*sec;units+=u;deliver(i,u);S.life.deliv+=Math.floor(sec/tripTime(i));p.over=(p.over||0)+Math.max(0,mineRate(i)-haul(i))*sec});
+  S.planets.forEach((p,i)=>{if(!p.u)return;const rate=mineRate(i),capR=cargo(i)/tripTime(i);
+    // spare ship capacity also carries off overflow while away
+    const back=Math.min(p.over||0,Math.max(0,capR-rate)*sec),u=haul(i)*sec+back;p.over=(p.over||0)-back;units+=u;deliver(i,u);S.life.deliv+=Math.floor(sec/tripTime(i));p.over+=Math.max(0,rate-haul(i))*sec});
   overflowSale(true);
   const n=smeltSlots();
   for(let k=0;k<n;k++){const sl=S.slots[k];if(sl.r===null)continue;const b=Math.floor(Math.min(sec/smeltTime(sl.r),(S.inv[sl.r]||0)/BAR_IN));S.inv[sl.r]-=b*BAR_IN;S.bars[sl.r]=(S.bars[sl.r]||0)+b;S.life.bars+=b}
@@ -1754,8 +1758,8 @@ function rf(v){return v<10?(Math.round(v*100)/100).toFixed(2):fmt(v)}
 function flowStrip(i,rate,hl){const p=S.planets[i],lost=rate>hl*1.005,pc=rate>0?Math.min(100,hl/rate*100):100;
   return `<div class="flow"><div class="flowh"><span>Mined <b class="num">${rf(rate)}/s</b></span><span>Hauled <b class="num">${rf(hl)}/s</b></span></div>
     <div class="flowbar" role="img" aria-label="${Math.round(pc)}% of mined ore is hauled"><i class="ok" style="width:${pc.toFixed(1)}%"></i><i class="lost" style="width:${(100-pc).toFixed(1)}%"></i></div>
-    <div class="flown">${lost?`<span style="color:var(--bad)"><b class="num">${Math.round((1-hl/rate)*100)}%</b> can’t be hauled · ${rf(rate-hl)}/s piling up</span>`:`<span style="color:var(--good)">Ships are keeping up.</span>`}
-      <span>Stockpile <b class="num">${fmt(p.stock)}</b> · Overflow <b class="num">${fmt(p.over||0)}</b>${lost?` · 25% sale in ${fmtTime(Math.max(0,(S.overAt-Date.now())/1000))}`:''}</span></div></div>`}
+    <div class="flown">${lost?`<span style="color:var(--bad)"><b class="num">${Math.round((1-hl/rate)*100)}%</b> can’t be hauled · ${rf(rate-hl)}/s piling up</span>`:`<span style="color:var(--good)">Ships are keeping up${p.over>.5?' · carrying off the overflow':''}.</span>`}
+      <span>Stockpile <b class="num">${fmt(p.stock)}</b> · Overflow <b class="num">${fmt(p.over||0)}</b>${p.over>.5?` · 25% sale in ${fmtTime(Math.max(0,(S.overAt-Date.now())/1000))}`:''}</span></div></div>`}
 function viewTeams(i,shipsBN,rate,hl){
   const p=S.planets[i],n=p.teams.length;let j=Math.min(teamSel[i]||0,n-1);
   let h=`<div class="card miner"><div class="head"><h3>Mining teams</h3><span class="num" style="font-size:12px;color:var(--muted)">${n} / ${TEAM_MAX} hired</span></div>`+hireBtn(i);
