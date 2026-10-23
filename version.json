@@ -1,1 +1,1 @@
-{"name": "Beta 1.0.24", "n": 24, "notes": "Double-tap a planet's name in the Planet tab to zoom into its close-up, and again to zoom back out"}
+{"name": "Beta 1.0.25", "n": 25, "notes": "Real orbits: inner planets now circle the sun faster than outer ones, so each planet drifts towards and away from the station and trip times rise and fall with the distance; colony stockpiles become silos (new Ore Silos and Deep Silos research) that store ore through the far stretch; the Planet tab shows a chart of a whole cycle, a silo gauge and the next close pass"}
