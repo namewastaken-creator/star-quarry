@@ -270,7 +270,7 @@ PLANETS.forEach((p,i)=>{p.r=ORBIT_R[i];p.speed=GALAXY_SPIN;p.a0=ORBIT_A[i];});
 /* Economy. Planet output comes only from its mining teams (and research / star dust).
    Each planet's base output is scaled to its claim price so every new planet is worth claiming. */
 // game version: bumped by bump.py on every publish (n is the build number used for update checks)
-const APP_VER={name:'Beta 1.0.3',n:3};
+const APP_VER={name:'Beta 1.0.4',n:4};
 // update checks read version.json straight from the GitHub repository
 const UPD_URL='https://raw.githubusercontent.com/namewastaken-creator/star-quarry/main/version.json';
 const ECON={DUST_A:2,DUST_K:.2,EXP:.7,PAY:2.9,SCALE_MIN:100,HIRE:[1,4,30],UP_BASE:.12,UP_GROW:1.32,TEAM_X:[1,6,40],SHIP_BASE:.8,SHIP_OVH:28,DOCK_T:5,PROBE_EVERY:300,PROBE_FLY:180,PROBE_FIRST:60,PROBE_SEC:90,CARGO_FIT:.9};
@@ -1914,8 +1914,12 @@ function viewWarp(){
    <div class="card"><h3>Sound</h3><div class="vol"><label for="vol" style="color:var(--muted)">Music volume</label><input type="range" id="vol" min="0" max="100" step="1" value="${Math.round(S.music.vol*100)}"><span class="num" style="min-width:3ch;text-align:right">${Math.round(S.music.vol*100)}</span></div>
    <p style="font-size:12px">Original music made by the game as it plays. Free to use, no licence needed.</p></div>
    <p>Star Quarry has no ads, no purchases and no premium currency. Every boost, including Overdrive, is free and earned by playing.</p>
-   <button class="btn ghost wide${armed('reset')?' warn':''}" data-act="reset" type="button">${armed('reset')?'Tap again to erase your save':'Erase save and start over'}</button>`;
+`;
   h+=viewVersion();
+  /* erase save: its own panel at the very bottom, laid out like the Version panel */
+  h+=`<div class="card"><h3>Erase save</h3><p style="font-size:12px">Starts the game over from nothing, as a brand-new player.</p>
+    <button class="btn ghost wide${armed('reset')?' warn':''}" data-act="reset" type="button">${armed('reset')?'Tap again to erase your save':'Erase save and start over'}</button>
+    <p style="font-size:12px">Erases everything: planets, mining teams, settlements, credits, ore, bars and research, plus your star dust, permanent event boosts, event history and lifetime stats. Only your music setting is kept. Tap twice to confirm. This can't be undone. To start a new galaxy and keep your star dust and boosts, use Warp instead.</p></div>`;
   return h}
 
 // planet button row: arrows, edge fades, selected planet kept in view, mouse drag and wheel on computers
