@@ -1824,7 +1824,9 @@ function viewResearch(){
       <button class="btn" data-act="res" data-id="${r.id}" ${canResearch(r)?'':'disabled'} type="button">Research</button></div>`});
   h+='</div>';
   if(!open.length)h+='<div class="empty">Every project is complete.</div>';
-  if(own.length)h+=`<h3>Completed</h3><div class="ores">${own.map(r=>`<button class="ore res" data-act="resinfo" data-id="${r.id}" type="button">${r.n}</button>`).join('')}</div>`;
+  /* finished projects: green cards with a Completed tag, matching completed event missions */
+  if(own.length)h+=`<h3>Completed</h3><div class="grid">${own.map(r=>{const paid=[fmt(r.cost)+' credits'].concat(r.ore.map(([o,q])=>fmt(q)+' '+ORES[o].n),r.bars?[fmt(r.bars[1])+' '+ORES[r.bars[0]].n+' bars']:[]).join(' · ');
+    return `<div class="card evdone"><div class="t" style="font:600 15px var(--f-body)">${r.n}</div><div class="evmeta"><span class="evstamp">✓ Completed</span></div><p>${r.d}</p><div class="evrew">Paid: ${paid}</div></div>`}).join('')}</div>`;
   return h}
 
 // Events tab: the active mission (progress, time left, claim) and this week's three offers
