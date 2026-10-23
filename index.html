@@ -270,8 +270,9 @@ PLANETS.forEach((p,i)=>{p.r=ORBIT_R[i];p.speed=GALAXY_SPIN;p.a0=ORBIT_A[i];});
 /* Economy. Planet output comes only from its mining teams (and research / star dust).
    Each planet's base output is scaled to its claim price so every new planet is worth claiming. */
 // game version: bumped by bump.py on every publish (n is the build number used for update checks)
-const APP_VER={name:'Beta 1.0.1',n:1};
-const UPD_URL='https://namewastaken-creator.github.io/star-quarry/version.json';
+const APP_VER={name:'Beta 1.0.2',n:2};
+// update checks read version.json straight from the GitHub repository
+const UPD_URL='https://raw.githubusercontent.com/namewastaken-creator/star-quarry/main/version.json';
 const ECON={DUST_A:2,DUST_K:.2,EXP:.7,PAY:2.9,SCALE_MIN:100,HIRE:[1,4,30],UP_BASE:.12,UP_GROW:1.32,TEAM_X:[1,6,40],SHIP_BASE:.8,SHIP_OVH:28,DOCK_T:5,PROBE_EVERY:300,PROBE_FLY:180,PROBE_FIRST:60,PROBE_SEC:90,CARGO_FIT:.9};
 // overflow: surplus ore is sold every OVER_EVERY seconds at OVER_PRICE of the normal price
 const OVER_EVERY=600,OVER_PRICE=.25;
@@ -1970,7 +1971,7 @@ function closeModal(){$('modal').hidden=true}
    it comes back to the foreground. A newer build asks once; "Not now" stays quiet until the game is reloaded. */
 const UPD={st:'idle',at:0,remote:null,declined:false,asked:false};
 const IS_APP=location.hostname==='appassets.androidplatform.net';
-function updURL(){return (location.hostname.endsWith('github.io')?'version.json':UPD_URL)+'?t='+Date.now()}
+function updURL(){return UPD_URL+'?t='+Date.now()}
 function updCheck(manual){if(UPD.st==='checking')return;UPD.st='checking';if(manual)render(true);
   fetch(updURL(),{cache:'no-store'}).then(r=>r.ok?r.json():Promise.reject()).then(v=>{UPD.at=Date.now();UPD.remote=v;
     UPD.st=v&&v.n>APP_VER.n?'new':'current';
@@ -1985,11 +1986,15 @@ function updShow(manual){const v=UPD.remote;if(!v)return;UPD.asked=true;
   else{$('unote').textContent='Your progress is saved first, then the game reloads with the new version. It only takes a moment.';$('uyes').hidden=false;$('uno').textContent='Not now'}
   $('upd').hidden=false;$('uyes').hidden?$('uno').focus():$('uyes').focus()}
 function updClose(){$('upd').hidden=true}
-$('uyes').addEventListener('click',()=>{try{localStorage.setItem('sq_updfrom',APP_VER.name)}catch(e){}save();$('uyes').disabled=true;$('uyes').firstChild.textContent='Updating…';setTimeout(()=>location.reload(),150)});
+$('uyes').addEventListener('click',()=>{try{localStorage.setItem('sq_updfrom',APP_VER.name);localStorage.setItem('sq_updto',String(UPD.remote.n))}catch(e){}save();$('uyes').disabled=true;$('uyes').firstChild.textContent='Updating…';setTimeout(()=>location.reload(),150)});
 $('uno').addEventListener('click',()=>{updClose();if(!UPD.declined){UPD.declined=true;
   toast(IS_APP?`Got it. You'll keep playing ${APP_VER.name} until you install the new build.`:`No problem. You'll keep playing ${APP_VER.name}. We won't ask again until the game is reloaded, and you can update any time from the Warp tab.`,6000)}});
 $('upd').addEventListener('click',e=>{if(e.target.id==='upd')$('uno').click()});
-setTimeout(()=>updCheck(false),20000);setInterval(()=>updCheck(false),30*60*1000);
+let updWait=20000;
+try{const to=+localStorage.getItem('sq_updto');localStorage.removeItem('sq_updto');
+  // the repository can be a minute or two ahead of the published game; if so, wait a bit before asking again
+  if(to>APP_VER.n){updWait=3*60*1000;setTimeout(()=>toast('The new version is still being published. It should be ready in a few minutes, and the game will offer it again.',6000),1500)}}catch(e){}
+setTimeout(()=>updCheck(false),updWait);setInterval(()=>updCheck(false),30*60*1000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Date.now()-UPD.at>5*60*1000)updCheck(false)});
 // after an update: say which version is now running
 try{const f=localStorage.getItem('sq_updfrom');if(f){localStorage.removeItem('sq_updfrom');if(f!==APP_VER.name)setTimeout(()=>toast(`Updated to ${APP_VER.name}. Your progress came with you.`,5000),1500)}}catch(e){}
