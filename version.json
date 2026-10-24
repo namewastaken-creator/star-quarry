@@ -1,1 +1,1 @@
-{"name": "Beta 1.0.63", "n": 63, "notes": "Mining teams card: the chart comes first, then the team picker and the current team's name right above its Mine rate, Speed and Cargo panes; panes are shorter (team multiplier moved into the title row); quirk, perks and Retrain sit below the panes"}
+{"name": "Beta 1.0.64", "n": 64, "notes": "Reverted the Mining teams card layout to Beta 1.0.62 (taller trait panes, team name above the chart)"}
