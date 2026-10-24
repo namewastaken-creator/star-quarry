@@ -1,1 +1,1 @@
-{"name": "Beta 1.0.60", "n": 60, "notes": "Planet tab: the Mined vs hauled card is gone; its details (mined and hauled rates, close-pass marker, silo, overflow and sale timer) are now part of the tuning chart in the Mining teams card"}
+{"name": "Beta 1.0.61", "n": 61, "notes": "Mining teams: the Preview button is gone; dragging a handle or Balance shows a preview, and while it's showing the + and \u2212 buttons fine-tune it (otherwise they act at once as before)"}
