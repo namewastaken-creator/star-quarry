@@ -1,1 +1,1 @@
-{"name": "Beta 1.0.43", "n": 43, "notes": "Code tidy-up and speed-ups: unused code removed, far-away colonies skipped while drawing (about 3x faster 3D drawing late game), team emblems drawn instantly, and a parked-station flow direction fix"}
+{"name": "Beta 1.0.44", "n": 44, "notes": "Overdrive now also speeds up docking, landing and loading, so hauling doubles along with mining and planets no longer bottleneck while it runs"}
