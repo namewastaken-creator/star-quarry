@@ -27,6 +27,9 @@ def vname(ma, mi, pa, b):
     return (f'Beta {ma}.{mi}.{pa}.{b}' if ma == 0 else f'{ma}.{mi}.{pa}.{b}')
 
 def main():
+    # Changes to the game are made only in the owner's chosen Claude chat, which builds index.html, sw.js and
+    # version.json from its own source; editing them here would be overwritten. See README.md, "Making changes".
+    sys.exit('bump: not used. Game changes are made only in the owner\'s chosen chat; see README.md, "Making changes".')
     args = sys.argv[1:]
     flags = {a for a in args if a.startswith('--')}
     text = ' '.join(a for a in args if not a.startswith('--')).strip()
