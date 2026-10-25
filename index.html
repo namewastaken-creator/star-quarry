@@ -195,6 +195,24 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
 .pm .pmm{flex-direction:row;justify-content:center;gap:6px;padding:6px;font-size:13px;line-height:1}
 .pm .pmm small{font-size:10px;white-space:nowrap}
 .row.trow .bn{margin-left:5px;letter-spacing:.05em;padding:1px 4px;font-size:9px}
+.crews{display:flex;flex-direction:column;gap:6px}
+.crew{display:flex;gap:8px;align-items:flex-start}
+.crew>div{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 0;min-width:0}
+.crew b{font:600 14px var(--f-body);color:var(--ink)}
+.crew .cq{flex-basis:100%;font:500 12px/1.35 var(--f-body);color:var(--muted)}
+.sub{border-top:1px solid var(--line);padding-top:10px;display:flex;flex-direction:column;gap:7px}
+.sub h4{margin:0;font:600 11px var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.sub .head .num{font-size:12px;color:var(--muted)}
+.perkrow,.progrow{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid var(--line);border-radius:8px;padding:7px 9px}
+.perkrow span{font:500 13px/1.35 var(--f-body);color:var(--muted)}.perkrow b{color:var(--ink);font-weight:600}.perkrow i{font-style:normal;color:var(--ore)}
+.perkrow .btn,.progrow .btn{min-width:84px;padding:6px 8px;font-size:12px}
+.perklist{display:flex;flex-direction:column;gap:5px;padding-left:8px}
+.perklist .btn{text-transform:none;letter-spacing:0;font:600 13px var(--f-body);align-items:flex-start;text-align:left}
+.perklist .btn small{font:500 11px var(--f-body)}
+.progrow>div{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.progrow b{font:600 13px var(--f-body);color:var(--ink)}.progrow span{font:500 12px/1.35 var(--f-body);color:var(--muted)}
+.progrow.done{opacity:.7}.progrow.done b{color:var(--good)}
+.progrow .pst{font:500 12px var(--f-data);color:var(--ore);white-space:nowrap}
 .hire{border:1px solid var(--line);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:8px;background:rgba(255,255,255,.02)}
 .hire .hh{display:flex;justify-content:space-between;align-items:center;gap:8px;font:600 14px var(--f-body);color:var(--ink)}
 .hire .hh .num{font-size:12px;color:var(--ore)}
@@ -448,12 +466,12 @@ const synodic=(i,G=econG())=>{const w=Math.abs(PLANETS[i].speed-G.W);return w<1e
 /* Economy. Planet output comes only from its mining crews (and research / star dust).
    Each planet's base output is scaled to its claim price so every new planet is worth claiming. */
 // game version: bumped by bump.py on every publish (n is the build number used for update checks)
-const APP_VER={name:'Beta 1.0.75',n:75};
+const APP_VER={name:'Beta 1.0.76',n:76};
 // update checks read version.json straight from the GitHub repository
 // change log, newest first: d = date, v = version (when there was one), t = what changed. Written by bump.py.
-const CHANGES=[{"d":"2026-10-24","v":"Beta 1.0.75","t":"Fixed Balance leaving planets short of ships when they have big silos (Ore Silos or Deep Silos): it could push mining a few percent above what the ships carry, so the planet's name turned red. Balance and the chart now account for the silo filling up over time","imp":true},{"d":"2026-10-24","v":"Beta 1.0.74","t":"Tuning chart: only the round handles drag the lines; touching anywhere else on the chart does nothing, so swiping over it scrolls the panel"},{"d":"2026-10-24","v":"Beta 1.0.73","t":"Planet tab trait panes: the crew-name and Next lines are gone; the planet's total multiplier sits next to each trait's name, and the panes are shorter"},{"d":"2026-10-24","v":"Beta 1.0.72","t":"Upgrade + and − buttons keep the same size in every state, including Maxed"},{"d":"2026-10-24","v":"Beta 1.0.71","t":"Maxed upgrade buttons no longer show the 20 / 20 count"},{"d":"2026-10-24","v":"Beta 1.0.70","t":"Planet tab: the selected planet stays in view in the planet list (after switching tabs, opening the panel, turning or resizing the screen, or a few seconds after you scroll the list yourself)"},{"d":"2026-10-24","v":"Beta 1.0.69","t":"Tapping a crew, planet, furnace ore or tab that's partly off the edge of its list scrolls the list so it's fully in view; opening a user guide section near the bottom scrolls it into view"},{"d":"2026-10-24","v":"Beta 1.0.68","t":"Balance keeps ships ahead: income is now worked out over a whole cycle with each planet's real silo, Balance only picks layouts where the ships keep up (then the most income), and when free moves can't get there it offers the cheapest points to buy (To keep up · Add) or says the crews need a hire, retrain or research. The red best-upgrade button and the drag handles use the same, more accurate model"},{"d":"2026-10-24","v":"Beta 1.0.67","t":"Quieter updates: new versions come out once a day at 4 pm Central and install themselves the next time you open the game; only important updates ask, at most once a day, and the update message lists everything new since your version"},{"d":"2026-10-24","v":"Beta 1.0.66","t":"Mining teams are now called mining crews throughout the game and the user guide"},{"d":"2026-10-24","v":"Beta 1.0.65","t":"The Planet tab's Mining teams card is now titled Specialists"},{"d":"2026-10-24","v":"Beta 1.0.64","t":"Reverted the Mining teams card layout to Beta 1.0.62 (taller trait panes, team name above the chart)"},{"d":"2026-10-24","v":"Beta 1.0.63","t":"Mining teams card: the chart comes first, then the team picker and the current team's name right above its Mine rate, Speed and Cargo panes; panes are shorter (team multiplier moved into the title row); quirk, perks and Retrain sit below the panes"},{"d":"2026-10-24","v":"Beta 1.0.62","t":"Tuning chart: the mining handle is on the left edge and the hauling (Speed and Cargo) handle on the right, both with up and down arrows"},{"d":"2026-10-24","v":"Beta 1.0.61","t":"Mining teams: the Preview button is gone; dragging a handle or Balance shows a preview, and while it's showing the + and − buttons fine-tune it (otherwise they act at once as before)"},{"d":"2026-10-24","v":"Beta 1.0.60","t":"Planet tab: the Mined vs hauled card is gone; its details (mined and hauled rates, close-pass marker, silo, overflow and sale timer) are now part of the tuning chart in the Mining teams card"},{"d":"2026-10-24","v":"Beta 1.0.59","t":"Mining teams: a tuning chart in the card shows mining against hauling through the cycle and updates with every change. Preview plans changes with dashed after-lines, cost and income change, then Apply or Cancel. Drag the orange or teal handle to set mining or average hauling and the cheapest points are planned for you; Balance rearranges points for the most income for free"},{"d":"2026-10-24","v":"Beta 1.0.58","t":"Tapping the credit total switches number style without a message"},{"d":"2026-10-24","v":"Beta 1.0.57","t":"Numbers: tapping the credit total cycles named (Qa…), letters (aa…) and full words; the Warp tab's Numbers card is gone"},{"d":"2026-10-24","v":"Beta 1.0.56","t":"Numbers: choose named (Qa, Qi, Sx…) or letter (aa, ab, ac…) names for numbers past a trillion in the Warp tab; full-word numbers are capitalised (1.2 Million); fixed exact powers of a thousand showing as 999 of the size below"},{"d":"2026-10-24","v":"Beta 1.0.55","t":"Mining teams: the next team can only be hired once the planet's newest team is fully upgraded (20 / 20); the hire panel shows progress toward unlocking it"},{"d":"2026-10-24","v":"Beta 1.0.54","t":"Retraining: any specialist team can retrain into a new role and pick one of three new quirks (points come back as free points, perks reset, 10 minutes off the job). Price is a quarter of its hire cost and doubles with each paid retrain. The planet the station parks at gets a free retrain, and planets left badly short of ships after a move get Priority Training at 75% off; the parking forecast flags them"},{"d":"2026-10-24","v":"Beta 1.0.53","t":"Mining team upgrade buttons are back to green and red (with outlined − buttons); other panel buttons stay orange"},{"d":"2026-10-24","v":"Beta 1.0.52","t":"Main screen: star dust indicator removed (it's in the Warp tab); credits, status lines and the Recenter, Music and Full screen buttons made more compact and consistent"},{"d":"2026-10-24","v":"Beta 1.0.51","t":"Smelter: opening the tab centres each furnace's ore row on the ore it's smelting, and the Off button sits next to the furnace's name"},{"d":"2026-10-24","v":"Beta 1.0.50","t":"Every usable button in the panel is now orange (the red best-upgrade and warning buttons keep their colour; disabled buttons fade; toggles fill in when on)"},{"d":"2026-10-24","v":"Beta 1.0.49","t":"User guide: Tips and tricks moved to the bottom, and every section starts collapsed"},{"d":"2026-10-24","v":"Beta 1.0.48","t":"Specialist crews: a planet's 2nd and 3rd teams now pick a role (Drillers, Haulers, Dockhands or Prospectors, one of each per planet), are chosen from three named candidates with quirks, and unlock a choice of veteran perks at 10 and 20 upgrades. Dockhands cut docking and loading time and add silo space; Prospectors raise ore yield, strike rich veins and steer probes. Existing second and third teams become Drillers or Haulers with spare points refunded. Economy retuned so pacing stays the same"},{"d":"2026-10-23","v":"Beta 1.0.47","t":"Planet tab: the planet list stays pinned at the top while you scroll, and switching planets keeps your scroll position (also when tapping a planet in the sky)"},{"d":"2026-10-23","v":"Beta 1.0.46","t":"User guide in the Warp tab: how every part of the game works, with a Tips and tricks section; shorter Market Surge status line so it fits on one line on small phones"},{"d":"2026-10-23","v":"Beta 1.0.45","t":"Overdrive is replaced by Market Surge: for 10 minutes everything you sell earns double, up to 10 minutes' worth of extra income, then it recharges for 60 minutes. Mining and ships stay at normal speed, so there are no bottlenecks"},{"d":"2026-10-23","v":"Beta 1.0.44","t":"Overdrive now also speeds up docking, landing and loading, so hauling doubles along with mining and planets no longer bottleneck while it runs"},{"d":"2026-10-23","v":"Beta 1.0.43","t":"Code tidy-up and speed-ups: unused code removed, far-away colonies skipped while drawing (about 3x faster 3D drawing late game), team emblems drawn instantly, and a parked-station flow direction fix"},{"d":"2026-10-23","v":"Beta 1.0.42","t":"Maxed bottleneck buttons fade red like other buttons you can't press"},{"d":"2026-10-23","v":"Beta 1.0.41","t":"Green upgrade buttons you can't afford fade like the red ones"},{"d":"2026-10-23","v":"Beta 1.0.40","t":"Planet tab names (heading and planet buttons) take the planet's status colour: red when its ships can't keep up, grey when unclaimed; the sun's surface turns as one body so it no longer twists into swirls over time"},{"d":"2026-10-23","v":"Beta 1.0.39","t":"Planet structures refined: buildings get plated, panelled and concrete textures, glass domes a geodesic lattice, tubes ribbed bands, solar panels real cells; buildings, solar arrays, the loader, tower and hangar sit on concrete footings, the launch pad on a scorched apron, and the tower and hangar moved clear of the pad's rim"},{"d":"2026-10-23","v":"Beta 1.0.38","t":"Station's status line is centred under its name"},{"d":"2026-10-23","v":"Beta 1.0.37","t":"New sun modelled on a real ultraviolet photo: deep orange surface with dark filaments, bright active regions with glowing loops, sunspots that drift and grow and shrink, and constant solar flares licking off the edge; also fixes the cycle chart for the planet the station is parked at"},{"d":"2026-10-23","v":"Beta 1.0.36","t":"Orbits respaced: Cinder sits farther from the sun and every orbit is placed outward from it with wide gaps that allow for rings; each galaxy starts with the station parked above Cinder (no station lane any more), and the station parks a little higher and farther from its planet"},{"d":"2026-10-23","v":"Beta 1.0.35","t":"Fainter orbit lines: claimed planets' orbits are now as faint as the surveyed planet's used to be, and the surveyed planet's orbit is fainter still"},{"d":"2026-10-23","v":"Beta 1.0.34","t":"Undiscovered ores and bars in research cards read Not discovered; their tip says to keep claiming planets to discover them"},{"d":"2026-10-23","v":"Beta 1.0.33","t":"Ore tips say not discovered yet (with no planet named) for ores whose first planet hasn't been scanned, and the same for their bars; only scanned planets are named"},{"d":"2026-10-23","v":"Beta 1.0.32","t":"Research tab: hover or tap an ore to see which planets mine it (bars say which ore to smelt and where it's mined)"},{"d":"2026-10-23","v":"Beta 1.0.31","t":"Research needs counts each project the same way as the Research tab, so a project disappears as soon as Research shows its bars are ready"},{"d":"2026-10-23","v":"Beta 1.0.30","t":"Smelter's Research needs shows one row per bar type with your total bars against what's still needed, bar types being smelted first, so the count rises as bars are made"},{"d":"2026-10-23","v":"Beta 1.0.29","t":"Smelter's Research needs list drops projects whose bars are already in stock, and says None needed at this time when nothing is waiting"},{"d":"2026-10-23","v":"Beta 1.0.28","t":"Furnace ore choices scroll sideways like the planet list"},{"d":"2026-10-23","v":"Beta 1.0.27","t":"Park station here button is orange and sits above the cycle chart"},{"d":"2026-10-23","v":"Beta 1.0.26","t":"Station Thrusters research: park the station above any claimed planet for short, steady trips there; a forecast shows how every other planet's hauling changes so you can retune; fuel cost, 10-minute move, 1-hour cooldown, free return to the lane; moves recorded in the Captain's log"},{"d":"2026-10-23","v":"Beta 1.0.25","t":"Real orbits: inner planets now circle the sun faster than outer ones, so each planet drifts towards and away from the station and trip times rise and fall with the distance; colony stockpiles become silos (new Ore Silos and Deep Silos research) that store ore through the far stretch; the Planet tab shows a chart of a whole cycle, a silo gauge and the next close pass"},{"d":"2026-10-23","v":"Beta 1.0.24","t":"Double-tap a planet's name in the Planet tab to zoom into its close-up, and again to zoom back out"},{"d":"2026-10-23","v":"Beta 1.0.23","t":"Captain's log shows when the current galaxy was created instead of when the station was named"},{"d":"2026-10-23","v":"Beta 1.0.22","t":"Name your space station: asked at the start of each new game (and once for games already in progress), renamable from the Warp tab, kept through warps; its name shows under the station and turns orange when research is ready; every name is kept in the Captain's log"},{"d":"2026-10-23","v":"Beta 1.0.21","t":"Station lights redone: red beacon now on top and teal light at the bottom, lights sit in small housings with a bright core and halo, steady red and green wing lights with white strobes, a pulsing top beacon and a breathing bottom light"},{"d":"2026-10-23","v":"Beta 1.0.20","t":"Orbits respaced so the station has its own clear lane between Vesk and Orra; bigger sun with a churning, seamless surface, sunspots and a stronger glow"},{"d":"2026-10-23","v":"Beta 1.0.19","t":"A sun now shines at the centre of the galaxy and lights every planet; the space station orbits it between Vesk and Orra, with haulers and the probe flying to wherever it is"},{"d":"2026-10-23","v":"Beta 1.0.18","t":"Maxed trait buttons stay red when that trait is still the bottleneck"},{"d":"2026-10-23","v":"Beta 1.0.17","t":"Tap star dust to open the Warp tab"},{"d":"2026-10-23","v":"Beta 1.0.16","t":"Small space between numbers and their letter (1.23 B)"},{"d":"2026-10-23","v":"Beta 1.0.15","t":"Planet Kesh renamed Kallyur'Dadh"},{"d":"2026-10-23","v":"Beta 1.0.14","t":"Change log: more space between entries"},{"d":"2026-10-23","v":"Beta 1.0.13","t":"Change log: a dated list of every change, with version numbers, under What's changed on the Warp tab; the update prompt shows what's new"},{"d":"2026-10-23","v":"Beta 1.0.12","t":"Trait rows show team name and its multiplier; spaced operators"},{"d":"2026-10-23","v":"Beta 1.0.11","t":"+ 0.25 / − 0.25 buttons, x/20 point count beside each trait"},{"d":"2026-10-23","v":"Beta 1.0.10","t":"Team card note reads 'The red button is the most efficient upgrade.'"},{"d":"2026-10-23","v":"Beta 1.0.9","t":"Drop × from team + buttons"},{"d":"2026-10-23","v":"Beta 1.0.8","t":"Per-trait + and − team point buttons; Reassign points removed"},{"d":"2026-10-23","v":"Beta 1.0.7","t":"Switching planets in the Planet tab keeps the current zoom"},{"d":"2026-10-23","v":"Beta 1.0.6","t":"Double-tap zooms out centred; probe tap opens Probe tab, double-tap zooms"},{"d":"2026-10-23","v":"Beta 1.0.5","t":"Tap credits to switch between short and full number names"},{"d":"2026-10-23","v":"Beta 1.0.4","t":"Erase save in its own panel at the bottom of the Warp tab"},{"d":"2026-10-23","v":"Beta 1.0.3","t":"Update check falls back to GitHub API and Pages; clearer messages when blocked"},{"d":"2026-10-23","v":"Beta 1.0.2","t":"Update check reads version.json from the GitHub repository"},{"d":"2026-10-23","v":"Beta 1.0.1","t":"Version on Warp tab, update checks with prompt, version.json"},{"d":"2026-10-23","v":null,"t":"Overflow: spare ship capacity carries it off at full price; sale timer always shown"},{"d":"2026-10-23","v":null,"t":"Planet tab: mined-vs-hauled strip; stats merged into team rows with next-point preview"},{"d":"2026-10-22","v":null,"t":"HUD: tap the selected tab to close the console"},{"d":"2026-10-22","v":null,"t":"Research: drop Completed tag from completed project cards"},{"d":"2026-10-22","v":null,"t":"Research: completed projects listed as green Completed cards like events"},{"d":"2026-10-22","v":null,"t":"HUD: taller console, no arrow; tap the selected planet or its name to close"},{"d":"2026-10-22","v":null,"t":"Planet tab: fixed-size read-outs and notes so cards don't jump when wording changes"},{"d":"2026-10-22","v":null,"t":"Mining team trait panes: same layout and fixed height"},{"d":"2026-10-22","v":null,"t":"Remove Bottleneck tag from Mine rate"},{"d":"2026-10-22","v":null,"t":"Events: status tag sits in the days/reward-type row at the same size"},{"d":"2026-10-22","v":null,"t":"Events: info icon inside Unavailable button; boost info shows source mission card"},{"d":"2026-10-22","v":null,"t":"Events: keep mission status on its own card; Unavailable button with info"},{"d":"2026-10-22","v":null,"t":"Events: mark completed missions with a Completed badge and history list"},{"d":"2026-10-22","v":null,"t":"Overdrive: 10 min run, 60 min recharge, status line under probe status"},{"d":"2026-10-22","v":null,"t":"Blend orbit and descent/climb into single curves (no stop at the corners)"},{"d":"2026-10-22","v":null,"t":"Smoother orbit transitions: curved tangential approach/departure, eased speeds, smooth ship turning"},{"d":"2026-10-22","v":null,"t":"Smaller landing struts that fold completely inside the hull"},{"d":"2026-10-22","v":null,"t":"Ships deploy four landing struts to land, retract after launch"},{"d":"2026-10-22","v":null,"t":"Brighter reverse thrusters (main engine off while they fire); more visible pad dust"},{"d":"2026-10-22","v":null,"t":"Ships: faint reverse thrusters when undocking; stronger burn and pad dust on landing and take-off"},{"d":"2026-10-22","v":null,"t":"All speed boosts affect flight only; slower, more controlled docking, orbiting, landing and loading (16s -> 28s)"},{"d":"2026-10-22","v":null,"t":"Ship speed vs cargo: team speed shortens flight only, cargo makes ships heavier; best fix highlighted per planet"},{"d":"2026-10-22","v":null,"t":"Stockpile holds one cargo load so surplus reaches overflow right away"},{"d":"2026-10-22","v":null,"t":"Remove scroll arrows; keep swipe, drag and wheel; dragging the tab row no longer switches tabs"},{"d":"2026-10-22","v":null,"t":"Show small unhauled rates with two decimals"},{"d":"2026-10-22","v":null,"t":"One consistent horizontal scroller (arrows, fades, swipe/drag/wheel) for tabs, planets and teams"},{"d":"2026-10-22","v":null,"t":"Show unhauled ore and sell overflow every 10 minutes at 25% price"},{"d":"2026-10-22","v":null,"t":"Refined rounded rovers with unique team emblems; emblems shown beside team names"},{"d":"2026-10-22","v":null,"t":"Detailed mining rovers: six-wheel rocker chassis, cab, ore bin, drill arm, glowing lights"},{"d":"2026-10-22","v":null,"t":"Probe: ease size change when leaving and returning to the station"},{"d":"2026-10-22","v":null,"t":"Probe: raised, slowly turning dish; steady upright launch and landing, smooth turn after"},{"d":"2026-10-22","v":null,"t":"Detailed probe: gold-foil bus, dish, collector scoop, solar wings, booms, thrusters, glowing lights"},{"d":"2026-10-22","v":null,"t":"Weekly events: 3 missions every Friday, stories, 3-5 day goals, permanent boosts / star dust / free unlocks; no repeats for 52 weeks"},{"d":"2026-10-22","v":null,"t":"Transit terminal at the launch pad where the settlement tubes arrive"},{"d":"2026-10-22","v":null,"t":"Same glow on colony base, launch pad and station lights"},{"d":"2026-10-22","v":null,"t":"Consistent glow for light elements (glowify); applied to settlements"},{"d":"2026-10-22","v":null,"t":"Settlement: twin transit tubes to the launch pad; central hub dome grows taller each level"},{"d":"2026-10-22","v":null,"t":"Settlements as dome habitats: barracks, greenhouse pods, entertainment and management domes"},{"d":"2026-10-21","v":null,"t":"Hire and settlement buttons sit under their card titles"},{"d":"2026-10-21","v":null,"t":"Station: glow halo, light glows, reflective panelled hull with portholes, rim light"},{"d":"2026-10-21","v":null,"t":"Planet labels: settlement marks above name, team stars below, red name on ship bottleneck"},{"d":"2026-10-21","v":null,"t":"Hire button above Mining teams card; settlement button above Settlement card"},{"d":"2026-10-21","v":null,"t":"Settlement card: name row under the heading, like team names"},{"d":"2026-10-21","v":null,"t":"Settlements: further from the mines, road to the launch pad, 1.25x scale"},{"d":"2026-10-21","v":null,"t":"Settlements: 3 levels per planet with unique upgrades and growing 3D towns"},{"d":"2026-10-21","v":null,"t":"Close-up for unclaimed planets (double-tap or Close-up button)"},{"d":"2026-10-21","v":null,"t":"Unique ore names tied to the planet each is first mined on"},{"d":"2026-10-21","v":null,"t":"See-through bottom panel so the galaxy shows faintly behind it"},{"d":"2026-10-21","v":null,"t":"Detailed seamless planet textures with bump maps, storms and atmosphere glow"},{"d":"2026-10-21","v":null,"t":"Hire team button stays at the top of the Planet tab"},{"d":"2026-10-21","v":null,"t":"Research of 100M+ also needs bars from the smelter"},{"d":"2026-10-21","v":null,"t":"Service worker always revalidates the game page so updates show immediately"},{"d":"2026-10-21","v":null,"t":"Smooth smelter progress bars"},{"d":"2026-10-21","v":null,"t":"Close-up button highlighted green like Back to galaxy"},{"d":"2026-10-21","v":null,"t":"Revert close-up drag-to-turn and double-tap zoom out"},{"d":"2026-10-21","v":null,"t":"Close-up: one-finger drag turns the planet; double-tap zooms back out"},{"d":"2026-10-21","v":null,"t":"Star dust: original award rate at +1% per unit (slower progression)"},{"d":"2026-10-21","v":null,"t":"Star dust: +1% per unit with 10x as much awarded; old saves converted"},{"d":"2026-10-21","v":null,"t":"Bigger iris blades so the closed door edge is hidden under the collar"},{"d":"2026-10-21","v":null,"t":"Wider iris opening; no seam between iris rim and collar"},{"d":"2026-10-21","v":null,"t":"Blue ring turns with the docking ring, clear of the spokes"},{"d":"2026-10-21","v":null,"t":"Dock boxes pass through the ring evenly"},{"d":"2026-10-21","v":null,"t":"Station lights blink again; blue ring solid; dock lights true green"},{"d":"2026-10-21","v":null,"t":"Dock lights steady green only while docked; stop station blinking; blue ring flashes on delivery"},{"d":"2026-10-21","v":null,"t":"Dock clamps open/close; only finished docks flash; fix ship scaling"},{"d":"2026-10-21","v":null,"t":"Loading docks evenly spaced; even lights between docks"},{"d":"2026-10-21","v":null,"t":"Iris: smooth rim that sits on the deck; steady 2.5 s open/close"},{"d":"2026-10-21","v":null,"t":"Iris door: dark collar hides the blade edges so the door reads as a circle"},{"d":"2026-10-21","v":null,"t":"Research costs credits and ore; sink the iris door into the deck"},{"d":"2026-10-21","v":null,"t":"Probe tab: tap the probe status to follow the probe and see its stats"},{"d":"2026-10-21","v":null,"t":"Space probes launch from the station's iris every 5 minutes"},{"d":"2026-10-21","v":null,"t":"Double-tap the space station to zoom in and open Research"},{"d":"2026-10-21","v":null,"t":"Space planet orbits so planets never overlap; declutter labels"},{"d":"2026-10-21","v":null,"t":"Picking a planet in the Planet tab flies the camera to it"},{"d":"2026-10-21","v":null,"t":"Docking ports on the habitat ring; each planet's hauler has its own"},{"d":"2026-10-21","v":null,"t":"Planet button row: arrows, edge fades, keep selected planet in view"},{"d":"2026-10-21","v":null,"t":"Docked haulers turn with the habitat ring; longer unloading stop"},{"d":"2026-10-21","v":null,"t":"Haulers dock nose-first at the habitat ring to unload"},{"d":"2026-10-21","v":null,"t":"Smaller, more detailed station with an iris door for haulers"},{"d":"2026-10-21","v":null,"t":"Slower haulers with orbit, controlled landing and loading pause"},{"d":"2026-10-21","v":null,"t":"Third team: large dome replaces the processing plant"},{"d":"2026-10-20","v":null,"t":"Refinery back near its original spot; solar blocks step outward"},{"d":"2026-10-20","v":null,"t":"Solar rows per team; third team turns the refinery into a large dome"},{"d":"2026-10-20","v":null,"t":"Connect second-team buildings to the base"},{"d":"2026-10-20","v":null,"t":"Stagger rover departures evenly around one shared cycle"},{"d":"2026-10-20","v":null,"t":"Replace colony roads with faint, curving tire tracks"},{"d":"2026-10-20","v":null,"t":"Colony roads: single depot entrance, junction, farther ore deposits"},{"d":"2026-10-20","v":null,"t":"End the base conveyor at the edge of the launch pad, with a loader"},{"d":"2026-10-20","v":null,"t":"Each mining team adds three rovers, new ore deposits and a base upgrade"},{"d":"2026-10-20","v":null,"t":"Color hired-team stars in planet labels orange"},{"d":"2026-10-20","v":null,"t":"Fill bottleneck team buttons red"},{"d":"2026-10-20","v":null,"t":"Remove bottleneck sentence next to the hauling stat"},{"d":"2026-10-20","v":null,"t":"Up to three mining teams per planet; first team claims the planet; remove direct planet upgrades"},{"d":"2026-10-20","v":null,"t":"Rename Dark Matter to Star Dust"},{"d":"2026-10-20","v":null,"t":"Mining teams: green trait buttons buy upgrades directly and show their price"},{"d":"2026-10-20","v":null,"t":"First release of Star Quarry on the web"}];
+const CHANGES=[{"d":"2026-10-24","v":"Beta 1.0.76","t":"Mining crews reworked: a planet's points now go into one pool that the Crew Chief (crew 1) allocates across every trait, each point costing a little more than the last. The Shift Crew (crew 2) adds 20 points and swappable perk slots; the Instructors (crew 3) add 20 points and run training programs: Dock training, Prospecting, Deep drilling, Logistics, Advanced shifts and Mentoring. Specialist roles and retraining are replaced: Dockhands and Prospectors become Dock training and Prospecting, and existing saves carry over"},{"d":"2026-10-24","v":"Beta 1.0.75","t":"Fixed Balance leaving planets short of ships when they have big silos (Ore Silos or Deep Silos): it could push mining a few percent above what the ships carry, so the planet's name turned red. Balance and the chart now account for the silo filling up over time","imp":true},{"d":"2026-10-24","v":"Beta 1.0.74","t":"Tuning chart: only the round handles drag the lines; touching anywhere else on the chart does nothing, so swiping over it scrolls the panel"},{"d":"2026-10-24","v":"Beta 1.0.73","t":"Planet tab trait panes: the crew-name and Next lines are gone; the planet's total multiplier sits next to each trait's name, and the panes are shorter"},{"d":"2026-10-24","v":"Beta 1.0.72","t":"Upgrade + and − buttons keep the same size in every state, including Maxed"},{"d":"2026-10-24","v":"Beta 1.0.71","t":"Maxed upgrade buttons no longer show the 20 / 20 count"},{"d":"2026-10-24","v":"Beta 1.0.70","t":"Planet tab: the selected planet stays in view in the planet list (after switching tabs, opening the panel, turning or resizing the screen, or a few seconds after you scroll the list yourself)"},{"d":"2026-10-24","v":"Beta 1.0.69","t":"Tapping a crew, planet, furnace ore or tab that's partly off the edge of its list scrolls the list so it's fully in view; opening a user guide section near the bottom scrolls it into view"},{"d":"2026-10-24","v":"Beta 1.0.68","t":"Balance keeps ships ahead: income is now worked out over a whole cycle with each planet's real silo, Balance only picks layouts where the ships keep up (then the most income), and when free moves can't get there it offers the cheapest points to buy (To keep up · Add) or says the crews need a hire, retrain or research. The red best-upgrade button and the drag handles use the same, more accurate model"},{"d":"2026-10-24","v":"Beta 1.0.67","t":"Quieter updates: new versions come out once a day at 4 pm Central and install themselves the next time you open the game; only important updates ask, at most once a day, and the update message lists everything new since your version"},{"d":"2026-10-24","v":"Beta 1.0.66","t":"Mining teams are now called mining crews throughout the game and the user guide"},{"d":"2026-10-24","v":"Beta 1.0.65","t":"The Planet tab's Mining teams card is now titled Specialists"},{"d":"2026-10-24","v":"Beta 1.0.64","t":"Reverted the Mining teams card layout to Beta 1.0.62 (taller trait panes, team name above the chart)"},{"d":"2026-10-24","v":"Beta 1.0.63","t":"Mining teams card: the chart comes first, then the team picker and the current team's name right above its Mine rate, Speed and Cargo panes; panes are shorter (team multiplier moved into the title row); quirk, perks and Retrain sit below the panes"},{"d":"2026-10-24","v":"Beta 1.0.62","t":"Tuning chart: the mining handle is on the left edge and the hauling (Speed and Cargo) handle on the right, both with up and down arrows"},{"d":"2026-10-24","v":"Beta 1.0.61","t":"Mining teams: the Preview button is gone; dragging a handle or Balance shows a preview, and while it's showing the + and − buttons fine-tune it (otherwise they act at once as before)"},{"d":"2026-10-24","v":"Beta 1.0.60","t":"Planet tab: the Mined vs hauled card is gone; its details (mined and hauled rates, close-pass marker, silo, overflow and sale timer) are now part of the tuning chart in the Mining teams card"},{"d":"2026-10-24","v":"Beta 1.0.59","t":"Mining teams: a tuning chart in the card shows mining against hauling through the cycle and updates with every change. Preview plans changes with dashed after-lines, cost and income change, then Apply or Cancel. Drag the orange or teal handle to set mining or average hauling and the cheapest points are planned for you; Balance rearranges points for the most income for free"},{"d":"2026-10-24","v":"Beta 1.0.58","t":"Tapping the credit total switches number style without a message"},{"d":"2026-10-24","v":"Beta 1.0.57","t":"Numbers: tapping the credit total cycles named (Qa…), letters (aa…) and full words; the Warp tab's Numbers card is gone"},{"d":"2026-10-24","v":"Beta 1.0.56","t":"Numbers: choose named (Qa, Qi, Sx…) or letter (aa, ab, ac…) names for numbers past a trillion in the Warp tab; full-word numbers are capitalised (1.2 Million); fixed exact powers of a thousand showing as 999 of the size below"},{"d":"2026-10-24","v":"Beta 1.0.55","t":"Mining teams: the next team can only be hired once the planet's newest team is fully upgraded (20 / 20); the hire panel shows progress toward unlocking it"},{"d":"2026-10-24","v":"Beta 1.0.54","t":"Retraining: any specialist team can retrain into a new role and pick one of three new quirks (points come back as free points, perks reset, 10 minutes off the job). Price is a quarter of its hire cost and doubles with each paid retrain. The planet the station parks at gets a free retrain, and planets left badly short of ships after a move get Priority Training at 75% off; the parking forecast flags them"},{"d":"2026-10-24","v":"Beta 1.0.53","t":"Mining team upgrade buttons are back to green and red (with outlined − buttons); other panel buttons stay orange"},{"d":"2026-10-24","v":"Beta 1.0.52","t":"Main screen: star dust indicator removed (it's in the Warp tab); credits, status lines and the Recenter, Music and Full screen buttons made more compact and consistent"},{"d":"2026-10-24","v":"Beta 1.0.51","t":"Smelter: opening the tab centres each furnace's ore row on the ore it's smelting, and the Off button sits next to the furnace's name"},{"d":"2026-10-24","v":"Beta 1.0.50","t":"Every usable button in the panel is now orange (the red best-upgrade and warning buttons keep their colour; disabled buttons fade; toggles fill in when on)"},{"d":"2026-10-24","v":"Beta 1.0.49","t":"User guide: Tips and tricks moved to the bottom, and every section starts collapsed"},{"d":"2026-10-24","v":"Beta 1.0.48","t":"Specialist crews: a planet's 2nd and 3rd teams now pick a role (Drillers, Haulers, Dockhands or Prospectors, one of each per planet), are chosen from three named candidates with quirks, and unlock a choice of veteran perks at 10 and 20 upgrades. Dockhands cut docking and loading time and add silo space; Prospectors raise ore yield, strike rich veins and steer probes. Existing second and third teams become Drillers or Haulers with spare points refunded. Economy retuned so pacing stays the same"},{"d":"2026-10-23","v":"Beta 1.0.47","t":"Planet tab: the planet list stays pinned at the top while you scroll, and switching planets keeps your scroll position (also when tapping a planet in the sky)"},{"d":"2026-10-23","v":"Beta 1.0.46","t":"User guide in the Warp tab: how every part of the game works, with a Tips and tricks section; shorter Market Surge status line so it fits on one line on small phones"},{"d":"2026-10-23","v":"Beta 1.0.45","t":"Overdrive is replaced by Market Surge: for 10 minutes everything you sell earns double, up to 10 minutes' worth of extra income, then it recharges for 60 minutes. Mining and ships stay at normal speed, so there are no bottlenecks"},{"d":"2026-10-23","v":"Beta 1.0.44","t":"Overdrive now also speeds up docking, landing and loading, so hauling doubles along with mining and planets no longer bottleneck while it runs"},{"d":"2026-10-23","v":"Beta 1.0.43","t":"Code tidy-up and speed-ups: unused code removed, far-away colonies skipped while drawing (about 3x faster 3D drawing late game), team emblems drawn instantly, and a parked-station flow direction fix"},{"d":"2026-10-23","v":"Beta 1.0.42","t":"Maxed bottleneck buttons fade red like other buttons you can't press"},{"d":"2026-10-23","v":"Beta 1.0.41","t":"Green upgrade buttons you can't afford fade like the red ones"},{"d":"2026-10-23","v":"Beta 1.0.40","t":"Planet tab names (heading and planet buttons) take the planet's status colour: red when its ships can't keep up, grey when unclaimed; the sun's surface turns as one body so it no longer twists into swirls over time"},{"d":"2026-10-23","v":"Beta 1.0.39","t":"Planet structures refined: buildings get plated, panelled and concrete textures, glass domes a geodesic lattice, tubes ribbed bands, solar panels real cells; buildings, solar arrays, the loader, tower and hangar sit on concrete footings, the launch pad on a scorched apron, and the tower and hangar moved clear of the pad's rim"},{"d":"2026-10-23","v":"Beta 1.0.38","t":"Station's status line is centred under its name"},{"d":"2026-10-23","v":"Beta 1.0.37","t":"New sun modelled on a real ultraviolet photo: deep orange surface with dark filaments, bright active regions with glowing loops, sunspots that drift and grow and shrink, and constant solar flares licking off the edge; also fixes the cycle chart for the planet the station is parked at"},{"d":"2026-10-23","v":"Beta 1.0.36","t":"Orbits respaced: Cinder sits farther from the sun and every orbit is placed outward from it with wide gaps that allow for rings; each galaxy starts with the station parked above Cinder (no station lane any more), and the station parks a little higher and farther from its planet"},{"d":"2026-10-23","v":"Beta 1.0.35","t":"Fainter orbit lines: claimed planets' orbits are now as faint as the surveyed planet's used to be, and the surveyed planet's orbit is fainter still"},{"d":"2026-10-23","v":"Beta 1.0.34","t":"Undiscovered ores and bars in research cards read Not discovered; their tip says to keep claiming planets to discover them"},{"d":"2026-10-23","v":"Beta 1.0.33","t":"Ore tips say not discovered yet (with no planet named) for ores whose first planet hasn't been scanned, and the same for their bars; only scanned planets are named"},{"d":"2026-10-23","v":"Beta 1.0.32","t":"Research tab: hover or tap an ore to see which planets mine it (bars say which ore to smelt and where it's mined)"},{"d":"2026-10-23","v":"Beta 1.0.31","t":"Research needs counts each project the same way as the Research tab, so a project disappears as soon as Research shows its bars are ready"},{"d":"2026-10-23","v":"Beta 1.0.30","t":"Smelter's Research needs shows one row per bar type with your total bars against what's still needed, bar types being smelted first, so the count rises as bars are made"},{"d":"2026-10-23","v":"Beta 1.0.29","t":"Smelter's Research needs list drops projects whose bars are already in stock, and says None needed at this time when nothing is waiting"},{"d":"2026-10-23","v":"Beta 1.0.28","t":"Furnace ore choices scroll sideways like the planet list"},{"d":"2026-10-23","v":"Beta 1.0.27","t":"Park station here button is orange and sits above the cycle chart"},{"d":"2026-10-23","v":"Beta 1.0.26","t":"Station Thrusters research: park the station above any claimed planet for short, steady trips there; a forecast shows how every other planet's hauling changes so you can retune; fuel cost, 10-minute move, 1-hour cooldown, free return to the lane; moves recorded in the Captain's log"},{"d":"2026-10-23","v":"Beta 1.0.25","t":"Real orbits: inner planets now circle the sun faster than outer ones, so each planet drifts towards and away from the station and trip times rise and fall with the distance; colony stockpiles become silos (new Ore Silos and Deep Silos research) that store ore through the far stretch; the Planet tab shows a chart of a whole cycle, a silo gauge and the next close pass"},{"d":"2026-10-23","v":"Beta 1.0.24","t":"Double-tap a planet's name in the Planet tab to zoom into its close-up, and again to zoom back out"},{"d":"2026-10-23","v":"Beta 1.0.23","t":"Captain's log shows when the current galaxy was created instead of when the station was named"},{"d":"2026-10-23","v":"Beta 1.0.22","t":"Name your space station: asked at the start of each new game (and once for games already in progress), renamable from the Warp tab, kept through warps; its name shows under the station and turns orange when research is ready; every name is kept in the Captain's log"},{"d":"2026-10-23","v":"Beta 1.0.21","t":"Station lights redone: red beacon now on top and teal light at the bottom, lights sit in small housings with a bright core and halo, steady red and green wing lights with white strobes, a pulsing top beacon and a breathing bottom light"},{"d":"2026-10-23","v":"Beta 1.0.20","t":"Orbits respaced so the station has its own clear lane between Vesk and Orra; bigger sun with a churning, seamless surface, sunspots and a stronger glow"},{"d":"2026-10-23","v":"Beta 1.0.19","t":"A sun now shines at the centre of the galaxy and lights every planet; the space station orbits it between Vesk and Orra, with haulers and the probe flying to wherever it is"},{"d":"2026-10-23","v":"Beta 1.0.18","t":"Maxed trait buttons stay red when that trait is still the bottleneck"},{"d":"2026-10-23","v":"Beta 1.0.17","t":"Tap star dust to open the Warp tab"},{"d":"2026-10-23","v":"Beta 1.0.16","t":"Small space between numbers and their letter (1.23 B)"},{"d":"2026-10-23","v":"Beta 1.0.15","t":"Planet Kesh renamed Kallyur'Dadh"},{"d":"2026-10-23","v":"Beta 1.0.14","t":"Change log: more space between entries"},{"d":"2026-10-23","v":"Beta 1.0.13","t":"Change log: a dated list of every change, with version numbers, under What's changed on the Warp tab; the update prompt shows what's new"},{"d":"2026-10-23","v":"Beta 1.0.12","t":"Trait rows show team name and its multiplier; spaced operators"},{"d":"2026-10-23","v":"Beta 1.0.11","t":"+ 0.25 / − 0.25 buttons, x/20 point count beside each trait"},{"d":"2026-10-23","v":"Beta 1.0.10","t":"Team card note reads 'The red button is the most efficient upgrade.'"},{"d":"2026-10-23","v":"Beta 1.0.9","t":"Drop × from team + buttons"},{"d":"2026-10-23","v":"Beta 1.0.8","t":"Per-trait + and − team point buttons; Reassign points removed"},{"d":"2026-10-23","v":"Beta 1.0.7","t":"Switching planets in the Planet tab keeps the current zoom"},{"d":"2026-10-23","v":"Beta 1.0.6","t":"Double-tap zooms out centred; probe tap opens Probe tab, double-tap zooms"},{"d":"2026-10-23","v":"Beta 1.0.5","t":"Tap credits to switch between short and full number names"},{"d":"2026-10-23","v":"Beta 1.0.4","t":"Erase save in its own panel at the bottom of the Warp tab"},{"d":"2026-10-23","v":"Beta 1.0.3","t":"Update check falls back to GitHub API and Pages; clearer messages when blocked"},{"d":"2026-10-23","v":"Beta 1.0.2","t":"Update check reads version.json from the GitHub repository"},{"d":"2026-10-23","v":"Beta 1.0.1","t":"Version on Warp tab, update checks with prompt, version.json"},{"d":"2026-10-23","v":null,"t":"Overflow: spare ship capacity carries it off at full price; sale timer always shown"},{"d":"2026-10-23","v":null,"t":"Planet tab: mined-vs-hauled strip; stats merged into team rows with next-point preview"},{"d":"2026-10-22","v":null,"t":"HUD: tap the selected tab to close the console"},{"d":"2026-10-22","v":null,"t":"Research: drop Completed tag from completed project cards"},{"d":"2026-10-22","v":null,"t":"Research: completed projects listed as green Completed cards like events"},{"d":"2026-10-22","v":null,"t":"HUD: taller console, no arrow; tap the selected planet or its name to close"},{"d":"2026-10-22","v":null,"t":"Planet tab: fixed-size read-outs and notes so cards don't jump when wording changes"},{"d":"2026-10-22","v":null,"t":"Mining team trait panes: same layout and fixed height"},{"d":"2026-10-22","v":null,"t":"Remove Bottleneck tag from Mine rate"},{"d":"2026-10-22","v":null,"t":"Events: status tag sits in the days/reward-type row at the same size"},{"d":"2026-10-22","v":null,"t":"Events: info icon inside Unavailable button; boost info shows source mission card"},{"d":"2026-10-22","v":null,"t":"Events: keep mission status on its own card; Unavailable button with info"},{"d":"2026-10-22","v":null,"t":"Events: mark completed missions with a Completed badge and history list"},{"d":"2026-10-22","v":null,"t":"Overdrive: 10 min run, 60 min recharge, status line under probe status"},{"d":"2026-10-22","v":null,"t":"Blend orbit and descent/climb into single curves (no stop at the corners)"},{"d":"2026-10-22","v":null,"t":"Smoother orbit transitions: curved tangential approach/departure, eased speeds, smooth ship turning"},{"d":"2026-10-22","v":null,"t":"Smaller landing struts that fold completely inside the hull"},{"d":"2026-10-22","v":null,"t":"Ships deploy four landing struts to land, retract after launch"},{"d":"2026-10-22","v":null,"t":"Brighter reverse thrusters (main engine off while they fire); more visible pad dust"},{"d":"2026-10-22","v":null,"t":"Ships: faint reverse thrusters when undocking; stronger burn and pad dust on landing and take-off"},{"d":"2026-10-22","v":null,"t":"All speed boosts affect flight only; slower, more controlled docking, orbiting, landing and loading (16s -> 28s)"},{"d":"2026-10-22","v":null,"t":"Ship speed vs cargo: team speed shortens flight only, cargo makes ships heavier; best fix highlighted per planet"},{"d":"2026-10-22","v":null,"t":"Stockpile holds one cargo load so surplus reaches overflow right away"},{"d":"2026-10-22","v":null,"t":"Remove scroll arrows; keep swipe, drag and wheel; dragging the tab row no longer switches tabs"},{"d":"2026-10-22","v":null,"t":"Show small unhauled rates with two decimals"},{"d":"2026-10-22","v":null,"t":"One consistent horizontal scroller (arrows, fades, swipe/drag/wheel) for tabs, planets and teams"},{"d":"2026-10-22","v":null,"t":"Show unhauled ore and sell overflow every 10 minutes at 25% price"},{"d":"2026-10-22","v":null,"t":"Refined rounded rovers with unique team emblems; emblems shown beside team names"},{"d":"2026-10-22","v":null,"t":"Detailed mining rovers: six-wheel rocker chassis, cab, ore bin, drill arm, glowing lights"},{"d":"2026-10-22","v":null,"t":"Probe: ease size change when leaving and returning to the station"},{"d":"2026-10-22","v":null,"t":"Probe: raised, slowly turning dish; steady upright launch and landing, smooth turn after"},{"d":"2026-10-22","v":null,"t":"Detailed probe: gold-foil bus, dish, collector scoop, solar wings, booms, thrusters, glowing lights"},{"d":"2026-10-22","v":null,"t":"Weekly events: 3 missions every Friday, stories, 3-5 day goals, permanent boosts / star dust / free unlocks; no repeats for 52 weeks"},{"d":"2026-10-22","v":null,"t":"Transit terminal at the launch pad where the settlement tubes arrive"},{"d":"2026-10-22","v":null,"t":"Same glow on colony base, launch pad and station lights"},{"d":"2026-10-22","v":null,"t":"Consistent glow for light elements (glowify); applied to settlements"},{"d":"2026-10-22","v":null,"t":"Settlement: twin transit tubes to the launch pad; central hub dome grows taller each level"},{"d":"2026-10-22","v":null,"t":"Settlements as dome habitats: barracks, greenhouse pods, entertainment and management domes"},{"d":"2026-10-21","v":null,"t":"Hire and settlement buttons sit under their card titles"},{"d":"2026-10-21","v":null,"t":"Station: glow halo, light glows, reflective panelled hull with portholes, rim light"},{"d":"2026-10-21","v":null,"t":"Planet labels: settlement marks above name, team stars below, red name on ship bottleneck"},{"d":"2026-10-21","v":null,"t":"Hire button above Mining teams card; settlement button above Settlement card"},{"d":"2026-10-21","v":null,"t":"Settlement card: name row under the heading, like team names"},{"d":"2026-10-21","v":null,"t":"Settlements: further from the mines, road to the launch pad, 1.25x scale"},{"d":"2026-10-21","v":null,"t":"Settlements: 3 levels per planet with unique upgrades and growing 3D towns"},{"d":"2026-10-21","v":null,"t":"Close-up for unclaimed planets (double-tap or Close-up button)"},{"d":"2026-10-21","v":null,"t":"Unique ore names tied to the planet each is first mined on"},{"d":"2026-10-21","v":null,"t":"See-through bottom panel so the galaxy shows faintly behind it"},{"d":"2026-10-21","v":null,"t":"Detailed seamless planet textures with bump maps, storms and atmosphere glow"},{"d":"2026-10-21","v":null,"t":"Hire team button stays at the top of the Planet tab"},{"d":"2026-10-21","v":null,"t":"Research of 100M+ also needs bars from the smelter"},{"d":"2026-10-21","v":null,"t":"Service worker always revalidates the game page so updates show immediately"},{"d":"2026-10-21","v":null,"t":"Smooth smelter progress bars"},{"d":"2026-10-21","v":null,"t":"Close-up button highlighted green like Back to galaxy"},{"d":"2026-10-21","v":null,"t":"Revert close-up drag-to-turn and double-tap zoom out"},{"d":"2026-10-21","v":null,"t":"Close-up: one-finger drag turns the planet; double-tap zooms back out"},{"d":"2026-10-21","v":null,"t":"Star dust: original award rate at +1% per unit (slower progression)"},{"d":"2026-10-21","v":null,"t":"Star dust: +1% per unit with 10x as much awarded; old saves converted"},{"d":"2026-10-21","v":null,"t":"Bigger iris blades so the closed door edge is hidden under the collar"},{"d":"2026-10-21","v":null,"t":"Wider iris opening; no seam between iris rim and collar"},{"d":"2026-10-21","v":null,"t":"Blue ring turns with the docking ring, clear of the spokes"},{"d":"2026-10-21","v":null,"t":"Dock boxes pass through the ring evenly"},{"d":"2026-10-21","v":null,"t":"Station lights blink again; blue ring solid; dock lights true green"},{"d":"2026-10-21","v":null,"t":"Dock lights steady green only while docked; stop station blinking; blue ring flashes on delivery"},{"d":"2026-10-21","v":null,"t":"Dock clamps open/close; only finished docks flash; fix ship scaling"},{"d":"2026-10-21","v":null,"t":"Loading docks evenly spaced; even lights between docks"},{"d":"2026-10-21","v":null,"t":"Iris: smooth rim that sits on the deck; steady 2.5 s open/close"},{"d":"2026-10-21","v":null,"t":"Iris door: dark collar hides the blade edges so the door reads as a circle"},{"d":"2026-10-21","v":null,"t":"Research costs credits and ore; sink the iris door into the deck"},{"d":"2026-10-21","v":null,"t":"Probe tab: tap the probe status to follow the probe and see its stats"},{"d":"2026-10-21","v":null,"t":"Space probes launch from the station's iris every 5 minutes"},{"d":"2026-10-21","v":null,"t":"Double-tap the space station to zoom in and open Research"},{"d":"2026-10-21","v":null,"t":"Space planet orbits so planets never overlap; declutter labels"},{"d":"2026-10-21","v":null,"t":"Picking a planet in the Planet tab flies the camera to it"},{"d":"2026-10-21","v":null,"t":"Docking ports on the habitat ring; each planet's hauler has its own"},{"d":"2026-10-21","v":null,"t":"Planet button row: arrows, edge fades, keep selected planet in view"},{"d":"2026-10-21","v":null,"t":"Docked haulers turn with the habitat ring; longer unloading stop"},{"d":"2026-10-21","v":null,"t":"Haulers dock nose-first at the habitat ring to unload"},{"d":"2026-10-21","v":null,"t":"Smaller, more detailed station with an iris door for haulers"},{"d":"2026-10-21","v":null,"t":"Slower haulers with orbit, controlled landing and loading pause"},{"d":"2026-10-21","v":null,"t":"Third team: large dome replaces the processing plant"},{"d":"2026-10-20","v":null,"t":"Refinery back near its original spot; solar blocks step outward"},{"d":"2026-10-20","v":null,"t":"Solar rows per team; third team turns the refinery into a large dome"},{"d":"2026-10-20","v":null,"t":"Connect second-team buildings to the base"},{"d":"2026-10-20","v":null,"t":"Stagger rover departures evenly around one shared cycle"},{"d":"2026-10-20","v":null,"t":"Replace colony roads with faint, curving tire tracks"},{"d":"2026-10-20","v":null,"t":"Colony roads: single depot entrance, junction, farther ore deposits"},{"d":"2026-10-20","v":null,"t":"End the base conveyor at the edge of the launch pad, with a loader"},{"d":"2026-10-20","v":null,"t":"Each mining team adds three rovers, new ore deposits and a base upgrade"},{"d":"2026-10-20","v":null,"t":"Color hired-team stars in planet labels orange"},{"d":"2026-10-20","v":null,"t":"Fill bottleneck team buttons red"},{"d":"2026-10-20","v":null,"t":"Remove bottleneck sentence next to the hauling stat"},{"d":"2026-10-20","v":null,"t":"Up to three mining teams per planet; first team claims the planet; remove direct planet upgrades"},{"d":"2026-10-20","v":null,"t":"Rename Dark Matter to Star Dust"},{"d":"2026-10-20","v":null,"t":"Mining teams: green trait buttons buy upgrades directly and show their price"},{"d":"2026-10-20","v":null,"t":"First release of Star Quarry on the web"}];
 const UPD_URL='https://raw.githubusercontent.com/namewastaken-creator/star-quarry/main/version.json';
-const ECON={DUST_A:2,DUST_K:.2,EXP:.7,PAY:3.3,SCALE_MIN:100,HIRE:[1,8,30],UP_BASE:.12,UP_GROW:1.32,TEAM_X:[1,6,40],SHIP_BASE:.8,SHIP_OVH:28,DOCK_T:5,PROBE_EVERY:300,PROBE_FLY:180,PROBE_FIRST:60,PROBE_SEC:90,CARGO_FIT:.9};
+const ECON={DUST_A:2,DUST_K:.2,EXP:.7,PAY:3.5,SCALE_MIN:100,HIRE:[1,8,30],UP_BASE:.12,UP_GROW:1.32,PT_GROW:1.18,TEAM_X:[1,6,40],SHIP_BASE:.8,SHIP_OVH:28,DOCK_T:5,PROBE_EVERY:300,PROBE_FLY:180,PROBE_FIRST:60,PROBE_SEC:90,CARGO_FIT:.9};
 // overflow: surplus ore is sold every OVER_EVERY seconds at OVER_PRICE of the normal price
 const OVER_EVERY=600,OVER_PRICE=.25;
 // fixed handling steps (seconds): orbit in, descend, load, ascend, orbit out; plus DOCK_T at each end = SHIP_OVH
@@ -560,7 +578,7 @@ function buyResearch(r){if(!canResearch(r))return false;S.cash-=r.cost;r.ore.for
 const KEY='starquarry_save_v1';
 function newRun(keep){keep=keep||{};return{v:1,econ:2,probe:{nextAt:Date.now()+ECON.PROBE_FIRST*1000,out:null,st:{launched:0,returned:0,value:0,best:null,byOre:{},log:[]}},probeLife:keep.probeLife||{returned:0,value:0},overAt:Date.now()+OVER_EVERY*1000,life:keep.life||newLife(),perm:keep.perm||newPerm(),ev:keep.ev||{taken:{}},st:keep.st||{name:'',hist:[]},born:Date.now(),park:{i:0,from:0,t0:0,dur:1,cd:0,done:1},music:keep.music||{on:true,vol:.6},nfmt:keep.nfmt||'named',words:!!keep.words,cash:0,dm:keep.dm||0,runEarned:0,lifetime:keep.lifetime||0,warps:keep.warps||0,
  // Cinder's hauler starts already loaded and on its way home, so the first delivery comes quickly
- planets:PLANETS.map((p,i)=>({u:i===0,teams:i===0?[{n:0,t:{},pk:[]}]:[],stock:0,t:i===0?.66:Math.random()*.4,load:i===0?8:0})),
+ planets:PLANETS.map((p,i)=>({u:i===0,teams:i===0?[{}]:[],pts:0,bought:0,al:{},perks:[],done:{},stock:0,t:i===0?.66:Math.random()*.4,load:i===0?8:0})),
  inv:{},bars:{},research:{},auto:{},slots:[{r:null,p:0,a:false},{r:null,p:0,a:false},{r:null,p:0,a:false}],
  od:{until:0,ready:0},last:Date.now(),tut:0,sel:0}}
 let S;
@@ -587,113 +605,125 @@ const has=id=>!!S.research[id];
 function rmult(k){let m=1;for(const r of RESEARCH)if(r[k]&&has(r.id))m*=r[k];return m}
 const odOn=()=>Date.now()<S.od.until
 const valueMult=()=>rmult('value')*(1+.01*S.dm)*setG('gv')*perm('value');
-/* Mining crews: up to 3 per planet, each with up to 20 upgrade points.
-   - Team 1 is the planet's founding crew: + 0.25x per point on Mine rate, Ship speed or Cargo.
-   - Teams 2 and 3 are specialists. The role is picked when hiring (one of each per planet) and decides which traits
-     the team can upgrade: Drillers (Mine rate, + 0.3x), Haulers (Ship speed and Cargo, + 0.3x), Dockhands (handling
-     time, DOCK_K per point, and a silo load per 5 points) or Prospectors (ore yield, YIELD_STEP per point, plus rich veins).
-   - Balanced in the simulator (Oct 2026): roles get picked roughly drill 40%, pros 30%, dock 20%, haul 10%.
-   - Specialists are picked from three named candidates, each with a quirk (CREW_QUIRKS). At 10 and 20 points a team
-     unlocks a choice of two perks (CREW_PERKS). Quirks and perks only touch the team's own planet. */
-const MINER_MAX=20,MINER_STEP=.25,TEAM_MAX=3;
-const TRAITS=[['m','Mining'],['s','Ship speed'],['c','Cargo'],['d','Handling'],['v','Ore yield']];
-const ROLES={
-  f:{n:'Founding crew',s:'Mines and hauls',tr:{m:.25,s:.25,c:.25}},
-  drill:{n:'Drillers',s:'Mine rate only, + 0.3 per point',tr:{m:.3}},
-  haul:{n:'Haulers',s:'Ship speed and cargo, + 0.3 per point',tr:{s:.3,c:.3}},
-  dock:{n:'Dockhands',s:'Faster docking, landing and loading, and a bigger silo',tr:{d:1}},
-  pros:{n:'Prospectors',s:'Richer ore from every load, and rich veins',tr:{v:1}}};
-const SPEC=['drill','haul','dock','pros'];
-// Dockhands: handling time = (28 s + quirk/perk seconds) / (1 + DOCK_K x points), never under HANDLE_MIN seconds
-// Prospectors: every load delivers (1 + YIELD_STEP x points) times the ore; a rich vein every VEIN_EVERY seconds
-// ships VEIN_SEC seconds of the planet's mining straight to the Market
+/* Mining crews (Beta 1.0.76). Up to 3 crews per planet; each adds PTS_PER_CREW points of room to the planet's one
+   pool of upgrade points. Points belong to the planet, not to a crew:
+   - Crew 1, the Crew Chief, allocates every point: Mine rate, Speed and Cargo (+ 0.25x each), plus Handling and Ore
+     yield once the planet has learned them. Moving a point is free; each point bought costs more than the last
+     (pointCost: scale x UP_BASE x PT_GROW ^ points bought).
+   - Crew 2, the Shift Crew, adds 20 points and perk slots (PERKS): 1 when hired, 2 once the planet has 40 points,
+     3 with Advanced shifts. Changing a perk takes a REFIT refit (filling an empty slot is instant).
+   - Crew 3, the Instructors, add 20 points and run training programs (PROGRAMS), one at a time, each costing credits
+     and taking time, and kept for the rest of the galaxy. Dock training and Prospecting are what Dockhands and
+     Prospectors used to be.
+   - Crews 2 and 3 are picked from three named candidates, each with a quirk for its job (CREW_QUIRKS).
+   - The next crew can be hired once the planet owns all the points its crews have room for. */
+const MINER_MAX=20,PTS_PER_CREW=20,TEAM_MAX=3,REFIT=300;
+const CREW_KIND=[{n:'Crew Chief',s:'Allocates every point on the planet'},{n:'Shift Crew',s:'+ 20 points and perk slots'},{n:'Instructors',s:'+ 20 points and training programs'}];
+// Handling: handling time = (28 s + perk/quirk seconds) / (1 + DOCK_K x points), never under HANDLE_MIN seconds
+// Ore yield: every load delivers (1 + YIELD_STEP x points) times the ore; Prospecting also brings a rich vein every
+// VEIN_EVERY seconds that ships VEIN_SEC seconds of the planet's mining straight to the Market
 const DOCK_K=.4,HANDLE_MIN=3,YIELD_STEP=.02,VEIN_EVERY=3600,VEIN_SEC=120;
-const roleOf=tm=>(tm&&tm.r)||'f';
-const roleTraits=r=>Object.keys(ROLES[r].tr);
 const CREW_QUIRKS={
-  m10:{d:'+ 10% mine rate here',fx:{m:1.1}},deep:{d:'+ 18% mine rate here, − 6% ship speed',fx:{m:1.18,s:.94}},
-  s10:{d:'+ 10% ship speed here',fx:{s:1.1}},c10:{d:'+ 10% cargo here',fx:{c:1.1}},
-  heavy:{d:'+ 18% cargo here, − 6% ship speed',fx:{c:1.18,s:.94}},reckless:{d:'+ 18% ship speed here, − 6% cargo',fx:{s:1.18,c:.94}},
-  h2:{d:'− 2 s docking and loading here',fx:{h:-2}},silo1:{d:'+ 1 silo load here',fx:{silo:1}},
-  v6:{d:'+ 6% ore yield here',fx:{v:1.06}},veins:{d:'Rich veins twice as often',fx:{vein:2}},vsize:{d:'Rich veins 50% bigger',fx:{veinSize:1.5}},
-  thrifty:{d:'Upgrades cost 15% less',fx:{cost:.85}},eager:{d:'Joins with 2 free points',fx:{free:2}}};
-const QUIRK_POOL={drill:['m10','deep','thrifty','eager','silo1'],haul:['s10','c10','heavy','reckless','thrifty','eager'],
-  dock:['h2','silo1','s10','thrifty','eager'],pros:['v6','veins','vsize','thrifty','eager']};
-// perks by role: [the two choices at 10 points, the two at 20]
-const CREW_PERKS={
-  f:[[{d:'+ 10% mine rate here',fx:{m:1.1}},{d:'+ 10% ship speed here',fx:{s:1.1}}],[{d:'+ 15% mine rate here',fx:{m:1.15}},{d:'+ 15% cargo here',fx:{c:1.15}}]],
-  drill:[[{d:'+ 12% mine rate here',fx:{m:1.12}},{d:'Overflow here sells at 50%, not 25%',fx:{over:2}}],[{d:'+ 20% mine rate here',fx:{m:1.2}},{d:'+ 2 silo loads here',fx:{silo:2}}]],
-  haul:[[{d:'+ 12% ship speed here',fx:{s:1.12}},{d:'+ 12% cargo here',fx:{c:1.12}}],[{d:'Lighter hulls: cargo points weigh half as much here',fx:{mass:.5}},{d:'+ 10% ship speed and cargo here',fx:{s:1.1,c:1.1}}]],
-  dock:[[{d:'− 2 s docking and loading here',fx:{h:-2}},{d:'+ 1 silo load here',fx:{silo:1}}],[{d:'− 3 s docking and loading here',fx:{h:-3}},{d:'+ 2 silo loads here',fx:{silo:2}}]],
-  pros:[[{d:'+ 8% ore yield here',fx:{v:1.08}},{d:'Rich veins 50% bigger',fx:{veinSize:1.5}}],[{d:'+ 12% ore yield here',fx:{v:1.12}},{d:'Rich veins twice as often',fx:{vein:2}}]]};
-const PERK_AT=[10,20];
-// a planet's combined quirk and perk effects, cached until a team is hired or a perk is chosen
-let crewVer=0;const _cm={};
-function crewMod(i){const c=_cm[i];if(c&&c.v===crewVer&&c.S===S)return c.m;
-  const m={m:1,s:1,c:1,v:1,h:0,silo:0,vein:1,veinSize:1,mass:1,over:1},add=fx=>{for(const k in fx){if(k==='h'||k==='silo')m[k]+=fx[k];else if(k in m)m[k]*=fx[k]}};
-  for(const tm of S.planets[i].teams){if(tm.q&&CREW_QUIRKS[tm.q])add(CREW_QUIRKS[tm.q].fx);(tm.pk||[]).forEach((x,l)=>{if(x!=null)add(CREW_PERKS[roleOf(tm)][l][x].fx)})}
-  _cm[i]={v:crewVer,S,m};return m}
-const hasRole=(i,r)=>S.planets[i].teams.some(tm=>roleOf(tm)===r);
+  m10:{d:'+ 10% mine rate here',fx:{m:1.1}},s10:{d:'+ 10% ship speed here',fx:{s:1.1}},c10:{d:'+ 10% cargo here',fx:{c:1.1}},
+  thrifty:{d:'Points cost 10% less here',fx:{cost:.9}},eager:{d:'Joins with 2 free points',fx:{}},
+  fastrefit:{d:'Perk changes take half the time',fx:{refit:.5}},silo1:{d:'+ 1 silo load here',fx:{silo:1}},
+  h2:{d:'− 2 s docking and loading here',fx:{h:-2}},fasttrain:{d:'Training programs 25% faster',fx:{train:.75}},
+  cheaptrain:{d:'Training programs 25% cheaper',fx:{tcost:.75}}};
+const QUIRK_POOL=[[],['m10','s10','c10','thrifty','eager','fastrefit'],['fasttrain','cheaptrain','thrifty','eager','silo1','h2']];
+// the Shift Crew's perks; need: a training program the planet must have finished first
+const PERKS={
+  mine12:{d:'+ 12% mine rate',fx:{m:1.12}},speed12:{d:'+ 12% ship speed',fx:{s:1.12}},cargo12:{d:'+ 12% cargo',fx:{c:1.12}},
+  silo2:{d:'+ 2 silo loads',fx:{silo:2}},over50:{d:'Overflow sells at 50%, not 25%',fx:{over:2}},
+  light:{d:'Lighter hulls: cargo points weigh half as much',fx:{mass:.5}},hand2:{d:'− 2 s docking and loading',fx:{h:-2}},
+  yield8:{d:'+ 8% ore yield',fx:{v:1.08},need:'pros'},veins2:{d:'Rich veins twice as often',fx:{vein:2},need:'pros'},
+  veinbig:{d:'Rich veins 50% bigger',fx:{veinSize:1.5},need:'pros'}};
+// the Instructors' training programs: cost in multiples of the planet's scale, time in minutes
+const PROGRAMS={
+  dock:{n:'Dock training',d:'Unlocks Handling: each point cuts the 28 s of docking, landing and loading, and every 5 points add a silo load.',cost:30,mins:30},
+  pros:{n:'Prospecting',d:'Unlocks Ore yield: each point adds 2% ore to every load. Also a rich vein every hour, and probes go after this planet\'s ore.',cost:40,mins:45},
+  deep:{n:'Deep drilling',d:'Mine rate points are 20% stronger (+ 0.3 each).',cost:60,mins:60},
+  logi:{n:'Logistics',d:'+ 2 silo loads, and overflow sells at 40%, not 25%.',cost:30,mins:30},
+  shifts:{n:'Advanced shifts',d:'The Shift Crew gets a third perk slot.',cost:50,mins:60},
+  mentor:{n:'Mentoring',d:'+ 5 points of room on this planet.',cost:80,mins:120}};
+const TRAITS=[['m','Mine rate'],['s','Speed'],['c','Cargo'],['d','Handling'],['v','Ore yield']];
 const MINER_NAMES=['Flint Crew','Rustline Gang','Deepcut Company','Ironjaw Team','Ember Diggers','Shale Brigade','Hollow Point Crew','Quarry Wolves','Lodestar Team','Bedrock Union','Vein Hunters','Pickaxe Collective','Graviton Crew','Starfall Diggers','Core Breakers','Dustwalkers','Night Shift Crew','Crystal Guild','Void Sappers','Pulsar Company','Zero-G Crew','Last Light Team'];
-// a team that's retraining contributes nothing until it's done
-const training=tm=>!!(tm&&tm.tr&&Date.now()<tm.tr);
-const teamPts=(i,k)=>{const p=S.planets[i];return p&&p.teams?p.teams.reduce((a,tm)=>a+(training(tm)?0:(tm.t[k]||0)),0):0};
-// a trait's multiplier from the planet's teams: each team's points at its role's strength, then quirks and perks
-function minerT(i,k){let x=1;for(const tm of S.planets[i].teams){const st=ROLES[roleOf(tm)].tr[k];if(st&&!training(tm))x+=st*(tm.t[k]||0)}return x*(crewMod(i)[k]||1)}
-const teamStep=(tm,k)=>ROLES[roleOf(tm)].tr[k]||0;
-const teamHireCost=(i,j)=>j===0?PLANETS[i].cost:PLANETS[i].scale*ECON.HIRE[j];
-const teamUpCost=(i,j)=>{const tm=S.planets[i].teams[j],q=tm.q&&CREW_QUIRKS[tm.q];return PLANETS[i].scale*ECON.UP_BASE*ECON.TEAM_X[j]*Math.pow(ECON.UP_GROW,tm.n)*(q&&q.fx.cost||1)};
 const PREFIX=['Flint','Rustline','Deepcut','Ironjaw','Ember','Shale','Hollow Point','Quarry','Lodestar','Bedrock','Vein','Pickaxe','Graviton','Starfall','Core','Dust','Night Shift','Crystal','Void','Pulsar','Zero-G','Last Light'];
 const SUFFIX=['Crew','Gang','Company','Team','Diggers','Brigade','Union','Guild','Collective','Sappers','Hunters','Walkers'];
 const teamName=(i,j)=>{const tm=S.planets[i]&&S.planets[i].teams[j];return tm&&tm.nm?tm.nm:j===0?MINER_NAMES[i%MINER_NAMES.length]:PREFIX[(i*7+j*9+3)%PREFIX.length]+' '+SUFFIX[(i*5+j*7)%SUFFIX.length]};
-// the three crews offered for a specialist slot: fixed for this galaxy, planet, slot and role, so they can't be rerolled
+const teamHireCost=(i,j)=>j===0?PLANETS[i].cost:PLANETS[i].scale*ECON.HIRE[j];
+// a planet's crew-related state, created on demand: points owned, points bought (for the price), the allocation,
+// perk slots, the running program and finished programs
+function crewState(p){if(!p.al)p.al={};if(p.pts==null)p.pts=0;if(p.bought==null)p.bought=0;if(!p.perks)p.perks=[];if(!p.done)p.done={};return p}
+const progDone=(i,id)=>!!crewState(S.planets[i]).done[id];
+const crewQ=(i,fx)=>S.planets[i].teams.reduce((a,tm)=>a*((tm.q&&CREW_QUIRKS[tm.q]&&CREW_QUIRKS[tm.q].fx[fx])||1),1);
+// room for points: 20 per crew, + 5 with Mentoring
+const ptsCap=i=>S.planets[i].teams.length*PTS_PER_CREW+(progDone(i,'mentor')?5:0);
+const minerFree=i=>{const p=crewState(S.planets[i]);return p.pts-TRAITS.reduce((a,[k])=>a+(p.al[k]||0),0)};
+const pointCost=(i,b)=>PLANETS[i].scale*ECON.UP_BASE*Math.pow(ECON.PT_GROW,b==null?crewState(S.planets[i]).bought:b)*crewQ(i,'cost');
+// which traits the Crew Chief can put points on here
+const traitOK=(i,k)=>k==='d'?progDone(i,'dock'):k==='v'?progDone(i,'pros'):k==='m'||k==='s'||k==='c';
+const planetTraits=i=>TRAITS.map(([k])=>k).filter(k=>traitOK(i,k));
+const traitStep=(i,k)=>k==='m'?(progDone(i,'deep')?.3:.25):k==='s'||k==='c'?.25:k==='d'?DOCK_K:k==='v'?YIELD_STEP:0;
+// perk slots: 1 with a Shift Crew, 2 once the planet has 40 points, 3 with Advanced shifts
+const perkSlots=i=>{const p=crewState(S.planets[i]);return p.teams.length<2?0:1+(p.pts>=40?1:0)+(progDone(i,'shifts')?1:0)};
+const perkActive=sl=>sl&&sl.id&&Date.now()>=(sl.ready||0);
+// a planet's combined quirk, perk and program effects; cached until something changes or a refit finishes
+let crewVer=0;const _cm={};
+function crewMod(i){const c=_cm[i],now=Date.now();if(c&&c.v===crewVer&&c.S===S&&now<c.until)return c.m;
+  const m={m:1,s:1,c:1,v:1,h:0,silo:0,vein:1,veinSize:1,mass:1,over:1},add=fx=>{for(const k in fx){if(k==='h'||k==='silo')m[k]+=fx[k];else if(k==='over')m.over=Math.max(m.over,fx.over);else if(k in m)m[k]*=fx[k]}};
+  const p=crewState(S.planets[i]);let until=Infinity;
+  for(const tm of p.teams)if(tm.q&&CREW_QUIRKS[tm.q])add(CREW_QUIRKS[tm.q].fx);
+  p.perks.slice(0,perkSlots(i)).forEach(sl=>{if(!sl||!sl.id||!PERKS[sl.id])return;if(perkActive(sl))add(PERKS[sl.id].fx);else until=Math.min(until,sl.ready)});
+  if(p.done.logi)add({silo:2,over:1.6});
+  _cm[i]={v:crewVer,S,m,until};return m}
+// points on trait k (only traits the planet has learned count)
+const teamPts=(i,k)=>{const p=S.planets[i];if(!p||!p.al||!traitOK(i,k))return 0;return p.al[k]||0};
+// a trait's multiplier: 1 + step x points, then quirks and perks
+function minerT(i,k){return (1+traitStep(i,k)*teamPts(i,k))*(crewMod(i)[k]||1)}
+// the three crews offered for a slot: fixed for this galaxy, planet and slot, so they can't be rerolled
 function seeded(key){let h=2166136261;for(const ch of key){h^=ch.charCodeAt(0);h=Math.imul(h,16777619)}
   const rnd=()=>{h^=h<<13;h^=h>>>17;h^=h<<5;return (h>>>0)/4294967296};for(let k=0;k<4;k++)rnd();return rnd}
-function crewCands(i,j,r){const rnd=seeded(`${S.born||0}|${i}|${j}|${r}`);
-  const pool=QUIRK_POOL[r].slice(),out=[],used=new Set(S.planets[i].teams.map((tm,k)=>teamName(i,k)));
+function crewCands(i,j){const rnd=seeded(`${S.born||0}|${i}|${j}|crew`);
+  const pool=QUIRK_POOL[j].slice(),out=[],used=new Set(S.planets[i].teams.map((tm,k)=>teamName(i,k)));
   for(let k=0;k<3;k++){const q=pool.splice(Math.floor(rnd()*pool.length),1)[0];let nm;
     for(let g=0;g<40;g++){nm=PREFIX[Math.floor(rnd()*PREFIX.length)]+' '+SUFFIX[Math.floor(rnd()*SUFFIX.length)];if(!used.has(nm))break}used.add(nm);out.push({nm,q})}
   return out}
-// hire the planet's next team: the founding crew, or a specialist of role r picked from candidate ci
-// the next team can only be hired once the planet's newest team is fully upgraded
-const hireReady=i=>{const t=S.planets[i].teams;return !t.length||t[t.length-1].n>=MINER_MAX};
-function hireTeam(i,r,ci){const p=S.planets[i],j=p.teams.length;if(j>=TEAM_MAX||!hireReady(i))return false;
-  if(j>0&&(!SPEC.includes(r)||hasRole(i,r)))return false;const c=teamHireCost(i,j);if(S.cash<c)return false;
-  S.cash-=c;const tm={n:0,t:{},pk:[]};
-  if(j>0){const cd=crewCands(i,j,r)[ci||0];tm.r=r;tm.nm=cd.nm;tm.q=cd.q;if(cd.q==='eager')tm.n=2;
-}
-  p.teams.push(tm);crewVer++;S.life.teams++;if(j===0){p.u=true;p.t=0;S.life.claims++}
-  if(r==='pros')p.vein=Date.now()+veinEvery(i)*1000;return true}
-/* Retraining a specialist: pick any role the planet doesn't already have (or the same one) and one of three new
-   quirks. Its points come back as free points, its perks reset, and it's off the job for RT_TIME seconds.
-   Price: RT_BASE of its hire cost, doubling with each paid retrain of that team. Free on the planet the station has
-   just parked at; RT_PRIO of the price ("Priority Training") on planets left badly short of ships by a move.
-   Both offers last until the next move. */
-const RT_BASE=.25,RT_GROW=2,RT_PRIO=.25,RT_TIME=600,PRIO_BELOW=.85;
-const retrainFull=(i,j)=>teamHireCost(i,j)*RT_BASE*Math.pow(RT_GROW,S.planets[i].teams[j].rt||0);
-const retrainCost=(i,j)=>{const p=S.planets[i];return p.rtFree?0:p.rtPrio?retrainFull(i,j)*RT_PRIO:retrainFull(i,j)};
-function retrainQuirks(i,j,r){const tm=S.planets[i].teams[j],rnd=seeded(`${S.born||0}|${i}|${j}|${r}|rt${tm.rt||0}|${tm.rtn||0}`),pool=QUIRK_POOL[r].slice(),out=[];
-  for(let k=0;k<3&&pool.length;k++)out.push(pool.splice(Math.floor(rnd()*pool.length),1)[0]);return out}
-function retrain(i,j,r,qi){const p=S.planets[i],tm=p.teams[j];if(!tm||j===0||training(tm)||!SPEC.includes(r))return false;
-  if(p.teams.some((t,k)=>k!==j&&roleOf(t)===r))return false;const q=retrainQuirks(i,j,r)[qi||0],c=retrainCost(i,j);if(!q||S.cash<c)return false;
-  S.cash-=c;if(p.rtFree)p.rtFree=false;else{tm.rt=(tm.rt||0)+1;if(p.rtPrio)p.rtPrio=false}tm.rtn=(tm.rtn||0)+1;
-  tm.r=r;tm.q=q;tm.t={};tm.pk=[];if(q==='eager')tm.n=Math.min(MINER_MAX,tm.n+2);tm.tr=Date.now()+RT_TIME*1000;crewVer++;
-  if(r==='pros'&&!p.vein)p.vein=Date.now()+veinEvery(i)*1000;return true}
-// the best role to retrain team j into: try each role with the team's own points on its best trait, measure, put it back
-function retrainBest(i,j){const tm=S.planets[i].teams[j],save={r:tm.r,t:tm.t,q:tm.q,tr:tm.tr},p=S.planets[i];let br=null,bg=-1;tm.tr=0;
-  for(const r of SPEC){if(p.teams.some((t,k)=>k!==j&&roleOf(t)===r))continue;tm.r=r;tm.q=null;
-    for(const k of roleTraits(r)){tm.t={[k]:tm.n};crewVer++;const g=planetIncome(i);if(g>bg){bg=g;br=r}}}
-  Object.assign(tm,save);crewVer++;return br}
-// when a station move finishes: the planet it parked at gets a free retrain, and planets left badly short of ships
-// get Priority Training; offers from the move before end
-function retrainOffers(dest){let n=0;S.planets.forEach((p,i)=>{p.rtFree=false;p.rtPrio=false;if(!p.u||p.teams.length<2)return;
-  if(i===dest)p.rtFree=true;else if(capAvg(i)<mineRate(i)*PRIO_BELOW){p.rtPrio=true;n++}});return n}
-// a veteran perk waiting to be chosen: the milestone index, or -1
-function perkDue(tm){const pk=tm.pk||[];for(let l=0;l<PERK_AT.length;l++)if(tm.n>=PERK_AT[l]&&pk[l]==null)return l;return -1}
-function choosePerk(i,j,x){const tm=S.planets[i].teams[j],l=perkDue(tm);if(l<0||(x!==0&&x!==1))return false;tm.pk=tm.pk||[];tm.pk[l]=x;crewVer++;return true}
-function teamBuy(i,j,k){const tm=S.planets[i].teams[j];if(!tm||tm.n>=MINER_MAX||minerFree(tm)>0||!teamStep(tm,k))return false;
-  const c=teamUpCost(i,j);if(S.cash<c)return false;S.cash-=c;tm.n++;tm.t[k]=(tm.t[k]||0)+1;S.life.ups++;return true}
-const minerFree=mn=>mn.n-TRAITS.reduce((a,[k])=>a+(mn.t[k]||0),0);
+// the next crew can be hired once the planet owns every point its crews have room for
+const hireReady=i=>{const p=crewState(S.planets[i]);return !p.teams.length||p.pts>=ptsCap(i)};
+// hire the planet's next crew: the Crew Chief (claims the planet), or candidate ci for the Shift Crew or Instructors
+function hireTeam(i,ci){const p=crewState(S.planets[i]),j=p.teams.length;if(j>=TEAM_MAX||!hireReady(i))return false;const c=teamHireCost(i,j);if(S.cash<c)return false;
+  S.cash-=c;const tm={};if(j>0){const cd=crewCands(i,j)[ci||0];tm.nm=cd.nm;tm.q=cd.q}
+  p.teams.push(tm);if(tm.q==='eager')p.pts=Math.min(ptsCap(i),p.pts+2);crewVer++;S.life.teams++;if(j===0){p.u=true;p.t=0;S.life.claims++}return true}
+// buy one point and put it on trait k
+function teamBuy(i,k){const p=crewState(S.planets[i]);if(!traitOK(i,k)||minerFree(i)>0||p.pts>=ptsCap(i))return false;const c=pointCost(i);if(S.cash<c)return false;
+  S.cash-=c;p.pts++;p.bought++;p.al[k]=(p.al[k]||0)+1;S.life.ups++;return true}
+// perks: put perk id in slot l. A change takes a refit (half with a fastrefit crew); filling an empty slot, or a free
+// swap after a station move, is instant
+function setPerk(i,l,id){const p=crewState(S.planets[i]);if(l<0||l>=perkSlots(i)||!PERKS[id]||(PERKS[id].need&&!progDone(i,PERKS[id].need)))return false;
+  if(p.perks.some((sl,k)=>k!==l&&k<perkSlots(i)&&sl&&sl.id===id))return false;const cur=p.perks[l],now=Date.now();
+  const instant=!cur||!cur.id||p.swapFree;if(!instant&&cur.id===id)return false;
+  p.perks[l]={id,ready:instant?now:now+REFIT*1000*crewQ(i,'refit')};if(cur&&cur.id&&p.swapFree)p.swapFree=false;crewVer++;return true}
+// training programs: one at a time
+const progCost=(i,id)=>PLANETS[i].scale*PROGRAMS[id].cost*crewQ(i,'tcost');
+const progTime=(i,id)=>PROGRAMS[id].mins*60*crewQ(i,'train');
+function startProg(i,id){const p=crewState(S.planets[i]);if(p.teams.length<3||!PROGRAMS[id]||p.done[id]||p.prog)return false;const c=progCost(i,id);if(S.cash<c)return false;
+  S.cash-=c;p.prog={id,until:Date.now()+progTime(i,id)*1000};return true}
+// finish programs whose time is up (also while away)
+function progTick(now,quiet){S.planets.forEach((p,i)=>{if(!p.prog||now<p.prog.until)return;const id=p.prog.id;crewState(p).done[id]=1;p.prog=null;crewVer++;
+  if(id==='pros'&&!p.vein)p.vein=now+veinEvery(i)*1000;if(!quiet)toast(`${PLANETS[i].n}: ${PROGRAMS[id].n} complete. ${PROGRAMS[id].d}`,4500)})}
+// saves from before the point pool (Beta 1.0.76): every crew's points move into the planet's pool, allocated where
+// they were; Dockhands and Prospectors count as finished Dock training and Prospecting; quirks that suit the crew's
+// new job are kept; old veteran perks are dropped, and planets with a Shift Crew get a free swap to fill its slots
+S.planets.forEach((p,i)=>{if(!p.teams||!p.teams.some(tm=>tm&&('n' in tm||'t' in tm||'r' in tm)))return;p.al=null;crewState(p);let pts=0;const al={},TR={m:1,s:1,c:1,d:1,v:1};
+  p.teams.forEach((tm,j)=>{pts+=Math.min(MINER_MAX,tm.n||0);const t=tm.t||{};for(const k in t)if(TR[k])al[k]=(al[k]||0)+(t[k]||0);
+    if(tm.r==='dock')p.done.dock=1;if(tm.r==='pros')p.done.pros=1;const nt={};if(tm.nm)nt.nm=tm.nm;if(j>0&&tm.q&&QUIRK_POOL[j]&&QUIRK_POOL[j].includes(tm.q))nt.q=tm.q;p.teams[j]=nt});
+  p.pts=pts;p.bought=pts;p.al=al;if(p.teams.length>1)p.swapFree=true;delete p.rtFree;delete p.rtPrio});
+crewVer++;
+// when a station move finishes: the planet it parked at, and planets left badly short of ships, get one free and
+// instant perk swap (until the next move)
+const PRIO_BELOW=.85;
+function swapOffers(dest){let n=0;S.planets.forEach((p,i)=>{p.swapFree=false;if(!p.u||perkSlots(i)<1)return;
+  if(i===dest||capAvg(i)<mineRate(i)*PRIO_BELOW){p.swapFree=true;n++}});return n}
 const settleLv=i=>(S.planets[i]&&S.planets[i].set)||0;
 const settleCost=i=>PLANETS[i].scale*SETTLE_COST[settleLv(i)];
 // settlement bonuses, cached until a settlement is bought or the game state is replaced
@@ -718,9 +748,9 @@ const CARGO_MASS=.06;
 function shipG(i){return rmult('ship')*perm('ship')*setG('gs')}
 function shipL(i){return minerT(i,'s')*setLoc(i,'s')/(1+CARGO_MASS*crewMod(i).mass*teamPts(i,'c'))}
 function shipSpeed(i){return ECON.SHIP_BASE*shipG(i)*shipL(i)}
-// docking, orbiting, landing and loading: 28 s, cut by Dockhands and by quirks and perks
+// docking, orbiting, landing and loading: 28 s, cut by Handling points (after Dock training) and by quirks and perks
 const handleTime=i=>{const d=S.planets[i]?teamPts(i,'d'):0;return Math.max(HANDLE_MIN,(ECON.SHIP_OVH+crewMod(i).h)/(1+DOCK_K*d))};
-// Prospectors: ore delivered per unit hauled, and the rich-vein period in seconds
+// Ore yield (after Prospecting): ore delivered per unit hauled, and the rich-vein period in seconds
 const yieldF=i=>(1+YIELD_STEP*teamPts(i,'v'))*crewMod(i).v;
 const veinEvery=i=>VEIN_EVERY/crewMod(i).vein;
 const cruiseTime=i=>2*PLANETS[i].er*distF(PLANETS[i],phaseNow(i))/shipSpeed(i);
@@ -743,17 +773,12 @@ function planetFlow(i){const P=PLANETS[i],m=mineRate(i),cg=cargo(i),v=shipSpeed(
 // ships keep up: next to nothing overflows over a whole cycle
 const keepsUp=f=>f.over<=f.m*.002;
 // a planet's income in ore value per second: hauled ore times yield, plus rich veins, plus the overflow's 25% sale
-function planetIncome(i,f){f=f||planetFlow(i);const cm=crewMod(i),vein=hasRole(i,'pros')?VEIN_SEC*f.m*cm.veinSize/veinEvery(i):0;
+function planetIncome(i,f){f=f||planetFlow(i);const cm=crewMod(i),vein=progDone(i,'pros')?VEIN_SEC*f.m*cm.veinSize/veinEvery(i):0;
   return ((f.hauled+vein)*yieldF(i)+f.over*OVER_PRICE*cm.over)*avgValue(i)}
-// what one more point on team j's trait k adds to the planet's income (add it, measure, take it back)
-function pointGain(i,j,k){const tm=S.planets[i].teams[j],a=planetIncome(i);tm.t[k]=(tm.t[k]||0)+1;const b=planetIncome(i);tm.t[k]--;return b-a}
-// the trait on team j that adds the most income for one point
-function bestTrait(i,j){const tm=S.planets[i].teams[j];let bk=null,bg=-1;for(const k of roleTraits(roleOf(tm))){const g=pointGain(i,j,k);if(g>bg){bg=g;bk=k}}return bk}
-// how much a new specialist of role r would add with its first 5 points on its best trait (for the Recommended tag)
-function roleGain(i,r){const p=S.planets[i];if(hasRole(i,r)||p.teams.length>=TEAM_MAX)return -1;const a=planetIncome(i);let best=0;
-  for(const k of roleTraits(r)){p.teams.push({r,n:5,t:{[k]:5},pk:[]});crewVer++;best=Math.max(best,planetIncome(i)-a);p.teams.pop();crewVer++}
-  return best}
-const bestRole=i=>{let br=null,bg=-1;for(const r of SPEC){const g=roleGain(i,r);if(g>bg){bg=g;br=r}}return br};
+// what one more point on trait k adds to the planet's income (add it, measure, take it back)
+function pointGain(i,k){const p=crewState(S.planets[i]),a=planetIncome(i);p.al[k]=(p.al[k]||0)+1;p.pts++;const b=planetIncome(i);p.al[k]--;p.pts--;return b-a}
+// the trait that adds the most income for one point
+function bestTrait(i){let bk=null,bg=-1;for(const k of planetTraits(i)){const g=pointGain(i,k);if(g>bg){bg=g;bk=k}}return bk}
 // the ship's on-screen timeline (fractions of the trip) follows the current flight and handling times
 function layFor(i){const P=PLANETS[i],cr=cruiseTime(i)/2,hf=handleTime(i)/ECON.SHIP_OVH,D=ECON.DOCK_T*hf;
   const seg=[D,cr,...HANDLE_SEG.map(x=>x*hf),cr],tot=seg.reduce((a,b)=>a+b,0)+D;let acc=0;for(let k=0;k<8;k++){acc+=seg[k];P.lay[k]=acc/tot}
@@ -764,7 +789,7 @@ const tripTime=i=>cruiseTime(i)+handleTime(i);
 const haul=i=>Math.min(mineRate(i),capAvg(i));
 // ore silos: the stockpile holds this many cargo loads; ore mined beyond it goes to the overflow
 const siloBase=()=>has('silo2')?8:has('silo1')?3:1;
-// plus Dockhands (one load per 5 points) and quirks and perks
+// plus one load per 5 Handling points, Logistics, and quirks and perks
 const siloLoads=i=>siloBase()+(i==null?0:crewMod(i).silo+Math.floor(teamPts(i,'d')/5));
 const siloCap=i=>cargo(i)*siloLoads(i);
 /* silo needed to get through the far stretch: run the balance (mined - hauled) over two cycles and take its peak */
@@ -781,7 +806,7 @@ function sellItem(key,keep){const store=key[0]==='b'?S.bars:S.inv,o=+key.slice(1
 function surgeBonus(v){const d=S.od;if(!odOn()||!(d.pool>0))return 0;const b=Math.min(v,d.pool);d.pool-=b;
   if(d.pool<=0){const now=Date.now();d.until=now;d.ready=now+OD_CD*1000;toast('Market Surge sold out: the bonus is used up. It recharges in '+fmtTime(OD_CD)+'.')}return b}
 function autoSell(){if(!has('auto'))return;for(const k in S.auto){if(!S.auto[k])continue;sellItem(k,k[0]==='o'?Math.max(reserve(+k.slice(1)),researchReserve(+k.slice(1))):researchBarReserve(+k.slice(1)))}}
-// ore arriving from planet i; Prospectors' yield multiplies every load
+// ore arriving from planet i; Ore yield (Prospecting) multiplies every load
 function deliver(i,units){units*=yieldF(i);for(const [o,f] of PLANETS[i].mix){S.inv[o]=(S.inv[o]||0)+units*f;S.life.del[o]=(S.life.del[o]||0)+units*f}}
 function discovered(){const set=new Set();S.planets.forEach((p,i)=>{if(p.u)PLANETS[i].mix.forEach(([o])=>set.add(o))});return [...set].sort((a,b)=>a-b)}
 
@@ -827,20 +852,20 @@ function probeTick(now,quiet){const pr=S.probe,cap=(has('night')?24:8)*3600e3,go
   if(pr.nextAt<now-cap)pr.nextAt=now-cap;
   for(let guard=0;guard<500;guard++){
     if(pr.out&&now>=pr.out.at+ECON.PROBE_FLY*1000){got.push(probeReturn());continue}
-    if(!pr.out&&now>=pr.nextAt){let d=discovered();const pz=[];S.planets.forEach((p,i)=>{if(p.u&&hasRole(i,'pros'))PLANETS[i].mix.forEach(([o])=>pz.push(o))});if(pz.length&&Math.random()<.5)d=pz;pr.out={at:pr.nextAt,ore:d[Math.floor(Math.random()*d.length)],ang:Math.random()*Math.PI*2};pr.st.launched++;pr.nextAt+=ECON.PROBE_EVERY*1000;continue}
+    if(!pr.out&&now>=pr.nextAt){let d=discovered();const pz=[];S.planets.forEach((p,i)=>{if(p.u&&progDone(i,'pros'))PLANETS[i].mix.forEach(([o])=>pz.push(o))});if(pz.length&&Math.random()<.5)d=pz;pr.out={at:pr.nextAt,ore:d[Math.floor(Math.random()*d.length)],ang:Math.random()*Math.PI*2};pr.st.launched++;pr.nextAt+=ECON.PROBE_EVERY*1000;continue}
     break}
   if(got.length&&!quiet)toast(got.length===1?`Probe returned with ${fmt(got[0][1])} ${ORES[got[0][0]].n} ore.`:`${got.length} probes returned.`,3400);
   return got}
-/* Rich veins: a planet with Prospectors strikes one every veinEvery(i) seconds, shipping VEIN_SEC seconds of its mining
+/* Rich veins: a planet that has learned Prospecting strikes one every veinEvery(i) seconds, shipping VEIN_SEC seconds of its mining
    straight to the Market (no hauling needed). Timed by the real clock, so they keep coming while the game is closed. */
 function veinTick(now,quiet){const cap=(has('night')?24:8)*3600e3;let n=0,last=null;
-  S.planets.forEach((p,i)=>{if(!p.u||!hasRole(i,'pros'))return;const per=veinEvery(i)*1000;if(!p.vein)p.vein=now+per;if(p.vein<now-cap)p.vein=now-cap;
+  S.planets.forEach((p,i)=>{if(!p.u||!progDone(i,'pros'))return;const per=veinEvery(i)*1000;if(!p.vein)p.vein=now+per;if(p.vein<now-cap)p.vein=now-cap;
     for(let g=0;g<200&&now>=p.vein;g++){const u=VEIN_SEC*mineRate(i)*crewMod(i).veinSize;deliver(i,u);p.vein+=per;n++;last=[i,u*yieldF(i)]}});
-  if(n&&!quiet){const [i,u]=last,tm=S.planets[i].teams.find(t=>roleOf(t)==='pros');toast(`Rich vein! The ${tm.nm||'Prospectors'} struck ${fmt(u)} ore on ${PLANETS[i].n}.`,3400)}
+  if(n&&!quiet){const [i,u]=last;toast(`Rich vein! The ${teamName(i,0)} struck ${fmt(u)} ore on ${PLANETS[i].n}.`,3400)}
   if(n)autoSell();return n}
 function offline(sec,announce){
   const cap=(has('night')?24:8)*3600;sec=Math.min(sec,cap);
-  const before=S.cash;let units=0;const probes=probeTick(Date.now(),true).length,veins=veinTick(Date.now(),true);
+  const before=S.cash;let units=0;const probes=probeTick(Date.now(),true).length;progTick(Date.now(),true);const veins=veinTick(Date.now(),true);
   S.planets.forEach((p,i)=>{if(!p.u)return;const rate=mineRate(i),capR=capAvg(i);
     // spare ship capacity also carries off overflow while away
     const back=Math.min(p.over||0,Math.max(0,capR-rate)*sec),u=haul(i)*sec+back;p.over=(p.over||0)-back;units+=u;deliver(i,u);S.life.deliv+=Math.floor(sec/tripTime(i));p.over+=Math.max(0,rate-haul(i))*sec});
@@ -921,9 +946,9 @@ function evGive(r){
   if(r.type==='dust'){S.dm+=r.amt;return `+${r.amt} star dust.`}
   if(r.type==='res'){const got=[];for(let k=0;k<r.amt;k++){const o=openResearch().sort((a,b)=>a.cost-b.cost)[0];if(!o)break;S.research[o.id]=1;got.push(o.n)}
     if(got.length)return `Free research: ${got.join(', ')}.`;S.dm+=8*r.amt;return `No research left, so +${8*r.amt} star dust instead.`}
-  if(r.type==='pts'){let left=r.amt;const tms=[];S.planets.forEach((p,i)=>{if(p.u)p.teams.forEach(tm=>tms.push(tm))});tms.reverse();
-    for(let guard=0;left>0&&guard<500;guard++){const t=tms.find(tm=>tm.n<MINER_MAX);if(!t)break;t.n++;left--;tms.push(tms.shift())}
-    const given=r.amt-left;if(left>0)S.dm+=Math.ceil(left/2);return `${given} free upgrade point${given===1?'':'s'} on your mining crews${left>0?` (+${Math.ceil(left/2)} star dust for the rest)`:''}. Tap the green buttons to place them.`}}
+  if(r.type==='pts'){let left=r.amt;const ps=[];S.planets.forEach((p,i)=>{if(p.u)ps.push(i)});ps.reverse();
+    for(let guard=0;left>0&&guard<500&&ps.length;guard++){const i=ps[guard%ps.length],p=crewState(S.planets[i]);if(p.pts<ptsCap(i)){p.pts++;left--}else if(ps.every(k=>S.planets[k].pts>=ptsCap(k)))break}
+    const given=r.amt-left;if(left>0)S.dm+=Math.ceil(left/2);return `${given} free upgrade point${given===1?'':'s'} on your planets${left>0?` (+${Math.ceil(left/2)} star dust for the rest)`:''}. Tap the green buttons to place them.`}}
 function evAccept(k){const now=Date.now(),w=evWeek(now),E=S.ev;if(E.act&&(E.act.status==='active'||E.act.status==='done'))return false;if(E.taken[w])return false;
   const d=evDef(w,k),tg=evTarget(d);E.taken[w]=1;
   E.act=Object.assign({},d,tg,{story:evStory(d,tg),reward:evReward(d),acc:now,end:now+d.days*864e5,status:'active'});E.act.start=evProg(E.act);return true}
@@ -1934,7 +1959,7 @@ function updateWorld(dt){
   stationPos(STP);station.position.copy(STP);
   // parking: the lane's dashed line shows only while the station uses it; thrusters glow during a move; finishing a move updates the world
   {const k=S.park,e=parkProg(),moving=k&&e<1;stThrust.forEach((sp,n)=>{sp.material.opacity=moving?.75+.25*Math.sin(simTime*30+n):0});
-   if(k&&!k.done&&e>=1){k.done=1;const pr=k.i>=0?retrainOffers(k.i):0;refreshWorld();save();toast(k.i>=0?`${S.st&&S.st.name?S.st.name:'The station'} is parked above ${PLANETS[k.i].n}.${S.planets[k.i].teams.length>1?` Free retrain there.`:''}${pr?` Priority Training on ${pr} planet${pr>1?'s':''}.`:''}`:`${S.st&&S.st.name?S.st.name:'The station'} is back in its own lane.`,4500)}}
+   if(k&&!k.done&&e>=1){k.done=1;const pr=k.i>=0?swapOffers(k.i):0;refreshWorld();save();toast(k.i>=0?`${S.st&&S.st.name?S.st.name:'The station'} is parked above ${PLANETS[k.i].n}.${pr?` Free perk swap on ${pr} planet${pr>1?'s':''}.`:''}`:`${S.st&&S.st.name?S.st.name:'The station'} is back in its own lane.`,4500)}}
   {const p=1+Math.sin(simTime*.7)*.04;sunHalo.scale.set(SUN_R*6.5*p,SUN_R*6.5*p,1);sunMat.uniforms.time.value=simTime;flareMat.uniforms.time.value=simTime;sunFlare.quaternion.copy(camera.quaternion);sunCorona.material.opacity=.42+.06*Math.sin(simTime*.43)}
   station.rotation.y+=dt*STATION_SPIN;habRing.rotation.y+=dt*RING_SPIN;
   updateGlows(stGlowL);
@@ -2250,31 +2275,31 @@ function viewPlanet(){
   h+=viewPark(i)+viewTeams(i,shipsBN,rate,hl)+viewSettlement(i);
   return h}
 // the hire button sits under the Specialists card's title, and the settlement button under the Settlement card's title
-// retraining a specialist: a button with its price, then (once opened) a role picker and three new quirks
-const rtPick={};
-function retrainUI(i,j){const p=S.planets[i],tm=p.teams[j],c=retrainCost(i,j),full=retrainFull(i,j),pk=rtPick[i];
-  if(training(tm))return `<div class="note rtn"><span>Retraining as <b style="color:var(--ink)">${ROLES[roleOf(tm)].n}</b> · back to work in ${fmtTime((tm.tr-Date.now())/1000)}. Place its points now.</span></div>`;
-  const tag=p.rtFree?'<i class="rtt">Free</i>':p.rtPrio?`<i class="rtt">Priority Training · ${Math.round((1-RT_PRIO)*100)}% off</i>`:'';
-  if(!pk||pk.j!==j)return `<button class="btn ghost wide rtb" data-act="rtopen" data-p="${i}" data-j="${j}" type="button">Retrain this team${tag}<small>${c?fmt(c)+' credits'+(p.rtPrio?` (was ${fmt(full)})`:''):'Free after the station move'} · new role or quirk · ${Math.round(RT_TIME/60)} min off the job</small></button>`;
-  let h=`<div class="hire"><div class="hh"><span>Retrain ${esc(teamName(i,j))}</span><span class="num">${c?fmt(c)+' credits':'Free'}</span></div>`;
-  if(!pk.r){const rec=retrainBest(i,j);
-    h+=`<p class="hs"><span>Pick its new role. Points come back as free points and perks reset.</span><button class="lnk" data-act="rtclose" data-p="${i}" type="button">Cancel</button></p><div class="roles">${SPEC.map(x=>{const other=p.teams.some((t,k)=>k!==j&&roleOf(t)===x),cur=roleOf(tm)===x;
-      return `<button class="role${x===rec&&!other?' rec':''}" data-act="rtrole" data-p="${i}" data-j="${j}" data-r="${x}" ${other?'disabled':''} type="button"><span class="rn">${ROLES[x].n}${x===rec&&!other&&!cur?'<i>Recommended</i>':''}${cur?'<i>Current</i>':''}</span><span class="rs">${other?'Another team has this role':cur?'Same role, new quirk':ROLES[x].s}</span></button>`}).join('')}</div>`}
-  else h+=`<p class="hs"><span><b style="color:var(--ink)">${ROLES[pk.r].n}:</b> pick a new quirk.</span><button class="lnk" data-act="rtrole" data-p="${i}" data-j="${j}" data-r="" type="button">‹ Other roles</button></p>
-    <div class="cands">${retrainQuirks(i,j,pk.r).map((q,k)=>`<div class="cand"><div><b>${esc(teamName(i,j))}</b><span>${CREW_QUIRKS[q].d}</span></div><button class="btn" data-act="retrain" data-p="${i}" data-j="${j}" data-r="${pk.r}" data-c="${k}" ${S.cash>=c?'':'disabled'} type="button">Retrain<small>${c?fmt(c):'Free'}</small></button></div>`).join('')}</div>`;
+// hiring the next crew: locked until the planet owns all the points its crews have room for, then three candidates
+function hireBtn(i){const p=crewState(S.planets[i]),n=p.teams.length;if(n>=TEAM_MAX)return '';const c=teamHireCost(i,n),can=S.cash>=c,K=CREW_KIND[n],cap=ptsCap(i);
+  let h=`<div class="hire${hireReady(i)?'':' locked'}"><div class="hh"><span>${embIcon(i,n,16)}Hire ${n===1?'a Shift Crew':'Instructors'}</span><span class="num">${fmt(c)} credits</span></div>`;
+  if(!hireReady(i))return h+`<p class="hs"><span>${K.s}. Unlocks when the planet owns all ${cap} points: <b style="color:var(--ink)">${p.pts} / ${cap}</b>.</span></p><div class="bar"><i style="width:${(p.pts/cap*100).toFixed(1)}%;background:var(--ore)"></i></div></div>`;
+  h+=`<p class="hs"><span>${K.s}. Pick a crew.</span></p><div class="cands">${crewCands(i,n).map((cd,k)=>`<div class="cand"><div><b>${esc(cd.nm)}</b><span>${CREW_QUIRKS[cd.q].d}</span></div><button class="btn" data-act="hire" data-p="${i}" data-c="${k}" ${can?'':'disabled'} type="button">Hire<small>${fmt(c)}</small></button></div>`).join('')}</div>`;
   return h+'</div>'}
-// hiring a specialist: first pick a role (one of each per planet), then one of three candidate crews
-const hirePick={};
-function hireBtn(i){const p=S.planets[i],n=p.teams.length;if(n>=TEAM_MAX)return '';const c=teamHireCost(i,n),can=S.cash>=c,r=hirePick[i];
-  if(!hireReady(i)){const last=p.teams[n-1];return `<div class="hire locked"><div class="hh"><span>${embIcon(i,n,16)}Hire a ${n===1?'second':'third'} team</span><span class="num">${fmt(c)} credits</span></div>
-    <p class="hs"><span>Unlocks when the ${esc(teamName(i,n-1))} is fully upgraded: <b style="color:var(--ink)">${last.n} / ${MINER_MAX}</b>.</span></p><div class="bar"><i style="width:${(last.n/MINER_MAX*100).toFixed(1)}%;background:var(--ore)"></i></div></div>`}
-  let h=`<div class="hire"><div class="hh"><span>${embIcon(i,n,16)}Hire a ${n===1?'second':'third'} team</span><span class="num">${fmt(c)} credits</span></div>`;
-  if(!r||hasRole(i,r)){const rec=bestRole(i);
-    h+=`<p class="hs"><span>Pick a specialist. Each role can be hired once per planet.</span></p><div class="roles">${SPEC.map(x=>{const tk=hasRole(i,x),rc=x===rec&&!tk;
-      return `<button class="role${rc?' rec':''}" data-act="hrole" data-p="${i}" data-r="${x}" ${tk?'disabled':''} type="button"><span class="rn">${ROLES[x].n}${rc?'<i>Recommended</i>':''}</span><span class="rs">${tk?'Already on this planet':ROLES[x].s}</span></button>`}).join('')}</div>`}
-  else{h+=`<p class="hs"><span><b style="color:var(--ink)">${ROLES[r].n}:</b> pick a crew.</span><button class="lnk" data-act="hrole" data-p="${i}" data-r="" type="button">‹ Other roles</button></p>
-    <div class="cands">${crewCands(i,n,r).map((cd,k)=>`<div class="cand"><div><b>${esc(cd.nm)}</b><span>${CREW_QUIRKS[cd.q].d}</span></div><button class="btn" data-act="hire" data-p="${i}" data-r="${r}" data-c="${k}" ${can?'':'disabled'} type="button">Hire<small>${fmt(c)}</small></button></div>`).join('')}</div>`}
+// the Shift Crew's perk slots; tapping Change opens the list of perks for that slot
+const perkPick={};
+function viewPerks(i){const p=crewState(S.planets[i]),n=perkSlots(i);if(n<1)return '';const now=Date.now(),open=perkPick[i];
+  let h=`<div class="sub"><div class="head"><h4>Shift Crew perks</h4><span class="num">${n} slot${n>1?'s':''}${p.swapFree?' · <b style="color:var(--ore)">free swap</b>':''}</span></div>`;
+  for(let l=0;l<n;l++){const sl=p.perks[l],pk=sl&&sl.id&&PERKS[sl.id],wait=pk&&!perkActive(sl);
+    h+=`<div class="perkrow"><span>${pk?`<b>${pk.d}</b>${wait?` <i>· refit ${fmtTime((sl.ready-now)/1000)}</i>`:''}`:'<i>Empty slot</i>'}</span><button class="btn ghost" data-act="pkopen" data-p="${i}" data-l="${l}" type="button">${pk?'Change':'Choose'}</button></div>`;
+    if(open===l){const used=new Set(p.perks.slice(0,n).filter((x,k)=>k!==l&&x&&x.id).map(x=>x.id));
+      h+=`<div class="perklist">${Object.entries(PERKS).map(([id,x])=>{const need=x.need&&!progDone(i,x.need),dis=need||used.has(id)||(sl&&sl.id===id);
+        return `<button class="btn ghost" data-act="pkset" data-p="${i}" data-l="${l}" data-id="${id}" ${dis?'disabled':''} type="button">${x.d}${need?' <small>needs Prospecting</small>':used.has(id)?' <small>in another slot</small>':''}</button>`}).join('')}
+        <p class="hs"><span>${pk&&!p.swapFree?`Changing a perk takes ${fmtTime(REFIT*crewQ(i,'refit'))}; the slot is empty until the refit is done.`:'Takes effect right away.'}</span><button class="lnk" data-act="pkclose" data-p="${i}" type="button">Close</button></p></div>`}}
+  if(n<3)h+=`<p class="hs"><span>${n<2?'A second slot opens when the planet has 40 points.':''}${!progDone(i,'shifts')?`${n<2?' ':''}Advanced shifts training adds a slot.`:''}</span></p>`;
   return h+'</div>'}
+// the Instructors' training programs
+function viewPrograms(i){const p=crewState(S.planets[i]);if(p.teams.length<3)return '';const now=Date.now(),run=p.prog;
+  let h=`<div class="sub"><div class="head"><h4>Training programs</h4><span class="num">${Object.keys(p.done).length} / ${Object.keys(PROGRAMS).length} done</span></div>`;
+  for(const [id,g] of Object.entries(PROGRAMS)){const done=p.done[id],on=run&&run.id===id,c=progCost(i,id),t=progTime(i,id);
+    h+=`<div class="progrow${done?' done':''}"><div><b>${g.n}${done?' ✓':''}</b><span>${g.d}</span>${on?`<div class="bar"><i style="width:${Math.min(100,(1-(run.until-now)/(t*1000))*100).toFixed(1)}%;background:var(--ore)"></i></div>`:''}</div>
+      ${done?'':on?`<span class="num pst">${fmtTime((run.until-now)/1000)}</span>`:`<button class="btn ghost" data-act="prog" data-p="${i}" data-id="${id}" ${run||S.cash<c?'disabled':''} type="button">Train<small>${fmt(c)} · ${Math.round(t/60)}m</small></button>`}</div>`}
+  return h+(run?'<p class="hs"><span>One program at a time.</span></p>':'')+'</div>'}
 function settleBtn(i){const p=S.planets[i];if(p.teams.length<TEAM_MAX||settleLv(i)>=3)return '';const lv=settleLv(i),c=settleCost(i),[nm,ups]=SETTLE[i];
   return `<button class="btn wide" data-act="settle" data-p="${i}" ${S.cash>=c?'':'disabled'} type="button">${lv?'Grow '+nm+' into a '+SETTLE_LV[lv]:'Found '+nm}: ${ups[lv][0]}<small>${fmt(c)} credits · ${settleDesc(i,ups[lv][1])}</small></button>`}
 // settlement card: its three upgrades, what each does, and which are built
@@ -2287,78 +2312,68 @@ function viewSettlement(i){const p=S.planets[i],[nm,ups]=SETTLE[i],lv=settleLv(i
     h+=`<div class="row"><div class="txt"><span class="t">${done?'<span style="color:var(--ship)">✓</span> ':''}${un}<span style="color:var(--muted);font:500 11px var(--f-body);margin-left:6px">${SETTLE_LV[k]}</span></span><span class="s">${settleDesc(i,kind)}</span></div>${!done&&k===lv&&ready?`<span class="num" style="font-size:12px;color:var(--muted);white-space:nowrap">${fmt(settleCost(i))} cr</span>`:''}</div>`});
   return h+'</div></div>'}
 
-const teamSel={};
 // small rates keep two decimals so a trickle never reads 0/s
 function rf(v){return v<10?(Math.round(v*100)/100).toFixed(2):fmt(v)}
 /* mined vs hauled at a glance: teal is what the ships carry, red stripes are ore piling up as overflow */
 /* ===== Tuning: plan point changes on the Specialists card, see them on its chart, then apply them =====
-   A plan is a set of point changes per team and trait, {j:{k:+/-n}}. It's tried on a copy of the planet (withPlan)
-   to draw the dashed "after" chart and work out the cost: removals are free, placements use the team's free points
-   first, then buy upgrades. Plans come from dragging the chart's handles or from Balance, and + and − fine-tune a
-   plan while one is showing. Nothing changes until Apply. */
+   A plan is a set of point changes per trait, {k:+/-n}, on the planet's one pool. It's tried on a copy of the planet
+   (withPlan) to draw the dashed "after" chart and work out the cost: removals are free, placements use free points
+   first, then buy points at the planet's rising price. Plans come from dragging the chart's handles or from Balance,
+   and the trait rows' + and − fine-tune a plan while one is showing. Nothing changes until Apply. */
 const TN={m:'Mine rate',s:'Speed',c:'Cargo',d:'Handling',v:'Ore yield'};
-// per planet: the plan being previewed; while there is one, the team rows' + and − change it instead of acting at once
 const tune={};
 const tuneOf=i=>tune[i]||(tune[i]={plan:{}});
-const planEmpty=pl=>!Object.values(pl).some(o=>Object.values(o).some(d=>d));
-// points a team would need to buy for its part of a plan
-function planBuys(tm,o){let a=0,r=0;for(const k in o){if(o[k]>0)a+=o[k];else r-=o[k]}return Math.max(0,a-r-minerFree(tm))}
-function planOK(i,pl){const T=S.planets[i].teams;for(const j in pl){const tm=T[j];if(!tm)return false;const o=pl[j];if(training(tm)&&Object.values(o).some(d=>d))return false;
-  for(const k in o){if(o[k]&&!teamStep(tm,k))return false;if((tm.t[k]||0)+o[k]<0)return false}if(tm.n+planBuys(tm,o)>MINER_MAX)return false}return true}
-function planCost(i,pl){let c=0;const T=S.planets[i].teams;for(const j in pl){const tm=T[j],b=planBuys(tm,pl[j]),n0=tm.n;for(let m=0;m<b;m++){tm.n=n0+m;c+=teamUpCost(i,+j)}tm.n=n0}return c}
+const planEmpty=pl=>!Object.values(pl).some(d=>d);
+// points the plan would need to buy
+function planBuys(i,pl){let a=0,r=0;for(const k in pl){if(pl[k]>0)a+=pl[k];else r-=pl[k]}return Math.max(0,a-r-minerFree(i))}
+function planOK(i,pl){const p=crewState(S.planets[i]);for(const k in pl){if(pl[k]&&!traitOK(i,k))return false;if((p.al[k]||0)+pl[k]<0)return false}return p.pts+planBuys(i,pl)<=ptsCap(i)}
+function planCost(i,pl){const p=crewState(S.planets[i]),b=planBuys(i,pl);let c=0;for(let m=0;m<b;m++)c+=pointCost(i,p.bought+m);return c}
 // run f on the planet as it would be with the plan applied, then put everything back
-function withPlan(i,pl,f){const T=S.planets[i].teams,saved=[];
-  for(const j in pl){const tm=T[j];saved.push([tm,{...tm.t},tm.n]);tm.n+=planBuys(tm,pl[j]);for(const k in pl[j])tm.t[k]=(tm.t[k]||0)+pl[j][k]}
-  try{return f()}finally{for(const [tm,t,n] of saved){tm.t=t;tm.n=n}}}
-const planAdd=(pl,j,k,d)=>{const o=pl[j]||(pl[j]={});o[k]=(o[k]||0)+d;if(!o[k])delete o[k];if(!Object.keys(o).length)delete pl[j];return pl};
-const planCopy=pl=>JSON.parse(JSON.stringify(pl));
-// teams that can take a point of trait k (not retraining)
-const teamsFor=(i,k)=>S.planets[i].teams.map((tm,j)=>j).filter(j=>{const tm=S.planets[i].teams[j];return teamStep(tm,k)&&!training(tm)});
-// the price of team j's next point under a plan: 0 while it still has free points, else its next upgrade
-function nextPrice(i,pl,j){const tm=S.planets[i].teams[j],o=pl[j]||{};let a=0,r=0;for(const k in o){if(o[k]>0)a+=o[k];else r-=o[k]}
-  if(a-r<minerFree(tm))return 0;const b=planBuys(tm,o);if(tm.n+b>=MINER_MAX)return Infinity;const n0=tm.n;tm.n=n0+b;const c=teamUpCost(i,j);tm.n=n0;return c}
+function withPlan(i,pl,f){const p=crewState(S.planets[i]),al={...p.al},pts=p.pts,bo=p.bought,b=planBuys(i,pl);
+  p.pts+=b;p.bought+=b;for(const k in pl)p.al[k]=(p.al[k]||0)+pl[k];
+  try{return f()}finally{p.al=al;p.pts=pts;p.bought=bo}}
+const planAdd=(pl,k,d)=>{pl[k]=(pl[k]||0)+d;if(!pl[k])delete pl[k];return pl};
+const planCopy=pl=>({...pl});
+// the price of the next point under a plan: 0 while free points remain, Infinity when the planet is out of room
+function nextPrice(i,pl){let a=0,r=0;for(const k in pl){if(pl[k]>0)a+=pl[k];else r-=pl[k]}if(a-r<minerFree(i))return 0;
+  const p=crewState(S.planets[i]),b=planBuys(i,pl);if(p.pts+b>=ptsCap(i))return Infinity;return pointCost(i,p.bought+b)}
 // cycle-average hauling capacity under a plan
 const capWith=(i,pl)=>withPlan(i,pl,()=>capAvg(i)),mineWith=(i,pl)=>withPlan(i,pl,()=>mineRate(i));
 /* the cheapest plan that moves the mining line (which 'm') or the average hauling (which 'h') to target, starting
    from plan base. Adds one point at a time (free points first, then the best value per credit), or takes points off
    (the ones that lose least), and stops at whichever whole step lands closest to the target. */
-function planTo(i,base,which,target){let pl=planCopy(base);const val=q=>which==='m'?mineWith(i,q):capWith(i,q),traits=which==='m'?['m']:['s','c','d'];
-  let cur=val(pl),best=planCopy(pl),bd=Math.abs(cur-target);
-  for(let g=0;g<90;g++){const up=target>cur;let pick=null,ps=-Infinity,pv=cur,pfree=false;
-    for(const k of traits)for(const j of teamsFor(i,k)){const tm=S.planets[i].teams[j],o=pl[j]||{};
-      if(up){const pr=nextPrice(i,pl,j);if(!isFinite(pr))continue;const q=planAdd(planCopy(pl),j,k,1);if(!planOK(i,q))continue;const v=val(q),gn=v-cur;if(gn<=1e-12)continue;
-        const fr=pr===0,sc=fr?gn:gn/pr;if((fr&&!pfree)||(fr===pfree&&sc>ps)){pfree=fr;ps=sc;pick=q;pv=v}}
-      else{if((tm.t[k]||0)+(o[k]||0)<=0)continue;const q=planAdd(planCopy(pl),j,k,-1);const v=val(q),ls=cur-v;const sc=-ls-(o[k]>0?0:1e-9*j);if(sc>ps){ps=sc;pick=q;pv=v}}}
+function planTo(i,base,which,target){let pl=planCopy(base);const val=q=>which==='m'?mineWith(i,q):capWith(i,q),traits=(which==='m'?['m']:['s','c','d']).filter(k=>traitOK(i,k));
+  const p=crewState(S.planets[i]);let cur=val(pl),best=planCopy(pl),bd=Math.abs(cur-target);
+  for(let g=0;g<90;g++){const up=target>cur;let pick=null,ps=-Infinity,pv=cur;const pr=up?nextPrice(i,pl):0;if(up&&!isFinite(pr))break;
+    for(const k of traits){
+      if(up){const q=planAdd(planCopy(pl),k,1);const v=val(q),gn=v-cur;if(gn<=1e-12)continue;const sc=pr===0?gn:gn/pr;if(sc>ps){ps=sc;pick=q;pv=v}}
+      else{if((p.al[k]||0)+(pl[k]||0)<=0)continue;const q=planAdd(planCopy(pl),k,-1);const v=val(q),sc=-(cur-v);if(sc>ps){ps=sc;pick=q;pv=v}}}
     if(!pick)break;pl=pick;cur=pv;const d=Math.abs(cur-target);if(d<bd){bd=d;best=planCopy(pl)}
     if(up?cur>=target:cur<=target)break}
   return best}
-/* Balance: place every free point, then keep moving single points between a crew's own traits. A layout where the
-   ships keep up all cycle always beats one where they don't; among those, the most income wins (among those that
-   can't keep up, the least overflow). Uses only points the planet already has, so it never costs anything. */
+/* Balance: place every free point, then keep moving single points between traits. A layout where the ships keep up
+   all cycle always beats one where they don't; among those, the most income wins (among those that can't keep up,
+   the least overflow). Uses only points the planet already has, so it never costs anything. */
 // income is always above zero and overflow makes a score below zero, so any layout that keeps up beats any that doesn't
 function balScore(i,q){return withPlan(i,q,()=>{const f=planetFlow(i);return keepsUp(f)?planetIncome(i,f):-f.over})}
-function planBalance(i){const T=S.planets[i].teams;let pl={};const inc=q=>balScore(i,q);let cur=inc(pl);
-  T.forEach((tm,j)=>{if(training(tm))return;const ks=roleTraits(roleOf(tm));for(let f=minerFree(tm);f>0;f--){let bq=null,bv=-Infinity;
-    for(const k of ks){const q=planAdd(planCopy(pl),j,k,1);const v=inc(q);if(v>bv){bv=v;bq=q}}if(!bq)break;pl=bq;cur=bv}});
-  for(let g=0;g<200;g++){let bq=null,bv=cur+Math.abs(cur)*1e-6;
-    T.forEach((tm,j)=>{if(training(tm))return;const ks=roleTraits(roleOf(tm));for(const a of ks)for(const b of ks){if(a===b||(tm.t[a]||0)+((pl[j]||{})[a]||0)<=0)continue;
-      const q=planAdd(planAdd(planCopy(pl),j,a,-1),j,b,1);const v=inc(q);if(v>bv){bv=v;bq=q}}});
+function planBalance(i){const ks=planetTraits(i),p=crewState(S.planets[i]);let pl={};const inc=q=>balScore(i,q);let cur=inc(pl);
+  for(let f=minerFree(i);f>0;f--){let bq=null,bv=-Infinity;for(const k of ks){const q=planAdd(planCopy(pl),k,1);const v=inc(q);if(v>bv){bv=v;bq=q}}if(!bq)break;pl=bq;cur=bv}
+  for(let g=0;g<300;g++){let bq=null,bv=cur+Math.abs(cur)*1e-6;
+    for(const a of ks)for(const b of ks){if(a===b||(p.al[a]||0)+(pl[a]||0)<=0)continue;const q=planAdd(planAdd(planCopy(pl),a,-1),b,1);const v=inc(q);if(v>bv){bv=v;bq=q}}
     if(!bq)break;pl=bq;cur=bv}
   return pl}
 // the cheapest points to buy on top of plan pl so the ships keep up: hauling points (Speed, Cargo, Handling) one at a
-// time, free points first, then the most overflow removed per credit. ok is false if the crews run out of room first.
-function planKeepUp(i,pl){pl=planCopy(pl);const fl=q=>withPlan(i,q,()=>planetFlow(i));let f=fl(pl);
-  for(let g=0;g<80&&!keepsUp(f);g++){let pick=null,ps=-Infinity,pf=f,pfree=false;
-    for(const k of['s','c','d'])for(const j of teamsFor(i,k)){const pr=nextPrice(i,pl,j);if(!isFinite(pr))continue;const q=planAdd(planCopy(pl),j,k,1);if(!planOK(i,q))continue;
-      const g2=fl(q),gn=f.over-g2.over;if(gn<=0)continue;const fr=pr===0,sc=fr?gn:gn/pr;if((fr&&!pfree)||(fr===pfree&&sc>ps)){pfree=fr;ps=sc;pick=q;pf=g2}}
+// time, free points first, then the most overflow removed per credit. ok is false if the planet runs out of room first.
+function planKeepUp(i,pl){pl=planCopy(pl);const fl=q=>withPlan(i,q,()=>planetFlow(i));let f=fl(pl);const ks=['s','c','d'].filter(k=>traitOK(i,k));
+  for(let g=0;g<80&&!keepsUp(f);g++){const pr=nextPrice(i,pl);if(!isFinite(pr))break;let pick=null,ps=-Infinity,pf=f;
+    for(const k of ks){const q=planAdd(planCopy(pl),k,1);const g2=fl(q),gn=f.over-g2.over;if(gn<=0)continue;const sc=pr===0?gn:gn/pr;if(sc>ps){ps=sc;pick=q;pf=g2}}
     if(!pick)break;pl=pick;f=pf}
   return{plan:pl,ok:keepsUp(f)}}
 function planApply(i){const t=tuneOf(i),pl=t.plan;if(planEmpty(pl)||!planOK(i,pl))return false;const c=planCost(i,pl);if(S.cash<c)return false;
-  S.cash-=c;const T=S.planets[i].teams;for(const j in pl){const tm=T[j],b=planBuys(tm,pl[j]);tm.n+=b;S.life.ups+=b;for(const k in pl[j])tm.t[k]=(tm.t[k]||0)+pl[j][k]}
+  S.cash-=c;const p=crewState(S.planets[i]),b=planBuys(i,pl);p.pts+=b;p.bought+=b;S.life.ups+=b;for(const k in pl)p.al[k]=(p.al[k]||0)+pl[k];
   t.plan={};return c}
 // the plan as words: "+ 2 Cargo · − 1 Mine rate"
-function planWords(pl){const by={};for(const j in pl)for(const k in pl[j])by[k]=(by[k]||0)+pl[j][k];
-  return Object.keys(by).filter(k=>by[k]).sort((a,b)=>by[b]-by[a]).map(k=>`${by[k]>0?'+':'−'} ${Math.abs(by[k])} ${TN[k]}`).join(' · ')}
+function planWords(pl){return Object.keys(pl).filter(k=>pl[k]).sort((a,b)=>pl[b]-pl[a]).map(k=>`${pl[k]>0?'+':'−'} ${Math.abs(pl[k])} ${TN[k]}`).join(' · ')}
 // hauling capacity at N+1 points through the next cycle (starting now), as drawn on the charts
 function capCurve(i,N){const P=PLANETS[i],cg=cargo(i),v=shipSpeed(i),syn=synodic(i),ph0=phaseNow(i),dir=Math.sign(P.speed-econG().W)||1,out=[];
   for(let k=0;k<=N;k++){const ph=isFinite(syn)?ph0+dir*k/N*2*Math.PI:ph0;out.push(cg/(2*P.er*distF(P,ph)/v+handleTime(i)))}return out}
@@ -2383,9 +2398,9 @@ function tuneSummary(i){const t=tuneOf(i),pl=t.plan,has=!planEmpty(pl),vm=valueM
   h+=`<div class="silo"><span>Silo</span><div class="bar"><i style="width:${fill.toFixed(1)}%;background:${fill>97?'var(--ore)':'var(--ship)'}"></i></div><span class="num">${fmt(p.stock)} / ${fmt(siloCap(i))}</span></div>
     <div class="flown"><span>${isFinite(nc)?`Close pass in <b class="num">${evTime(nc*1000)}</b>`:'Station parked here'} · Overflow <b class="num">${fmt(p.over||0)}</b>${p.over>.5?` · 25% sale in ${fmtTime(Math.max(0,(S.overAt-Date.now())/1000))}`:''}</span></div>`;
   const kp=t.keep&&t.keep.from===JSON.stringify(pl)?t.keep:null;
-  if(kp){if(kp.ok){const add={};for(const j in kp.plan)for(const k in kp.plan[j]){const d=kp.plan[j][k]-((pl[j]||{})[k]||0);if(d)planAdd(add,j,k,d)}
+  if(kp){if(kp.ok){const add={};for(const k in kp.plan){const d=kp.plan[k]-(pl[k]||0);if(d)planAdd(add,k,d)}
       h+=`<div class="tkeep"><span>To keep up: <b>${planWords(add)}</b> · ${fmt(planCost(i,kp.plan)-planCost(i,pl))} credits</span><button class="btn" data-act="tkeep" data-p="${i}" type="button">Add</button></div>`}
-    else h+=`<div class="tkeep"><span>Even fully upgraded, this planet's crews can't haul all its mining. Hire or retrain a crew as Haulers or Dockhands, or research faster ships.</span></div>`}
+    else h+=`<div class="tkeep"><span>This planet has no room for the points it would take. Hire its next crew, train Dock training or Logistics, or research faster ships.</span></div>`}
   if(has){const c=planCost(i,pl),ok=planOK(i,pl);
     h+=`<div class="tplan"><span>${planWords(pl)||'No change'}</span><b class="num">${c?fmt(c)+' credits':'Free'}</b></div>
       <div class="tbtns"><button class="btn" data-act="tapply" data-p="${i}" type="button" ${ok&&S.cash>=c?'':'disabled'}>Apply</button><button class="btn ghost" data-act="tcancel" data-p="${i}" type="button">Cancel</button></div>`}
@@ -2409,48 +2424,33 @@ pbody.addEventListener('pointermove',e=>{if(!tdrag)return;tdrag.y=e.clientY;if(t
 function tuneEnd(){if(!tdrag)return;const box=pbody.querySelector('.tchart.drag');if(box)box.classList.remove('drag');tdrag=null;render(true)}
 pbody.addEventListener('pointerup',tuneEnd);pbody.addEventListener('pointercancel',tuneEnd);
 function viewTeams(i,shipsBN,rate,hl){
-  const p=S.planets[i],n=p.teams.length;let j=Math.min(teamSel[i]||0,n-1);
-  let h=`<div class="card miner"><div class="head"><h3>Specialists${n>1&&(p.rtFree||p.rtPrio)?`<span class="rb" style="color:var(--ore);border-color:var(--ore)">${p.rtFree?'Free retrain':'Priority Training'}</span>`:''}</h3><span class="num" style="font-size:12px;color:var(--muted)">${n} / ${TEAM_MAX} hired</span></div>`+hireBtn(i);
-  if(n>1)h+=hscroll(p.teams.map((tm,k)=>`<button class="chip${k===j?' on':''}" data-act="tsel" data-p="${i}" data-j="${k}" type="button">${embIcon(i,k,14)}${teamName(i,k)}</button>`).join(''),'teams');
-  const tm=p.teams[j],r=roleOf(tm),free=minerFree(tm),full=tm.n>=MINER_MAX,uc=full?0:teamUpCost(i,j),canUp=free>0||!full,due=perkDue(tm);
-  const pk=(tm.pk||[]).map((x,l)=>x==null?null:CREW_PERKS[r][l][x].d).filter(Boolean);
-  h+=`<div class="head"><span style="font:600 15px var(--f-body)">${embIcon(i,j,20)}${teamName(i,j)}<span class="rb">${ROLES[r].n}</span></span><span class="num" style="font-size:12px;color:var(--muted)">${tm.n} / ${MINER_MAX} upgrades</span></div>
-    <div class="bar"><i style="width:${(tm.n/MINER_MAX*100).toFixed(1)}%;background:var(--ship)"></i></div>
-    <div class="crewl"><span title="${tm.q?esc(CREW_QUIRKS[tm.q].d):''}">${r==='f'?`Founding crew of ${PLANETS[i].n}`:tm.q?`Quirk: <b>${CREW_QUIRKS[tm.q].d}</b>`:'Veteran crew · no quirk'}</span>
-      <span title="${esc(pk.join(' · '))}">${pk.length?`Perks: <b>${pk.join(' · ')}</b>`:`Veteran perks at ${PERK_AT.join(' and ')} upgrades`}</span></div>`;
-  if(j>0)h+=retrainUI(i,j);
-  if(due>=0&&!training(tm))h+=`<div class="perkc"><b>Veteran perk unlocked at ${PERK_AT[due]} upgrades: choose one</b><div class="pk2">${CREW_PERKS[r][due].map((x,k)=>`<button class="btn ghost" data-act="perk" data-p="${i}" data-j="${j}" data-x="${k}" type="button">${x.d}</button>`).join('')}</div></div>`;
-  const TU=tuneOf(i),pv=!planEmpty(TU.plan),po=TU.plan[j]||{};
-  h+=`<div class="note fix1">${free>0?`<b style="color:var(--ship)">${free} free point${free>1?'s':''} to place.</b><span>Tap + to place.</span>`:`<span>No free points to place.</span>`}</div>
+  const p=crewState(S.planets[i]),n=p.teams.length,free=minerFree(i),cap=ptsCap(i),room=p.pts<cap,uc=room?pointCost(i):0;
+  let h=`<div class="card miner"><div class="head"><h3>Specialists</h3><span class="num" style="font-size:12px;color:var(--muted)">${n} / ${TEAM_MAX} crews</span></div>`;
+  // the crews: name, job and quirk
+  h+=`<div class="crews">${p.teams.map((tm,k)=>`<div class="crew">${embIcon(i,k,18)}<div><b>${esc(teamName(i,k))}</b><span class="rb">${CREW_KIND[k].n}</span><span class="cq">${k===0?`Allocates every point on ${PLANETS[i].n}`:tm.q&&CREW_QUIRKS[tm.q]?CREW_QUIRKS[tm.q].d:'No quirk'}</span></div></div>`).join('')}</div>`+hireBtn(i);
+  const TU=tuneOf(i),pv=!planEmpty(TU.plan),po=TU.plan;
+  h+=`<div class="head"><span style="font:600 14px var(--f-body)">Points</span><span class="num" style="font-size:12px;color:var(--muted)">${p.pts} / ${cap} owned</span></div>
+    <div class="bar"><i style="width:${(p.pts/cap*100).toFixed(1)}%;background:var(--ship)"></i></div>
+    <div class="note fix1">${free>0?`<b style="color:var(--ship)">${free} free point${free>1?'s':''} to place.</b><span>Tap + to place.</span>`:room?`<span>Next point: <b class="num" style="color:var(--ink)">${fmt(uc)}</b> credits.</span>`:`<span>${n<TEAM_MAX?'All points owned: hire the next crew for more.':'All points owned.'}</span>`}</div>
     ${tuneUI(i)}<div class="rows">`;
-  // what one more point on this team would give: add it, measure, take it back
-  const nextWith=(k,f)=>{tm.t[k]=(tm.t[k]||0)+1;const v=f();tm.t[k]--;return v};
-  // capacity and trip time averaged over the whole cycle
-  const cap0=capAvg(i),T=1/avgInvTc(i),TR=tripRange(i),BN='<span class="bn">Bottleneck</span>',arrow=(a,b,u)=>`${a} → <b style="color:var(--ink)">${b}</b>${u}`;
-  const inc0=planetIncome(i)*valueMult(),h0=handleTime(i),y0=yieldF(i);
-  const rows={
-    m:{name:'Mine rate',val:`${rf(rate)} ore/s`,
-       next:()=>{const r2=nextWith('m',()=>mineRate(i));return `Next: ${arrow(rf(rate),rf(r2),' ore/s')}`+(shipsBN?` · <span style="color:var(--bad)">income capped at ${rf(hl)}/s</span>`:'')}},
-    s:{name:'Speed',val:`${shipSpeed(i).toFixed(1)} AU/s · trip ${Math.round(TR[0])}–${Math.round(TR[1])}s`,
-       next:()=>{const [t2,c2]=nextWith('s',()=>[1/avgInvT(i,shipSpeed(i)),capAvg(i)]);return `Next: avg trip ${arrow(T.toFixed(1),t2.toFixed(1),'s')} · capacity ${arrow(rf(cap0),rf(c2),'/s')}`}},
-    c:{name:'Cargo',val:`${fmt(cargo(i))} ore/trip · − ${Math.round(CARGO_MASS*crewMod(i).mass*100)}% flight/pt`,
-       next:()=>{const [g2,c2]=nextWith('c',()=>[cargo(i),capAvg(i)]);return `Next: ${arrow(fmt(cargo(i)),fmt(g2),' ore/trip')} · capacity ${arrow(rf(cap0),rf(c2),'/s')}`}},
-    d:{name:'Handling',val:`${h0.toFixed(1)} s docking and loading · silo ${siloLoads(i)} loads`,
-       next:()=>{const [h2,c2]=nextWith('d',()=>[handleTime(i),capAvg(i)]);return `Next: ${arrow(h0.toFixed(1),h2.toFixed(1),' s')} · capacity ${arrow(rf(cap0),rf(c2),'/s')}`}},
-    v:{name:'Ore yield',val:`× ${y0.toFixed(2)} per load · vein every ${Math.round(veinEvery(i)/60)} min`,
-       next:()=>{const [y2,i2]=nextWith('v',()=>[yieldF(i),planetIncome(i)*valueMult()]);return `Next: yield ${arrow('× '+y0.toFixed(2),'× '+y2.toFixed(2),'')} · income ${arrow(fmt(inc0),fmt(i2),'/s')}`}}};
-  // red marks this team's best upgrade: whichever of its traits adds the most income for one point
-  const ks=roleTraits(r),gains={};ks.forEach(k=>gains[k]=pointGain(i,j,k));let bt=null;ks.forEach(k=>{if(gains[k]>0&&(bt==null||gains[k]>gains[bt]))bt=k});
-  ks.forEach(k=>{const R=rows[k],name=R.name,pts=tm.t[k]||0,hot=k===bt,loc=k in{m:1,s:1,c:1}?setLoc(i,k):1,st=teamStep(tm,k),sl=k==='d'?'1':k==='v'?Math.round(YIELD_STEP*100)+'%':String(st);
-    // the planet's total from all its crews (quirks and perks included), shown next to the trait's name
-    const tot=k==='d'?`÷ ${(ECON.SHIP_OVH/handleTime(i)).toFixed(2)}`:k==='v'?`× ${yieldF(i).toFixed(2)}`:`× ${minerT(i,k).toFixed(2)}`,val=R.val+(loc!==1?` · Settlement × ${loc.toFixed(1)}`:'');
-    /* each row: name, the team's points, the planet's total and any Bottleneck tag; the value; and the buttons */
-    h+=`<div class="row trow"><div class="txt"><span class="t">${name}<span class="ptc">${pts}${po[k]?`<b style="color:var(--ore)"> ${po[k]>0?'+':'−'} ${Math.abs(po[k])}</b>`:''}/${MINER_MAX}</span><span class="tmx">${tot}</span>${hot&&shipsBN&&k!=='m'&&k!=='v'?BN:''}</span><span class="s l1">${val}</span></div>
-      <div class="pm">${pv?`<button class="btn ghost pmm" data-act="tminus" data-p="${i}" data-j="${j}" data-k="${k}" ${pts+(po[k]||0)>0?'':'disabled'} type="button" aria-label="Plan one point less on ${name}">− ${sl}</button><button class="btn ship${hot?' bnr':''}" data-act="tplus" data-p="${i}" data-j="${j}" data-k="${k}" ${planOK(i,planAdd(planCopy(TU.plan),j,k,1))?'':'disabled'} type="button" aria-label="Plan one more point on ${name}">+ ${sl}<small>Plan</small></button>`:`<button class="btn ghost pmm" data-act="unassign" data-p="${i}" data-j="${j}" data-k="${k}" ${pts>0?'':'disabled'} type="button" aria-label="Take a point back from ${name}">− ${sl}</button>${free>0?`<button class="btn ship${hot?' bnr':''}" data-act="assign" data-p="${i}" data-j="${j}" data-k="${k}" type="button" aria-label="Add a free point to ${name}">+ ${sl}<small>Free</small></button>`
-        :full?`<button class="btn ship mx${hot?' bnr':''}" disabled type="button">Maxed</button>`
-        :`<button class="btn ship${hot?' bnr':''}" data-act="mbuy" data-p="${i}" data-j="${j}" data-k="${k}" ${S.cash>=uc?'':'disabled'} type="button" aria-label="Upgrade ${name} for ${fmt(uc)} credits">+ ${sl}<small>${fmt(uc)}</small></button>`}`}</div></div>`});
-  h+=`</div><div class="note"><span>${full?'<b>Fully upgraded.</b> ':''}The red button is this team's most efficient upgrade.</span></div>`;
-  return h+'</div>'}
+  const TR=tripRange(i),BN='<span class="bn">Bottleneck</span>',h0=handleTime(i),y0=yieldF(i);
+  const rows={m:{name:'Mine rate',val:`${rf(rate)} ore/s`},s:{name:'Speed',val:`${shipSpeed(i).toFixed(1)} AU/s · trip ${Math.round(TR[0])}–${Math.round(TR[1])}s`},
+    c:{name:'Cargo',val:`${fmt(cargo(i))} ore/trip · − ${Math.round(CARGO_MASS*crewMod(i).mass*100)}% flight/pt`},
+    d:{name:'Handling',val:`${h0.toFixed(1)} s docking and loading · silo ${siloLoads(i)} loads`},
+    v:{name:'Ore yield',val:`× ${y0.toFixed(2)} per load · vein every ${Math.round(veinEvery(i)/60)} min`}};
+  // red marks the best upgrade: whichever trait adds the most income for one point
+  const ks=planetTraits(i),gains={};ks.forEach(k=>gains[k]=pointGain(i,k));let bt=null;ks.forEach(k=>{if(gains[k]>0&&(bt==null||gains[k]>gains[bt]))bt=k});
+  ks.forEach(k=>{const R=rows[k],name=R.name,pts=p.al[k]||0,hot=k===bt,loc=k in{m:1,s:1,c:1}?setLoc(i,k):1,st=traitStep(i,k),sl=k==='v'?Math.round(YIELD_STEP*100)+'%':k==='d'?'1':String(st);
+    // the trait's total multiplier, shown next to its name
+    const tot=k==='d'?`÷ ${(ECON.SHIP_OVH/h0).toFixed(2)}`:k==='v'?`× ${y0.toFixed(2)}`:`× ${minerT(i,k).toFixed(2)}`,val=R.val+(loc!==1?` · Settlement × ${loc.toFixed(1)}`:'');
+    /* each row: name, points on it (with any planned change), the total and any Bottleneck tag; the value; the buttons */
+    h+=`<div class="row trow"><div class="txt"><span class="t">${name}<span class="ptc">${pts}${po[k]?`<b style="color:var(--ore)"> ${po[k]>0?'+':'−'} ${Math.abs(po[k])}</b>`:''}</span><span class="tmx">${tot}</span>${hot&&shipsBN&&k!=='m'&&k!=='v'?BN:''}</span><span class="s l1">${val}</span></div>
+      <div class="pm">${pv?`<button class="btn ghost pmm" data-act="tminus" data-p="${i}" data-k="${k}" ${pts+(po[k]||0)>0?'':'disabled'} type="button" aria-label="Plan one point less on ${name}">− ${sl}</button><button class="btn ship${hot?' bnr':''}" data-act="tplus" data-p="${i}" data-k="${k}" ${planOK(i,planAdd(planCopy(po),k,1))?'':'disabled'} type="button" aria-label="Plan one more point on ${name}">+ ${sl}<small>Plan</small></button>`
+      :`<button class="btn ghost pmm" data-act="unassign" data-p="${i}" data-k="${k}" ${pts>0?'':'disabled'} type="button" aria-label="Take a point back from ${name}">− ${sl}</button>${free>0?`<button class="btn ship${hot?' bnr':''}" data-act="assign" data-p="${i}" data-k="${k}" type="button" aria-label="Place a free point on ${name}">+ ${sl}<small>Free</small></button>`
+        :!room?`<button class="btn ship mx${hot?' bnr':''}" disabled type="button">Maxed</button>`
+        :`<button class="btn ship${hot?' bnr':''}" data-act="mbuy" data-p="${i}" data-k="${k}" ${S.cash>=uc?'':'disabled'} type="button" aria-label="Buy a point on ${name} for ${fmt(uc)} credits">+ ${sl}<small>${fmt(uc)}</small></button>`}`}</div></div>`});
+  h+=`</div><div class="note"><span>${ks.length<5?`${!progDone(i,'dock')?'Dock training':''}${!progDone(i,'dock')&&!progDone(i,'pros')?' and ':''}${!progDone(i,'pros')?'Prospecting':''} unlock${!progDone(i,'dock')&&!progDone(i,'pros')?'':'s'} more traits. `:''}The red button is the most efficient upgrade.</span></div>`;
+  return h+viewPerks(i)+viewPrograms(i)+'</div>'}
 function viewProbe(){const pr=S.probe,st=pr.st,nw=Date.now(),est=ECON.PROBE_SEC*totalMineValue()*setG('probe')*perm('probe')*valueMult();
   const ago=t=>{const s=Math.max(0,(nw-t)/1000);return s<60?'just now':s<3600?Math.floor(s/60)+'m ago':Math.floor(s/3600)+'h '+Math.floor(s%3600/60)+'m ago'};
   let h=`<div class="head"><h2>Space probe</h2>${pr.out?`<button class="tog${cam.probe?' on':''}" data-act="pfollow" type="button">${cam.probe?'Following':'Follow probe'}</button>`:''}</div>`;
@@ -2704,16 +2704,16 @@ function fuelCost(x){const a=stationPos(new THREE.Vector3()),b=geoPos(parkG(x),o
 /* forecast: average hauling of every claimed planet if the station were parked at x, against now */
 function parkForecast(x){const G=parkG(x),G0=econG(),rows=[];let v0=0,v1=0;
   S.planets.forEach((p,j)=>{if(!p.u)return;const m=mineRate(j),sp=shipSpeed(j),c0=cargo(j)*avgInvT(j,sp,G0),c1=cargo(j)*avgInvT(j,sp,G),d0=Math.min(m,c0),d1=Math.min(m,c1),val=avgValue(j);
-    v0+=d0*val;v1+=d1*val;rows.push({j,d0,d1,c0,c1,m,prio:j!==x&&p.teams.length>1&&c1<m*PRIO_BELOW,tag:c1<m*.97&&c0>=m*.97?'ship':c1>=m*.97&&c0<m*.97?'mine':''})});
+    v0+=d0*val;v1+=d1*val;rows.push({j,d0,d1,c0,c1,m,prio:j!==x&&perkSlots(j)>0&&c1<m*PRIO_BELOW,tag:c1<m*.97&&c0>=m*.97?'ship':c1>=m*.97&&c0<m*.97?'mine':''})});
   return{rows,total:v0>0?v1/v0-1:0}}
 function parkAsk(x){if(!parkOK())return;const here=x>=0?PLANETS[x].n:'its own lane',f=parkForecast(x),cost=x>=0?fuelCost(x):0,cd=parkCooldown();
   $('pkTitle').textContent=x>=0?`Park above ${here}?`:'Return to the lane?';
   $('pkDesc').textContent=x>=0?`${here} gets short, steady trips. Every other planet's distance to the station changes, so some will need their teams retuned.`:'The station goes back to its own orbit between Vesk and Orra. Every planet\'s distance changes back.';
   const pc=v=>(v>=0?'+':'−')+Math.abs(Math.round(v*100))+'%';
   const rows=f.rows.map(r=>({...r,ch:r.d0>0?r.d1/r.d0-1:0})).sort((a,b)=>Math.abs(b.ch)-Math.abs(a.ch)).slice(0,8);
-  $('pkRows').innerHTML=rows.map(r=>`<div class="pkrow"><span>${esc(PLANETS[r.j].n)}${r.tag==='ship'?' <b style="color:var(--bad)">· ships will fall behind</b>':r.tag==='mine'?' <b style="color:var(--good)">· ships catch up</b>':''}${r.prio?' <b style="color:var(--ore)">· Priority Training</b>':''}</span><b style="color:${r.ch>.005?'var(--good)':r.ch<-.005?'var(--bad)':'var(--muted)'}">${pc(r.ch)}</b></div>`).join('')
+  $('pkRows').innerHTML=rows.map(r=>`<div class="pkrow"><span>${esc(PLANETS[r.j].n)}${r.tag==='ship'?' <b style="color:var(--bad)">· ships will fall behind</b>':r.tag==='mine'?' <b style="color:var(--good)">· ships catch up</b>':''}${r.prio?' <b style="color:var(--ore)">· free perk swap</b>':''}</span><b style="color:${r.ch>.005?'var(--good)':r.ch<-.005?'var(--bad)':'var(--muted)'}">${pc(r.ch)}</b></div>`).join('')
     +`<div class="pkrow" style="color:var(--ink)"><span>Total income now</span><b style="color:${f.total>=0?'var(--good)':'var(--bad)'}">${pc(f.total)}</b></div>`;
-  $('pkCost').textContent=x>=0?`Fuel ${fmt(cost)} credits · 10 minute move · thrusters then cool down for 1 hour. ${PLANETS[x].n} gets a free retrain, and planets left badly short of ships get Priority Training (${Math.round((1-RT_PRIO)*100)}% off retraining).`:'Free · 10 minute move.';
+  $('pkCost').textContent=x>=0?`Fuel ${fmt(cost)} credits · 10 minute move · thrusters then cool down for 1 hour. ${PLANETS[x].n}, and planets left badly short of ships, get a free, instant Shift Crew perk swap.`:'Free · 10 minute move.';
   const why=parkMoving()?'The station is already moving':x>=0&&cd>0?`Thrusters cooling down · ${evTime(cd)}`:x>=0&&S.cash<cost?'Not enough credits for fuel':'';
   $('pkGo').disabled=!!why;$('pkGo').textContent=why||(x>=0?'Fire thrusters':'Head back to the lane');$('pkGo').dataset.x=x;$('pk').hidden=false}
 function parkGo(x){const cost=x>=0?fuelCost(x):0;if(!parkOK()||parkMoving()||(x>=0&&(parkCooldown()>0||S.cash<cost)))return false;
@@ -2808,27 +2808,27 @@ const GUIDE=[
 <li><b>Number names:</b> tap the credit total to cycle through three styles. Named uses K, M, B, T, then Qa, Qi, Sx… Letters uses K, M, B, T, then aa, ab, ac… Full words shows the credit total as 1.2 Million.</li>
 <li><b>Probe status:</b> tap it to open the Probe tab and follow the probe.</li>
 <li><b>Market Surge:</b> the line under the probe status. Tap it when it says ready.</li></ul>`],
-['Planets and mining crews',`<p>Each planet can hire up to 3 mining crews, and each has up to 20 upgrade points. The next team unlocks once the newest one is fully upgraded (20 / 20).</p>
-<ul><li><b>Founding crew</b> (team 1): claims the planet. Each point is + 0.25 × on Mine rate, Speed or Cargo.</li>
-<li><b>Specialists</b> (teams 2 and 3): pick a role when you hire. Each role can be hired once per planet, so you always leave one out.
-<ul><li><b>Drillers:</b> Mine rate only, + 0.3 × per point.</li>
-<li><b>Haulers:</b> Speed and Cargo only, + 0.3 × per point.</li>
-<li><b>Dockhands:</b> cut the 28 seconds of docking, landing and loading on every trip (down to about 3 seconds), and add a silo load every 5 points.</li>
-<li><b>Prospectors:</b> every load delivers 2% more ore per point, a rich vein ships 2 minutes of mining straight to the Market every hour, and probes go after their planet's ore more often.</li></ul></li>
-<li><b>Candidates:</b> after picking a role, choose one of three named crews. Each has a quirk, like + 10% ship speed, cheaper upgrades or 2 free points.</li>
-<li><b>Veteran perks:</b> at 10 and 20 upgrades a team unlocks a choice of two perks. The choice is shown on its card.</li>
-<li><b>Recommended</b> marks the role that would add the most income on that planet right now.</li>
-<li><b>Retraining:</b> any specialist can retrain into a new role (one the planet doesn't already have, or the same one) and pick one of three new quirks. Its points come back as free points, its perks reset, and it's off the job for 10 minutes. The price is a quarter of the team's hire cost and doubles with every paid retrain.</li>
-<li>+ places a free point or buys one. − gives a point back for free, so you can move it. Free points also come from some weekly events.</li></ul>
+['Planets and mining crews',`<p>Each planet can have up to 3 mining crews. Every crew adds room for 20 upgrade points, and all of a planet's points go into one pool.</p>
+<ul><li><b>Crew Chief</b> (crew 1): claims the planet and decides where every point goes: Mine rate, Speed and Cargo (+ 0.25 × each). Handling and Ore yield join the list once the planet has learned them.</li>
+<li><b>Buying points:</b> + buys a point on that trait. Each point bought costs a little more than the last. − takes a point back for free, so you can move it any time. Free points from weekly events wait to be placed.</li>
+<li><b>Shift Crew</b> (crew 2): hired once the planet owns its first 20 points. It adds 20 more points and perk slots: one when hired, a second at 40 points, a third with Advanced shifts. Changing a perk takes a 5 minute refit; filling an empty slot is instant.</li>
+<li><b>Instructors</b> (crew 3): hired once the planet owns 40 points. They add 20 more points and run training programs, one at a time. Each costs credits, takes time and lasts for the rest of the galaxy:
+<ul><li><b>Dock training:</b> unlocks Handling. Each point cuts the 28 seconds of docking, landing and loading, and every 5 points add a silo load.</li>
+<li><b>Prospecting:</b> unlocks Ore yield (2% more ore per load per point), a rich vein every hour, and probes that favour this planet's ore.</li>
+<li><b>Deep drilling:</b> Mine rate points are 20% stronger.</li>
+<li><b>Logistics:</b> + 2 silo loads, and overflow sells at 40%.</li>
+<li><b>Advanced shifts:</b> a third perk slot.</li>
+<li><b>Mentoring:</b> room for 5 more points.</li></ul></li>
+<li><b>Candidates:</b> the Shift Crew and the Instructors are picked from three named crews, each with a quirk that fits its job, like cheaper points, faster refits or faster training.</li></ul>
 <p><b>Tuning chart</b> (in the Specialists card on the Planet tab): the orange line is mining and the teal curve is what the ships can carry through the next cycle; red shading is ore piling up, teal is spare room.</p>
 <ul><li><b>Drag the handles:</b> drag the orange handle on the left to set mining, or the teal handle on the right to set average hauling. The game picks the cheapest points to get there: free points first, and the best mix of Speed, Cargo and Handling.</li>
 <li><b>Preview:</b> a drag or Balance shows its result as dashed lines, with the changes, the cost and the income change. While it's showing, + and − fine-tune it. <b>Apply</b> buys it all, <b>Cancel</b> drops it.</li>
-<li><b>Balance:</b> one tap places free points and moves existing points between each crew's traits so the ships keep up all cycle, with the most income it can find. It never costs anything. If the planet's points can't keep up on their own, it shows what to buy (<b>To keep up: … · Add</b>), or says that the crews need help from a hire, a retrain or research.</li></ul>`],
+<li><b>Balance:</b> one tap places free points and moves points between traits so the ships keep up all cycle, with the most income it can find. It never costs anything. If the planet's points can't keep up on their own, it shows what to buy (<b>To keep up: … · Add</b>), or says the planet needs more room.</li></ul>`],
 ['Hauling and bottlenecks',`<p>A planet earns the lower of what it mines and what its ships can carry. The tuning chart in the Specialists card shows which one is holding it back.</p>
 <ul><li>A trip is the flight there and back plus 28 seconds of docking, orbiting, landing and loading. Speed only shortens the flight.</li>
 <li>Each Cargo point makes the ship a little heavier (− 6% flight speed), so mixing Speed and Cargo works best.</li>
 <li>When ships are behind, the best fix on the selected team gets a <b>Bottleneck</b> tag and a red button.</li>
-<li>Dockhands are the fix that speed can't give: on near planets most of each trip is docking and loading.</li>
+<li>Handling (after Dock training) is the fix that speed can't give: on near planets most of each trip is docking and loading.</li>
 <li>If a team is maxed and still bottlenecked, its red button fades. Use another team, or move points with − 0.25.</li></ul>`],
 ['Orbits, silos and overflow',`<p>Planets really orbit the sun. Inner ones go round faster, so each planet's distance from the station grows and shrinks over a cycle.</p>
 <ul><li>Planets close to the station get faster trips, and planets far away get slower ones. The tuning chart shows hauling over the next whole cycle against mining, with a marker at the next close pass, plus the silo, the overflow and its next sale.</li>
@@ -2838,7 +2838,7 @@ const GUIDE=[
 <ul><li>The parked planet gets short, steady trips and never needs its silo.</li>
 <li>Every other planet's distance changes. The forecast shows which planets will fall behind (red) or catch up (green), and the total income change.</li>
 <li>Moving costs fuel, takes 10 minutes, and the thrusters then need an hour to cool down. Every new galaxy starts with the station at Cinder.</li>
-<li>When the station arrives, the planet it parked at gets a <b>free retrain</b>, and planets whose ships carry less than 85% of their mining get <b>Priority Training</b>: 75% off retraining. The forecast flags those planets, and both offers last until the next move.</li></ul>`],
+<li>When the station arrives, the planet it parked at, and any planet whose ships carry less than 85% of its mining, gets one <b>free perk swap</b>: its Shift Crew can change a perk instantly, with no refit. The forecast flags those planets, and the offer lasts until the next move.</li></ul>`],
 ['Market and Market Surge',`<ul>
 <li>The Market lists your ore and bars. Sell one kind at a time, or use Sell everything.</li>
 <li>Sell everything and auto-sell keep back what open research needs.</li>
@@ -2880,19 +2880,20 @@ const GUIDE=[
 ['Tips and tricks',`<ul>
 <li><b>Follow the red button.</b> On the Planet tab the red upgrade button is the one that adds the most income for its price.</li>
 <li><b>Ships first, then mining.</b> If a planet's ships can't keep up, more Mining adds little until hauling catches up. Fix Speed or Cargo first.</li>
-<li><b>Hire for the planet's problem.</b> Ships behind on a near planet? Dockhands. On a far planet? Haulers. Ships keeping up? Drillers. Not sure? Prospectors help any planet, since their bonus applies after hauling.</li>
-<li><b>Read the quirks.</b> A cheaper-upgrades or 2-free-points crew is often worth more than a small boost. Candidates don't change, so take your time.</li>
-<li><b>Near planets want Cargo, far planets want Speed.</b> Every trip has 28 seconds of docking and landing that speed can't shorten (only Dockhands can). Short trips gain more from bigger holds, and long flights gain more from faster ships.</li>
-<li><b>Re-balance for free.</b> Tap Balance on the tuning chart after parking the station or retraining a crew. It keeps the ships ahead of mining and finds the most income at no cost.</li>
+<li><b>Train for the planet's problem.</b> Ships behind on a near planet? Dock training, so Handling points can cut the docking time. Short of silo? Logistics. Ships keeping up? Deep drilling or Prospecting.</li>
+<li><b>Read the quirks.</b> A cheaper-points or 2-free-points crew is often worth more than a small boost. Candidates don't change, so take your time.</li>
+<li><b>Near planets want Cargo, far planets want Speed.</b> Every trip has 28 seconds of docking and landing that speed can't shorten (only Handling can, after Dock training). Short trips gain more from bigger holds, and long flights gain more from faster ships.</li>
+<li><b>Re-balance for free.</b> Tap Balance on the tuning chart after parking the station or finishing a training program. It keeps the ships ahead of mining and finds the most income at no cost.</li>
 <li><b>Drag, don't guess.</b> Drag the teal handle on the right until the curve sits just above the mining line and the status turns green, then Apply.</li>
-<li><b>Don't forget perks.</b> When a team reaches 10 or 20 upgrades, pick its perk on the team card.</li>
+<li><b>Fill every perk slot.</b> An empty slot costs nothing to fill. Swap perks when the planet's needs change: + 12% ship speed for a far planet, + 2 silo loads for a long cycle.</li>
 <li><b>Fix overflow early.</b> Overflow sells at only 25%. If a planet says the silo is too small, research Ore Silos and later Deep Silos.</li>
 <li><b>Call Market Surge whenever it's ready</b>, while you're going to play for the next 10 minutes. The bonus is capped at 10 minutes of income, so stockpiling first gains nothing. Just keep selling as normal.</li>
 <li><b>Extra mining isn't wasted.</b> Probe hauls are based on mine rate, not on hauling, so mining beyond what ships can carry still pays off through probes.</li>
 <li><b>Keep the furnaces busy.</b> 8 ore makes a bar worth 12 ore, which is 50% more value. Late research also needs bars, so check the Smelter's Research needs list.</li>
 <li><b>Get Night Shift before long breaks.</b> It raises the offline limit from 8 to 24 hours.</li>
 <li><b>Check the forecast before parking.</b> Station Thrusters show how every planet's hauling will change. Park near the planets that earn the most, then retune any that turn red.</li>
-<li><b>Use the free retrain and Priority Training.</b> After a move, retrain the planets that fell behind into Haulers or Dockhands while it's cheap. Paid retrains double in price each time, so save them for real changes.</li>
+<li><b>Use the free perk swap.</b> After a station move, swap perks on the planets that fell behind (flagged in the forecast) without waiting for a refit.</li>
+<li><b>Keep the Instructors busy.</b> Only one program runs at a time, so start the next as soon as one finishes.</li>
 <li><b>Warp when progress slows.</b> Once the next planet or upgrade would take hours, warping for star dust usually gets you further. The first warp tends to make sense around the 8th planet.</li>
 <li><b>Pick events you'll finish.</b> Permanent boosts stay through every warp, so they're worth the most over time. New missions arrive every Friday at 6 pm.</li>
 <li><b>Settlement perks are galaxy-wide.</b> A level 3 settlement boosts every planet, not just its own.</li>
@@ -2967,32 +2968,29 @@ pbody.addEventListener('click',e=>{
   else if(a==='pfollow'){focusProbe()}
   else if(a==='focus'){focusPlanet(+b.dataset.p)}
   else if(a==='unfocus'){cam.focus=-1;recenter()}
-  else if(a==='tsel'){teamSel[+b.dataset.p]=+b.dataset.j}
   else if(a==='evaccept'){if(evAccept(+b.dataset.k)){toast('Mission accepted. Good luck out there.');save()}}
   else if(a==='evclaim'){evClaim()}
   else if(a==='evinfo'){evInfo=evInfo===+b.dataset.k?-1:+b.dataset.k}
   else if(a==='evbinfo'){evBInfo=evBInfo===b.dataset.b?'':b.dataset.b}
   else if(a==='settle'){const i=+b.dataset.p,lv=settleLv(i);if(buySettle(i)){refreshWorld();toast(lv?`${SETTLE[i][0]} grew into a ${SETTLE_LV[lv]}.`:`${SETTLE[i][0]} founded on ${PLANETS[i].n}.`);save()}}
-  else if(a==='tplus'||a==='tminus'){const i=+b.dataset.p,t=tuneOf(i),q=planAdd(planCopy(t.plan),+b.dataset.j,b.dataset.k,a==='tplus'?1:-1);if(planOK(i,q))t.plan=q}
+  else if(a==='tplus'||a==='tminus'){const i=+b.dataset.p,t=tuneOf(i),q=planAdd(planCopy(t.plan),b.dataset.k,a==='tplus'?1:-1);if(planOK(i,q))t.plan=q}
   else if(a==='tcancel'){tuneOf(+b.dataset.p).plan={}}
   else if(a==='tbal'){const i=+b.dataset.p,t=tuneOf(i),q=planBalance(i),up=withPlan(i,q,()=>keepsUp(planetFlow(i)));t.plan=q;
     t.keep=up?null:Object.assign(planKeepUp(i,q),{from:JSON.stringify(q)});if(planEmpty(q)&&up)toast('Already balanced: ships keep up and no move would raise income.',2400)}
   else if(a==='tkeep'){const t=tuneOf(+b.dataset.p);if(t.keep&&t.keep.ok){t.plan=t.keep.plan;t.keep=null}}
   else if(a==='tapply'){const i=+b.dataset.p,w=planWords(tuneOf(i).plan),c=planApply(i);if(c!==false){toast(`Applied: ${w}${c?` for ${fmt(c)} credits`:''}.`,2600);save()}}
-  else if(a==='hrole'){hirePick[+b.dataset.p]=b.dataset.r||null}
-  else if(a==='rtopen'){rtPick[+b.dataset.p]={j:+b.dataset.j,r:null}}
-  else if(a==='rtclose'){rtPick[+b.dataset.p]=null}
-  else if(a==='rtrole'){rtPick[+b.dataset.p]={j:+b.dataset.j,r:b.dataset.r||null}}
-  else if(a==='retrain'){const i=+b.dataset.p,j=+b.dataset.j,c=retrainCost(i,j);if(retrain(i,j,b.dataset.r,+b.dataset.c||0)){rtPick[i]=null;tuneOf(i).plan={};const tm=S.planets[i].teams[j];
-    toast(`${teamName(i,j)} ${c?`paid ${fmt(c)} to retrain`:'retrains for free'} as ${ROLES[tm.r].n}: ${CREW_QUIRKS[tm.q].d}. Back in ${Math.round(RT_TIME/60)} minutes.`,4200);refreshWorld();save()}}
-  else if(a==='perk'){const i=+b.dataset.p,j=+b.dataset.j,tm=S.planets[i].teams[j],l=perkDue(tm),x=+b.dataset.x;if(choosePerk(i,j,x)){toast(`${teamName(i,j)}: ${CREW_PERKS[roleOf(tm)][l][x].d}.`,2600);save()}}
-  else if(a==='hire'){const i=+b.dataset.p,j=S.planets[i].teams.length;if(hireTeam(i,b.dataset.r,+b.dataset.c||0)){teamSel[i]=j;hirePick[i]=null;tuneOf(i).plan={};refreshWorld();
+  else if(a==='pkopen'){const i=+b.dataset.p,l=+b.dataset.l;perkPick[i]=perkPick[i]===l?null:l}
+  else if(a==='pkclose'){perkPick[+b.dataset.p]=null}
+  else if(a==='pkset'){const i=+b.dataset.p,l=+b.dataset.l,id=b.dataset.id,wasFree=!!S.planets[i].swapFree;if(setPerk(i,l,id)){perkPick[i]=null;const sl=S.planets[i].perks[l];
+    toast(Date.now()>=sl.ready?`${PERKS[id].d}: active on ${PLANETS[i].n}${wasFree&&!S.planets[i].swapFree?' (free swap used)':''}.`:`${PERKS[id].d}: refitting, ready in ${fmtTime((sl.ready-Date.now())/1000)}.`,3000);save()}}
+  else if(a==='prog'){const i=+b.dataset.p,id=b.dataset.id;if(startProg(i,id)){toast(`${PROGRAMS[id].n} started on ${PLANETS[i].n}: ready in ${fmtTime(progTime(i,id))}.`,3000);save()}}
+  else if(a==='hire'){const i=+b.dataset.p,j=S.planets[i].teams.length;if(hireTeam(i,+b.dataset.c||0)){tuneOf(i).plan={};refreshWorld();
       if(j===0){{const f=fitDistance();if(f>cam.tr)cam.tr=f}toast(`The ${teamName(i,0)} claimed ${PLANETS[i].n}. A hauler is on its way.`);if(i===WARP_AT)toast('Galaxy Warp is now available in the Warp tab.',4000);if(cam.focus!==i)focusPlanet(i)}
-      else{const tm=S.planets[i].teams[j];toast(`The ${teamName(i,j)} (${ROLES[tm.r].n}) joined ${PLANETS[i].n}. ${CREW_QUIRKS[tm.q].d}.`,3400)}save()}}
-  else if(a==='mbuy'){if(teamBuy(+b.dataset.p,+b.dataset.j,b.dataset.k))save()}
-  else if(a==='assign'){const tm=S.planets[+b.dataset.p].teams[+b.dataset.j];if(tm&&minerFree(tm)>0&&teamStep(tm,b.dataset.k)){tm.t[b.dataset.k]=(tm.t[b.dataset.k]||0)+1;save()}}
+      else{const tm=S.planets[i].teams[j];toast(`The ${teamName(i,j)} joined ${PLANETS[i].n} as its ${CREW_KIND[j].n}. ${CREW_QUIRKS[tm.q].d}.`,3400)}save()}}
+  else if(a==='mbuy'){if(teamBuy(+b.dataset.p,b.dataset.k))save()}
+  else if(a==='assign'){const i=+b.dataset.p,k=b.dataset.k,p=crewState(S.planets[i]);if(minerFree(i)>0&&traitOK(i,k)){p.al[k]=(p.al[k]||0)+1;save()}}
   // − on a trait: the point goes back to the team's free points (no cost), ready to place on any trait
-  else if(a==='unassign'){const tm=S.planets[+b.dataset.p].teams[+b.dataset.j],k=b.dataset.k;if(tm&&(tm.t[k]||0)>0){tm.t[k]--;save()}}
+  else if(a==='unassign'){const i=+b.dataset.p,k=b.dataset.k,p=crewState(S.planets[i]);if((p.al[k]||0)>0){p.al[k]--;save()}}
   else if(a==='auto'){S.auto[b.dataset.k]=!S.auto[b.dataset.k]}
   else if(a==='slot'){const sl=S.slots[+b.dataset.i],r=+b.dataset.r;if(sl.a&&sl.r!==null)S.inv[sl.r]=(S.inv[sl.r]||0)+BAR_IN;sl.r=r<0?null:r;sl.a=false;sl.p=0}
   else if(a==='res'){const r=RESEARCH.find(x=>x.id===b.dataset.id);if(buyResearch(r)){toast(r.n+' complete.');if(r.id==='smelt')toast('The Smelter tab is open. Pick an ore for your furnace.',4000);save()}}
@@ -3012,7 +3010,7 @@ let lastT=performance.now(),uiT=0,saveT=0;
 function frame(now){
   let dt=(now-lastT)/1000;lastT=now;
   if(dt>3){offline(dt,dt>60)}else step(Math.min(dt,.25));
-  probeTick(Date.now());veinTick(Date.now());
+  probeTick(Date.now());veinTick(Date.now());progTick(Date.now());
   updateWorld(Math.min(dt,.25));renderer.render(scene,camera);placeLabels();
   // furnace progress bars move every frame, not just when the panel redraws
   if(tab==='smelter')document.querySelectorAll('[data-smelt]').forEach(el=>{const sl=S.slots[+el.dataset.smelt];if(sl)el.style.width=(sl.a?sl.p*100:0).toFixed(2)+'%'});
@@ -3034,11 +3032,7 @@ if(!S.park||S.park.i<0||S.park.from<0)S.park={i:S.park&&S.park.i>=0?S.park.i:0,f
 if(!S.born){S.born=Date.now();save()}
 if(!S.st.name)setTimeout(()=>nameStation(S.tut===0||S.lifetime<1),1200);
 if(S.tut===0){S.tut=1;setTimeout(()=>toast('Your hauler is mining Cinder. When ore arrives, sell it in the Market.',5000),800)}
-// teams from before crew roles: a second or third team becomes Drillers if most of its points were on Mining,
-// otherwise Haulers; points on traits its role can't use come back as free points. Teams at 10+ points get their perk choice.
-S.planets.forEach((p,i)=>p.teams.forEach((tm,j)=>{if(!tm.pk)tm.pk=[];if(j===0||tm.r)return;const t=tm.t||{};
-  tm.nm=PREFIX[(i*7+j*9+3)%PREFIX.length]+' '+SUFFIX[(i*5+j*7)%SUFFIX.length];tm.q=null;
-  if((t.m||0)>=(t.s||0)+(t.c||0)){tm.r='drill';tm.t={m:t.m||0}}else{tm.r='haul';tm.t={s:t.s||0,c:t.c||0}}}));
+
 setTab('planet');hud();
 requestAnimationFrame(frame);
 </script>
