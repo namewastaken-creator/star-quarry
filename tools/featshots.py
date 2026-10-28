@@ -24,9 +24,9 @@ with sync_playwright() as p:
     pg.wait_for_timeout(1000)
   for i in ids:
     E(f"(p=>{{p.u=true;crewState(p);p.teams=[{{}},{{}},{{}}];p.pts=60;p.al={{m:30,s:12,c:12,v:6}};Object.keys(PROGRAMS).forEach(id=>p.done[id]=1);p.set=3}})(S.planets[{i}]);crewVer++;settleVer++;refreshWorld();0")
-    E(f"S.sel={i};focusPlanet({i},3);0");pg.wait_for_timeout(3000)
+    E(f"S.sel={i};focusPlanet({i},3);0");pg.wait_for_timeout(1500);E("while(surfJobs.length){if(surfJobs[0].step(performance.now()+1e9))surfJobs.shift()};0");pg.wait_for_timeout(1500)
     for k,xy in enumerate(([5.5,-5.5],[0,0])):
-      E(AIM%(i,str(xy),k));pg.wait_for_timeout(2500)
+      E(AIM%(i,str(xy),k));pg.wait_for_timeout(300);E("while(surfJobs.length){if(surfJobs[0].step(performance.now()+1e9))surfJobs.shift()};0");pg.wait_for_timeout(2500)
       f=f'/tmp/claude-0/fs_{i}_{k}.png';pg.screenshot(path=f);shots.append((i,k,f,E(f"PLANETS[{i}].n+' · '+PTYPE({i})")+(' · plot edge' if k==0 else ' · landmark')))
 srv.kill()
 Wd,H=390,620;img=Image.new('RGB',(2*Wd+10,len(ids)*(H+24)),'#05060d');d=ImageDraw.Draw(img)

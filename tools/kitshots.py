@@ -19,7 +19,7 @@ with sync_playwright() as p:
     for tier in (1,3):
       if tier==1:E(f"(p=>{{p.u=true;crewState(p);p.teams=[{{}}];p.al={{}};p.pts=0;p.done={{}};p.set={1 if aim=='set' else 0}}})(S.planets[{i}]);crewVer++;settleVer++;refreshWorld();0")
       else:E(f"(p=>{{p.u=true;crewState(p);p.teams=[{{}},{{}},{{}}];p.pts=60;p.al={{m:30,s:12,c:12,v:6}};Object.keys(PROGRAMS).forEach(id=>p.done[id]=1);p.set=3}})(S.planets[{i}]);crewVer++;settleVer++;refreshWorld();0")
-      E(f"S.sel={i};focusPlanet({i},{zl});0");pg.wait_for_timeout(2500)
+      E(f"S.sel={i};focusPlanet({i},{zl});0");pg.wait_for_timeout(300);E("while(surfJobs.length){if(surfJobs[0].step(performance.now()+1e9))surfJobs.shift()};0");pg.wait_for_timeout(2500)
       if aim=='ref':
         E(f"(()=>{{const w=W[{i}];cam.track=false;const d=plotDir(1.4,-1.1).applyQuaternion(w.siteQ).applyQuaternion(w.mesh.quaternion).normalize();cam.phi=Math.acos(d.y)*.9;cam.theta=Math.atan2(d.z,d.x)}})();0")
       if aim=='mine':

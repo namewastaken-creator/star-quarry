@@ -18,7 +18,7 @@ with sync_playwright() as p:
     pg.wait_for_timeout(1000)
   for i,k in jobs:
     E(f"(p=>{{p.u=true;crewState(p);p.teams=[{{}},{{}},{{}}];p.pts=60;p.al={{m:30,s:12,c:12,v:6}};Object.keys(PROGRAMS).forEach(id=>p.done[id]=1);p.set=3}})(S.planets[{i}]);crewVer++;settleVer++;refreshWorld();0")
-    E(f"S.sel={i};focusPlanet({i},3);0");pg.wait_for_timeout(3000)
+    E(f"S.sel={i};focusPlanet({i},3);0");pg.wait_for_timeout(1500);E("while(surfJobs.length){if(surfJobs[0].step(performance.now()+1e9))surfJobs.shift()};0");pg.wait_for_timeout(1500)
     for v,(tilt,dist) in enumerate(((.35,0),(.95,0))):
       lab=E(f"""(()=>{{const i={i},w=W[i];cam.track=false;const big=[...w.feat.children].filter(o=>!o.isInstancedMesh&&!o.isSprite);
         let d=big.length?big[{k}%big.length].position.clone().normalize():plotDir(PLOT_R+2,0).applyQuaternion(w.siteQ);
