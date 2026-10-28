@@ -13,7 +13,7 @@ crewVer++;settleVer++;refreshWorld();
 W.forEach((w,i)=>{syncBase(w,i);if(w.siteG&&!w.siteG.parent)w.mesh.add(w.siteG);w.mesh.updateMatrixWorld(true);buildFeatures(w,i);w.mesh.updateMatrixWorld(true);
   const R=PLANETS[i].size,unit=R*.16,inv=new THREE.Matrix4().copy(w.mesh.matrixWorld).invert(),v=new THREE.Vector3(),m=new THREE.Matrix4(),sc=new THREE.Vector3(),q=new THREE.Quaternion();
   let feats=0,bad=[];
-  const test=(pos,rad,what)=>{feats++;const [x,z,f]=plotXY(w,pos);if(f<.2)return;const d=Math.hypot(x,z);
+  const test=(pos,rad,what)=>{feats++;if(!occFar(w,pos,rad)){bad.push(`${what} on the far mining field`);return}const [x,z,f]=plotXY(w,pos);if(f<.2)return;const d=Math.hypot(x,z);
     if(d<PLOT_R+rad-1e-6){bad.push(`${what} inside plot (d ${d.toFixed(2)}, r ${rad.toFixed(2)})`);return}
     for(const o of OCC)if(Math.hypot(x-o.x,z-o.z)<o.r+rad-1e-6){bad.push(`${what} on ${o.kind}`);return}};
   w.feat.children.forEach(o=>{
@@ -22,7 +22,7 @@ W.forEach((w,i)=>{syncBase(w,i);if(w.siteG&&!w.siteG.parent)w.mesh.add(w.siteG);
       const p0=o.position.clone();test(p0,Math.max(sz.x,sz.z)*.0/unit+(o.userData.fr||0),o.type)}});
   // base parts outside every reservation (informational)
   let outside=0,parts=0;var outEx=window.__outEx||(window.__outEx=[]);w.siteG.updateMatrixWorld(true);w.siteG.traverse(o=>{if(!o.isMesh||o.userData.glow)return;for(let a=o;a;a=a.parent)if(a.userData.mobile)return;parts++;o.getWorldPosition(v).applyMatrix4(inv);
-    if(v.lengthSq()<1e-6)return;const [x,z]=plotXY(w,v.clone());if(!OCC.some(r=>Math.hypot(x-r.x,z-r.z)<=r.r+.25)){outside++;if(i===1&&outEx.length<12)outEx.push([x.toFixed(2),z.toFixed(2),o.geometry.type])}});
+    if(v.lengthSq()<1e-6)return;const [x,z]=plotXY(w,v.clone());if(!OCC.some(r=>Math.hypot(x-r.x,z-r.z)<=r.r+.25)&&occFar(w,v.clone(),.3)){outside++;if(i===1&&outEx.length<12)outEx.push([x.toFixed(2),z.toFixed(2),o.geometry.type])}});
   out.push({i,n:PLANETS[i].n,type:PTYPE(i),feats,bad:bad.length,first:bad.slice(0,3),parts,outside})});
 out.ex=window.__outEx;return JSON.stringify({out,ex:window.__outEx})})()"""
 with sync_playwright() as p:
