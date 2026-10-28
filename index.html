@@ -1736,6 +1736,7 @@ void planetDetail(inout vec3 col,inout vec3 em,vec3 p,float k,float t,float d){
     /* (Beta 0.30) molten worlds: cooled basalt (dark, low-contrast grain with ropy flow texture); the heat is all in the
        3D landmarks now (volcanoes and bubbling lava pools) */
     float lum=dot(col,vec3(.3,.59,.11));col=mix(mix(col,vec3(lum)*vec3(1.12,.95,.86),.6)*.45,vec3(.07,.055,.05),.5);
+    c0=col; // the basalt tone holds under the cleared ground too, so it matches the plains around it
     float gr1=snoise(p*42.)*.5+.5,rope=sin(dot(p,vec3(1.,.3,.6))*85.+snoise(p*7.)*7.)*.5+.5;
     col*=(.88+.18*gr1)*(.95+.08*rope);}
   else if(k<4.5){float sea=smoothstep(.04,.12,c0.b-max(c0.r,c0.g*.85));
