@@ -13,11 +13,11 @@ crewVer++;settleVer++;refreshWorld();
 W.forEach((w,i)=>{syncBase(w,i);if(w.siteG&&!w.siteG.parent)w.mesh.add(w.siteG);w.mesh.updateMatrixWorld(true);buildFeatures(w,i);w.mesh.updateMatrixWorld(true);
   const R=PLANETS[i].size,unit=R*.16,inv=new THREE.Matrix4().copy(w.mesh.matrixWorld).invert(),v=new THREE.Vector3(),m=new THREE.Matrix4(),sc=new THREE.Vector3(),q=new THREE.Quaternion();
   let feats=0,bad=[];
-  const test=(pos,rad,what)=>{feats++;if(!occFar(w,pos,rad)){bad.push(`${what} on the far mining field`);return}const [x,z,f]=plotXY(w,pos);if(f<.2)return;const d=Math.hypot(x,z);
-    if(d<PLOT_R+rad-1e-6){bad.push(`${what} inside plot (d ${d.toFixed(2)}, r ${rad.toFixed(2)})`);return}
+  const test=(pos,rad,what,inPlot)=>{feats++;if(!occFar(w,pos,rad)){bad.push(`${what} on the far mining field`);return}const [x,z,f]=plotXY(w,pos);if(f<.2)return;const d=Math.hypot(x,z);
+    if(!inPlot&&d<PLOT_R+rad-1e-6){bad.push(`${what} inside plot (d ${d.toFixed(2)}, r ${rad.toFixed(2)})`);return}
     for(const o of OCC)if(Math.hypot(x-o.x,z-o.z)<o.r+rad-1e-6){bad.push(`${what} on ${o.kind}`);return}};
   w.feat.children.forEach(o=>{
-    if(o.isInstancedMesh){o.geometry.computeBoundingSphere();const br=o.geometry.boundingSphere.radius;for(let k=0;k<o.count;k++){o.getMatrixAt(k,m);m.decompose(v,q,sc);test(v.clone(),br*Math.max(sc.x,sc.z)/unit,'instance')}}
+    if(o.isInstancedMesh){o.geometry.computeBoundingSphere();const br=o.geometry.boundingSphere.radius;for(let k=0;k<o.count;k++){o.getMatrixAt(k,m);m.decompose(v,q,sc);test(v.clone(),br*Math.max(sc.x,sc.z)/unit,o.userData.inPlot?'base tree':'instance',!!o.userData.inPlot)}}
     else{o.updateMatrixWorld(true);const b=new THREE.Box3().setFromObject(o);const c=b.getCenter(new THREE.Vector3()).applyMatrix4(inv),sz=b.getSize(new THREE.Vector3());
       const p0=o.position.clone();test(p0,Math.max(sz.x,sz.z)*.0/unit+(o.userData.fr||0),o.type)}});
   // base parts outside every reservation (informational)
