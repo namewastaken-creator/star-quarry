@@ -10,15 +10,17 @@ prints its findings; a test passes when it prints no page errors. Screenshots go
 import os, subprocess, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+# the game's text includes characters like U+202F; Windows pipes default to cp1252, which can't print them
+sys.stdout.reconfigure(errors='backslashreplace')
 TESTS = ['pwobj', 'pwchip', 'pwmed', 'pwtab', 'pwsave', 'pwland', 'pwrc', 'pwneb', 'pwpark2', 'pwaudit']
 want = sys.argv[1:] or TESTS + ['occcheck']
 bad = []
 for k, name in enumerate(want):
     port = str(8710 + k)
     path = os.path.join(HERE, 'occcheck.py' if name == 'occcheck' else os.path.join('tests', name + '.py'))
-    args = [sys.executable, '-I', path, port] + (['390'] if name == 'pwaudit' else [])
+    args = [sys.executable, '-I', '-X', 'utf8', path, port] + (['390'] if name == 'pwaudit' else [])
     try:
-        r = subprocess.run(args, capture_output=True, text=True, timeout=600)
+        r = subprocess.run(args, capture_output=True, encoding='utf-8', errors='replace', timeout=600)
         out = (r.stdout + r.stderr).strip().splitlines()
         last = out[-1] if out else ''
         ok = r.returncode == 0 and (('ALL PASS' in last) if name == 'occcheck' else

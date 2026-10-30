@@ -3,7 +3,7 @@ ROOT=_os.path.dirname(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file_
 OUT=_os.environ.get('SQ_OUT',_os.path.join(ROOT,'out'));_os.makedirs(OUT,exist_ok=True)  # screenshots (git-ignored)
 import subprocess,time,sys,json
 from playwright.sync_api import sync_playwright
-srv=subprocess.Popen(['python3','-m','http.server',sys.argv[1],'--bind','127.0.0.1'],cwd=ROOT,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL);time.sleep(1)
+srv=subprocess.Popen([sys.executable,'-m','http.server',sys.argv[1],'--bind','127.0.0.1'],cwd=ROOT,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL);time.sleep(1)
 W=int(sys.argv[2]) if len(sys.argv)>2 else 360
 with sync_playwright() as p:
   b=p.chromium.launch(args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])

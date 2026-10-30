@@ -9,7 +9,7 @@ from PIL import Image,ImageDraw
 port,out,ids=sys.argv[1],sys.argv[2],[int(x) for x in sys.argv[3].split(',')]
 T=sys.argv[4] if len(sys.argv)>4 else "mine head:0:3.05:.35;garage conveyor:.3:1.9:.3;works pad:0:8.65:.35;refinery:2.4:-1.6:.4;habitat:2.3:1.9:.3;settlement:-2.6:-1.5:.45"
 targets=[(a,float(b),float(c),float(d)) for a,b,c,d in (x.split(':') for x in T.split(';'))]
-srv=subprocess.Popen(['python3','-m','http.server',port,'--bind','127.0.0.1'],cwd=ROOT,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL);time.sleep(1)
+srv=subprocess.Popen([sys.executable,'-m','http.server',port,'--bind','127.0.0.1'],cwd=ROOT,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL);time.sleep(1)
 shots=[];errs=[]
 with sync_playwright() as p:
   b=p.chromium.launch(args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])

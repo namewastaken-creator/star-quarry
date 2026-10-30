@@ -6,7 +6,7 @@ import subprocess,time,sys
 from playwright.sync_api import sync_playwright
 from PIL import Image,ImageDraw
 port,out,ids=sys.argv[1],sys.argv[2],[int(x) for x in sys.argv[3].split(',')];zl=int(sys.argv[4]) if len(sys.argv)>4 else 1;aim=sys.argv[5] if len(sys.argv)>5 else ""
-srv=subprocess.Popen(['python3','-m','http.server',port,'--bind','127.0.0.1'],cwd=ROOT,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL);time.sleep(1)
+srv=subprocess.Popen([sys.executable,'-m','http.server',port,'--bind','127.0.0.1'],cwd=ROOT,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL);time.sleep(1)
 errs=[];shots=[]
 with sync_playwright() as p:
   b=p.chromium.launch(args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])

@@ -7,7 +7,7 @@ import subprocess,time,sys
 from playwright.sync_api import sync_playwright
 from PIL import Image,ImageDraw
 port,out,ids=sys.argv[1],sys.argv[2],[int(x) for x in sys.argv[3].split(',')]
-srv=subprocess.Popen(['python3','-m','http.server',port,'--bind','127.0.0.1'],cwd=ROOT,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL);time.sleep(1)
+srv=subprocess.Popen([sys.executable,'-m','http.server',port,'--bind','127.0.0.1'],cwd=ROOT,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL);time.sleep(1)
 shots=[];errs=[]
 VIEWS=[('pad',[0,0]),('mine head',[0,3.05]),('works pad',[0,8.65]),('refinery',[2.95,-1.35]),('settlement',[-3.12,-1.8])]
 with sync_playwright() as p:

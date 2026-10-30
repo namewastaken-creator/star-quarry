@@ -8,7 +8,7 @@ OUT=_os.environ.get('SQ_OUT',_os.path.join(ROOT,'out'));_os.makedirs(OUT,exist_o
 import subprocess,time,sys,json
 from playwright.sync_api import sync_playwright
 port=sys.argv[1] if len(sys.argv)>1 else '9600'
-srv=subprocess.Popen(['python3','-m','http.server',port,'--bind','127.0.0.1'],cwd=ROOT,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL);time.sleep(1)
+srv=subprocess.Popen([sys.executable,'-m','http.server',port,'--bind','127.0.0.1'],cwd=ROOT,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL);time.sleep(1)
 errs=[]
 JS=r"""(()=>{const out=[];
 S.planets.forEach((p,i)=>{p.u=true;crewState(p);p.teams=[{},{},{}];p.pts=Math.max(p.pts||0,60);p.al={m:30,s:12,c:12,v:6};Object.keys(PROGRAMS).forEach(id=>p.done[id]=1);p.set=3});

@@ -5,7 +5,7 @@ import subprocess,time,sys,os
 from playwright.sync_api import sync_playwright
 from PIL import Image
 port,i,k,out=sys.argv[1],int(sys.argv[2]),int(sys.argv[3]),sys.argv[4];TILT=float(os.environ.get('TILT','1.0'))
-srv=subprocess.Popen(['python3','-m','http.server',port,'--bind','127.0.0.1'],cwd=ROOT,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL);time.sleep(1)
+srv=subprocess.Popen([sys.executable,'-m','http.server',port,'--bind','127.0.0.1'],cwd=ROOT,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL);time.sleep(1)
 AIM=f"""(()=>{{const w=W[{i}],v=w.feat.children[{k}];cam.track=false;const d=v.position.clone().normalize().applyQuaternion(w.mesh.quaternion).normalize();
   const ax=new THREE.Vector3(0,1,0).cross(d).normalize(),c=d.clone().applyAxisAngle(ax,{TILT});cam.phi=Math.acos(c.y);cam.theta=Math.atan2(c.z,c.x)}})();0"""
 with sync_playwright() as p:

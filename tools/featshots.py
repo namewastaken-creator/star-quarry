@@ -7,7 +7,7 @@ import subprocess,time,sys
 from playwright.sync_api import sync_playwright
 from PIL import Image,ImageDraw
 port,out,ids=sys.argv[1],sys.argv[2],[int(x) for x in sys.argv[3].split(',')]
-srv=subprocess.Popen(['python3','-m','http.server',port,'--bind','127.0.0.1'],cwd=ROOT,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL);time.sleep(1)
+srv=subprocess.Popen([sys.executable,'-m','http.server',port,'--bind','127.0.0.1'],cwd=ROOT,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL);time.sleep(1)
 errs=[];shots=[]
 AIM="""(([e,n],k)=>{const i=%d,w=W[i];cam.track=false;let d;
   if(k===0)d=plotDir(e,n).applyQuaternion(w.siteQ);
