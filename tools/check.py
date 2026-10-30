@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Run the standard checks against the built game in the repository root (run src/build.py first).
 
-  python3 -I tools/check.py           the ten browser tests in tools/tests/ plus the overlap check (tools/occcheck.py)
+  python3 -I tools/check.py           the eleven browser tests in tools/tests/ plus the overlap check (tools/occcheck.py)
   python3 -I tools/check.py pwobj     just the named tests (occcheck included only if named)
 
 Each test serves the repository root on its own localhost port, opens the game in headless Chromium (Playwright) and
@@ -12,7 +12,7 @@ import os, subprocess, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 # the game's text includes characters like U+202F; Windows pipes default to cp1252, which can't print them
 sys.stdout.reconfigure(errors='backslashreplace')
-TESTS = ['pwobj', 'pwchip', 'pwmed', 'pwtab', 'pwsave', 'pwland', 'pwrc', 'pwneb', 'pwpark2', 'pwaudit']
+TESTS = ['pwobj', 'pwchip', 'pwmed', 'pwtab', 'pwsave', 'pwland', 'pwrc', 'pwneb', 'pwpark2', 'pwframe', 'pwaudit']
 want = sys.argv[1:] or TESTS + ['occcheck']
 bad = []
 for k, name in enumerate(want):

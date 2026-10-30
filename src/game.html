@@ -4780,7 +4780,10 @@ function planTo(i,base,which,target){let pl=planCopy(base);const val=q=>which===
    the least overflow). Uses only points the planet already has, so it never costs anything. */
 // income is always above zero and overflow makes a score below zero, so any layout that keeps up beats any that doesn't
 function balScore(i,q){return withPlan(i,q,()=>{const f=planetFlow(i);return keepsUp(f)?planetIncome(i,f):-f.over})}
-function planBalance(i){const ks=planetTraits(i),p=crewState(S.planets[i]);let pl={};const inc=q=>balScore(i,q);let cur=inc(pl);
+// each layout is scored once: the climb keeps coming back to layouts it has already scored (moving a point back, or
+// reaching the same layout by another move), and the parking forecast runs this hundreds of times
+function planBalance(i){const ks=planetTraits(i),p=crewState(S.planets[i]),memo=new Map();let pl={};
+  const inc=q=>{const key=ks.map(k=>q[k]||0).join();let v=memo.get(key);if(v===undefined){v=balScore(i,q);memo.set(key,v)}return v};let cur=inc(pl);
   for(let f=minerFree(i);f>0;f--){let bq=null,bv=-Infinity;for(const k of ks){const q=planAdd(planCopy(pl),k,1);const v=inc(q);if(v>bv){bv=v;bq=q}}if(!bq)break;pl=bq;cur=bv}
   for(let g=0;g<300;g++){let bq=null,bv=cur+Math.abs(cur)*1e-6;
     for(const a of ks)for(const b of ks){if(a===b||(p.al[a]||0)+(pl[a]||0)<=0)continue;const q=planAdd(planAdd(planCopy(pl),a,-1),b,1);const v=inc(q);if(v>bv){bv=v;bq=q}}
@@ -5420,44 +5423,63 @@ function parkEval(x,base){base=base||parkBase();const G=parkG(x),rows=[];let n0=
    works through it a planet at a time, a few milliseconds a frame (PR_BUDGET), and parkRank() returns the latest
    finished ranking straight away. A new ranking starts when anything that changes income changes (econSig: claims,
    crews, points and where they are, perks, training, settlements, research, permanent boosts, the station, a galaxy
-   event), or after PR_REFRESH as orbits drift. */
+   event), or after PR_REFRESH as orbits drift. A ranking's age is wall-clock time (Date.now), since a phone's
+   performance clock stops while it sleeps, and one older than PR_REFRESH no longer counts as ready.
+   The Park window never works a forecast out on the spot (that froze the game for a second on phones in the late
+   game): it waits for the running ranking, which does that spot next (PR_WANT). */
 const PR_BUDGET=4,PR_REFRESH=300e3;
-let PR=null,PRJ=null;
+let PR=null,PRJ=null,PR_WANT=-1;
 function econSig(){const now=Date.now(),g=galNow();
   return JSON.stringify([S.planets.map(p=>p.u?[p.teams.length,p.al,p.pts,(p.perks||[]).map(x=>x&&x.id?x.id+(x.ready>now?'~':''):0),Object.keys(p.done||{}).length,p.set||0]:0),
     Object.keys(S.research).length,S.perm,S.park,g&&g.type])}
 function parkJob(){if(!parkOK()||S.planets.filter(p=>p.u).length<2){PRJ=null;return}
   const t0=performance.now(),sig=econSig();
   if(PRJ&&PRJ.sig!==sig)PRJ=null;
-  if(!PRJ){if(PR&&PR.sig===sig&&t0-PR.t<PR_REFRESH)return;
+  if(!PRJ){if(PR&&PR.S===S&&PR.sig===sig&&Date.now()-PR.t<PR_REFRESH)return;
     const js=[];S.planets.forEach((p,j)=>{if(p.u)js.push(j)});const here=parkDest();
     PRJ={sig,S,js,k:0,dests:js.filter(x=>x!==here),d:0,base:{now:{},bal:{},keep:{}},cur:null,list:[]}}
   const J=PRJ;if(J.S!==S){PRJ=null;return}
   do{if(J.k<J.js.length&&J.d===0&&!J.cur){// the base: every planet now, and after Balance where it is
       const j=J.js[J.k++],f=planetFlow(j);J.base.now[j]=planetIncome(j,f);J.base.keep[j]=keepsUp(f);J.base.bal[j]=Math.max(J.base.now[j],incWithBalance(j));continue}
-    if(J.d>=J.dests.length){J.list.sort((a,b)=>b.gain-a.gain);PR={sig:J.sig,S,t:performance.now(),list:J.list,base:J.base};PRJ=null;return}
+    if(J.d>=J.dests.length){J.list.sort((a,b)=>b.gain-a.gain);PR={sig:J.sig,S,t:Date.now(),list:J.list,base:J.base};PRJ=null;parkAskRefresh();return}
+    // the spot open in the Park window goes next
+    if(!J.cur){const w=J.dests.indexOf(PR_WANT,J.d);if(w>J.d){J.dests.splice(w,1);J.dests.splice(J.d,0,PR_WANT)}}
     const x=J.dests[J.d];if(!J.cur)J.cur={x,G:parkG(x),rows:[],n0:0,b0:0,a1:0,b1:0,m:0};const c=J.cur;
     if(c.m<J.js.length){const j=J.js[c.m++];withG(c.G,()=>{const as=planetIncome(j),B=balancedNow(j),bl=Math.max(as,B.inc);
         c.rows.push({j,now:J.base.now[j],as,bal:bl,behind:J.base.keep[j]&&!B.keep});c.n0+=J.base.now[j];c.b0+=J.base.bal[j];c.a1+=as;c.b1+=bl})}
-    else{const cost=fuelCost(x),gain=c.b1-Math.max(c.n0,c.b0);J.list.push({x,rows:c.rows,now:c.n0,here:c.b0,as:c.a1,there:c.b1,gain,cost,payback:gain>0?cost/gain:Infinity});J.cur=null;J.d++}
+    else{const cost=fuelCost(x),gain=c.b1-Math.max(c.n0,c.b0);J.list.push({x,rows:c.rows,now:c.n0,here:c.b0,as:c.a1,there:c.b1,gain,cost,payback:gain>0?cost/gain:Infinity});J.cur=null;J.d++;
+      if(x===PR_WANT){parkAskRefresh();return}}
   }while(performance.now()-t0<PR_BUDGET)}
 // the latest finished ranking (empty until the first one is done); parkRankReady says whether it matches the game now
+// and is less than PR_REFRESH old
 function parkRank(){return PR&&PR.S===S?PR.list:[]}
-const parkRankReady=()=>!!PR&&PR.S===S&&PR.sig===econSig();
+const parkRankReady=()=>!!PR&&PR.S===S&&PR.sig===econSig()&&Date.now()-PR.t<PR_REFRESH;
+// the forecast for parking at x as the game is now: from the finished ranking, or the running one once it has done x
+function parkFor(x){const sig=econSig();
+  if(parkRankReady())return PR.list.find(e=>e.x===x)||null;
+  if(PRJ&&PRJ.S===S&&PRJ.sig===sig)return PRJ.list.find(e=>e.x===x)||null;
+  return null}
+// the Park window is waiting for spot PR_WANT: show it once it's worked out
+function parkAskRefresh(){const x=PR_WANT;if(x<0)return;if($('pk').hidden||+$('pkGo').dataset.x!==x){PR_WANT=-1;return}if(parkFor(x))parkAsk(x)}
 /* Station tab: the best places to park, from parkRank: the top three that would raise income after Balance, each with
    the gain, how fast the fuel pays for itself, and a button that opens the move window */
 function viewBestPark(){if(!parkOK())return '';const cd=parkCooldown(),mv=parkMoving();
   if(mv)return `<div class="card"><div class="head"><h3>Best parking spot</h3><span class="num" style="font-size:12px;color:var(--muted)">Moving</span></div><p class="l2" style="font-size:12px;margin:0">The station is on its way to ${esc(PLANETS[S.park.i].n)} · ${evTime((1-parkProg())*S.park.dur)} left. Tap Balance on your planets when it arrives.</p></div>`;
-  const list=parkRank(),good=list.filter(e=>e.gain>Math.max(e.now,e.here)*.01).slice(0,3),busy=!PR||(!parkRankReady()&&!good.length);
+  // while a new ranking is worked out the last one stands, less the spot the station is now parked at
+  const list=parkRank(),good=list.filter(e=>e.x!==parkDest()&&e.gain>Math.max(e.now,e.here)*.01).slice(0,3),busy=!PR||(!parkRankReady()&&!good.length);
   const rows=good.map(e=>`<div class="bprow"><div><b>${esc(PLANETS[e.x].n)}</b><span>+${Math.round(e.gain/Math.max(e.now,e.here)*100)}% income (+${fmt(e.gain)}/s) · fuel pays back in ${evTime(e.payback*1000)}</span></div><button class="btn" data-act="parkask" data-p="${e.x}" type="button">Park</button></div>`).join('');
   return `<div class="card"><div class="head"><h3>Best parking spot</h3><span class="num" style="font-size:12px;color:var(--muted)">${cd>0?'Thrusters cool down · '+evTime(cd):'Thrusters ready'}</span></div>
     ${rows||`<p class="l2" style="font-size:12px;margin:0">${busy?'Working out the best spots for your planets…':'The station is in the best spot: no move would raise income, even after rebalancing your planets.'}</p>`}
     <p style="font-size:12px;margin:0">Income after the move and a free Balance on every planet, against the best you can do without moving.</p></div>`}
 // the station is always parked above a planet (the old 'own lane' is gone), so x is a planet
-function parkAsk(x){if(!parkOK()||!(x>=0))return;const here=PLANETS[x].n,cost=fuelCost(x),cd=parkCooldown();
+function parkAsk(x){if(!parkOK()||!(x>=0)||!S.planets[x]||!S.planets[x].u||x===parkDest())return;const here=PLANETS[x].n,cost=fuelCost(x),cd=parkCooldown();
   $('pkTitle').textContent=`Park above ${here}?`;
   $('pkDesc').textContent=`${here} gets short, steady trips. Every other planet's distance to the station changes, so some will need their teams retuned.`;
-  const E=(parkRankReady()&&PR.list.find(e=>e.x===x))||parkEval(x,parkRankReady()?PR.base:undefined),pc=(v,w)=>w>0?`${v>=w?'+':'−'}${Math.abs(Math.round((v/w-1)*100))}%`:'',col=(v,w)=>v>w*1.005?'var(--good)':v<w*.995?'var(--bad)':'var(--muted)';
+  const E=parkFor(x);$('pkGo').dataset.x=x;$('pk').hidden=false;
+  // not worked out yet for the game as it is now: the running ranking does this spot next and fills the window in
+  if(!E){PR_WANT=x;$('pkRows').innerHTML='<div class="pkrow"><span>Working out the forecast for every planet…</span></div>';$('pkCost').textContent=`Fuel ${fmt(cost)} credits · 10 minute move · thrusters then cool down for 1 hour.`;
+    $('pkGo').disabled=true;$('pkGo').textContent='Working out…';return}
+  PR_WANT=-1;const pc=(v,w)=>w>0?`${v>=w?'+':'−'}${Math.abs(Math.round((v/w-1)*100))}%`:'',col=(v,w)=>v>w*1.005?'var(--good)':v<w*.995?'var(--bad)':'var(--muted)';
   // planets whose income changes most after Balance, in credits a second: now → after the move and Balance
   const rows=E.rows.slice().sort((a,b)=>Math.abs(b.bal-b.now)-Math.abs(a.bal-a.now)).slice(0,8);
   $('pkRows').innerHTML=`<div class="pkrow" style="color:var(--ink)"><span>Income now</span><b>${fmt(E.now)}/s</b></div>
@@ -5468,7 +5490,7 @@ function parkAsk(x){if(!parkOK()||!(x>=0))return;const here=PLANETS[x].n,cost=fu
     <h4 class="pkh">Biggest changes, after Balance</h4>`+rows.map(r=>`<div class="pkrow"><span>${esc(PLANETS[r.j].n)}${r.behind?' <b style="color:var(--bad)">· ships fall behind</b>':''}${r.j!==x&&perkSlots(r.j)>0&&withG(parkG(x),()=>capAvg(r.j))<mineRate(r.j)*PRIO_BELOW?' <b style="color:var(--ore)">· free perk swap</b>':''}</span><b style="color:${col(r.bal,r.now)}">${fmt(r.now)} → ${fmt(r.bal)}/s</b></div>`).join('');
   $('pkCost').textContent=`Fuel ${fmt(cost)} credits · 10 minute move · thrusters then cool down for 1 hour. 'After Balance' assumes you tap Balance on each planet once the station arrives (it's free). ${PLANETS[x].n}, and planets left badly short of ships, get a free, instant Shift Crew perk swap.`;
   const why=parkMoving()?'The station is already moving':cd>0?`Thrusters cooling down · ${evTime(cd)}`:S.cash<cost?'Not enough credits for fuel':'';
-  $('pkGo').disabled=!!why;$('pkGo').textContent=why||'Fire thrusters';$('pkGo').dataset.x=x;$('pk').hidden=false}
+  $('pkGo').disabled=!!why;$('pkGo').textContent=why||'Fire thrusters'}
 function parkGo(x){if(!(x>=0))return false;const cost=fuelCost(x);if(!parkOK()||parkMoving()||parkCooldown()>0||S.cash<cost)return false;
   S.cash-=cost;const now=Date.now(),cd=now+PARK_CD;S.park={i:x,from:parkDest(),t0:now,dur:PARK_MOVE,cd};
   if(!S.st)S.st={name:'',hist:[]};(S.st.parks=S.st.parks||[]).push({n:PLANETS[x].n,at:now});refreshWorld();save();return true}

@@ -17,6 +17,7 @@ repository root (the scripts work out their own paths, so any clone in any folde
 | `src/artifact/` | The Claude artifact phone preview: `preview.html` (the frame page) and `mk.py`. |
 | `android/` | The Android Studio project (a full-screen WebView around the game). |
 | `tools/check.py` | Runs the standard checks (browser tests in `tools/tests/` and the overlap check). |
+| `tools/tests/lategame.json` | A maxed late-game save (every planet, crew, point, perk, program, settlement and research). `pwframe` loads it to time frames; remake it with `tools/tests/mklategame.py` after a save-format change. |
 | `tools/*.py` | Visual check tools that render close-ups of the 3D scene (see the top of each file). |
 | `index.html`, `sw.js`, `version.json`, `manifest.webmanifest`, `three-r128.min.js`, `sky-*.jpg` | **Build outputs** at the root, served by GitHub Pages from `main`. Never edit them by hand. |
 | `icon-*.png`, `apple-touch-icon.png` | Web app icons (static, not generated). |
