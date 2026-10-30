@@ -10,6 +10,8 @@ On your phone, open the link and add it to your home screen (Chrome: ⋮ > Add t
 
 ## Making changes
 
-All changes to the game are made in one Claude chat, the one the owner chose. Other Claude sessions must not edit, build, bump or push anything in this repository; they can read it and suggest changes for that chat to make.
+Star Quarry is developed in Claude Code (the Code tab in the Claude desktop app), working from this repository, which is the single source of truth. The game's source is `src/game.html`; `BUILDING.md` has the exact commands to bump, build, check and publish, and `CLAUDE.md` has the rules.
 
-The repository's `index.html`, `sw.js` and `version.json` are build outputs from that chat's source copy, so editing them here directly would be overwritten by the next build. `tools/bump.py` is kept for reference only and refuses to run.
+The root `index.html`, `sw.js` and `version.json` are build outputs: edit the source and rebuild rather than editing them directly. Work happens on `dev`; merging to `main` publishes to every player.
+
+The Claude chat that used to build and push the game no longer does; it can read the repository and suggest changes.

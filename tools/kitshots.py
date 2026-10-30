@@ -1,9 +1,12 @@
 """Screenshots of tier 1 and tier 3 bases for chosen planets: python3 kitshots.py PORT OUT.png i,i,i [zoom]"""
+import os as _os
+ROOT=_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))  # the repository root, served as the game
+OUT=_os.environ.get('SQ_OUT',_os.path.join(ROOT,'out'));_os.makedirs(OUT,exist_ok=True)  # screenshots (git-ignored)
 import subprocess,time,sys
 from playwright.sync_api import sync_playwright
 from PIL import Image,ImageDraw
 port,out,ids=sys.argv[1],sys.argv[2],[int(x) for x in sys.argv[3].split(',')];zl=int(sys.argv[4]) if len(sys.argv)>4 else 1;aim=sys.argv[5] if len(sys.argv)>5 else ""
-srv=subprocess.Popen(['python3','-m','http.server',port,'--bind','127.0.0.1'],cwd='/home/claude/StarQuarryWeb',stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL);time.sleep(1)
+srv=subprocess.Popen(['python3','-m','http.server',port,'--bind','127.0.0.1'],cwd=ROOT,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL);time.sleep(1)
 errs=[];shots=[]
 with sync_playwright() as p:
   b=p.chromium.launch(args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
@@ -27,7 +30,7 @@ with sync_playwright() as p:
       if aim=='set':
         E(f"(()=>{{const w=W[{i}];cam.track=false;const d=plotDir(...LAY.set).applyQuaternion(w.siteQ).applyQuaternion(w.mesh.quaternion).normalize();cam.phi=Math.acos(d.y)*.92;cam.theta=Math.atan2(d.z,d.x)}})();0")
       pg.wait_for_timeout(2500)
-      f=f'/tmp/claude-0/ks_{i}_{tier}.png';pg.screenshot(path=f);shots.append((i,tier,f,E(f"PLANETS[{i}].n+' · '+PTYPE({i})+' · tier '+{tier}")))
+      f=f'{OUT}/ks_{i}_{tier}.png';pg.screenshot(path=f);shots.append((i,tier,f,E(f"PLANETS[{i}].n+' · '+PTYPE({i})+' · tier '+{tier}")))
 srv.kill()
 W,H=390,560;cols=2;rows=len(ids)
 img=Image.new('RGB',(cols*W+10,rows*(H+24)),'#05060d');d=ImageDraw.Draw(img)

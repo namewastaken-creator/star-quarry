@@ -1,10 +1,13 @@
 """Close look at landmarks: python3 featclose.py PORT OUT.png i:k,i:k ...  (planet i, k-th large landmark; two views each:
 from above at 35 degrees, and low across the ground)"""
+import os as _os
+ROOT=_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))  # the repository root, served as the game
+OUT=_os.environ.get('SQ_OUT',_os.path.join(ROOT,'out'));_os.makedirs(OUT,exist_ok=True)  # screenshots (git-ignored)
 import subprocess,time,sys
 from playwright.sync_api import sync_playwright
 from PIL import Image,ImageDraw
 port,out=sys.argv[1],sys.argv[2];jobs=[tuple(int(v) for v in x.split(':')) for x in sys.argv[3].split(',')]
-srv=subprocess.Popen(['python3','-m','http.server',port,'--bind','127.0.0.1'],cwd='/home/claude/StarQuarryWeb',stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL);time.sleep(1)
+srv=subprocess.Popen(['python3','-m','http.server',port,'--bind','127.0.0.1'],cwd=ROOT,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL);time.sleep(1)
 errs=[];shots=[]
 with sync_playwright() as p:
   b=p.chromium.launch(args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
@@ -27,7 +30,7 @@ with sync_playwright() as p:
         const ax=new THREE.Vector3(0,1,0).cross(d).normalize();if(ax.lengthSq()<1e-6)ax.set(1,0,0);const c=d.clone().applyAxisAngle(ax,{tilt});
         cam.phi=Math.acos(Math.max(-1,Math.min(1,c.y)));cam.theta=Math.atan2(c.z,c.x);
         return PLANETS[i].n+' · '+PTYPE(i)+' · landmark '+{k}+' of '+big.length}})()""")
-      pg.wait_for_timeout(2500);f=f'/tmp/claude-0/fc_{i}_{k}_{v}.png';pg.screenshot(path=f);shots.append((f,lab))
+      pg.wait_for_timeout(2500);f=f'{OUT}/fc_{i}_{k}_{v}.png';pg.screenshot(path=f);shots.append((f,lab))
 srv.kill()
 Wd,H=390,700;img=Image.new('RGB',(2*Wd+10,(len(shots)+1)//2*(H+24)),'#05060d');d=ImageDraw.Draw(img)
 for n,(f,lab) in enumerate(shots):

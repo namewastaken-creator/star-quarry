@@ -1,0 +1,7 @@
+<resources>
+    <style name="Theme.StarQuarry" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowBackground">@color/void_bg</item>
+    </style>
+    <color name="void_bg">#05060D</color>
+    <color name="ic_bg">#0D1020</color>
+</resources>

@@ -1,11 +1,14 @@
 """World kits occupancy check: on all 22 planets, builds a full tier 3 base (3 crews, 24 hauling points, every
 training program, City) and the close-up landmarks, then proves no landmark overlaps the plot or any reserved
 footprint (OCC), and reports any base part that stands outside every reservation.
-Usage: python3 occcheck.py PORT  (serves /home/claude/StarQuarryWeb on localhost:PORT)"""
+Usage: python3 occcheck.py PORT  (serves the repository root on localhost:PORT)"""
+import os as _os
+ROOT=_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))  # the repository root, served as the game
+OUT=_os.environ.get('SQ_OUT',_os.path.join(ROOT,'out'));_os.makedirs(OUT,exist_ok=True)  # screenshots (git-ignored)
 import subprocess,time,sys,json
 from playwright.sync_api import sync_playwright
 port=sys.argv[1] if len(sys.argv)>1 else '9600'
-srv=subprocess.Popen(['python3','-m','http.server',port,'--bind','127.0.0.1'],cwd='/home/claude/StarQuarryWeb',stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL);time.sleep(1)
+srv=subprocess.Popen(['python3','-m','http.server',port,'--bind','127.0.0.1'],cwd=ROOT,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL);time.sleep(1)
 errs=[]
 JS=r"""(()=>{const out=[];
 S.planets.forEach((p,i)=>{p.u=true;crewState(p);p.teams=[{},{},{}];p.pts=Math.max(p.pts||0,60);p.al={m:30,s:12,c:12,v:6};Object.keys(PROGRAMS).forEach(id=>p.done[id]=1);p.set=3});

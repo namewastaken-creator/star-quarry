@@ -1,0 +1,97 @@
+<title>Star Quarry</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@600;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: a slim tool strip over a dark stage; the game runs in a phone-sized frame, scaled to fit, centred.
+   On a real phone (narrow screen) the strip and frame disappear and the game fills the screen.
+   Single dark look, matching the game itself. */
+:root{
+  --bg:#05060d;          /* the game's own space black */
+  --strip:#0d1020;       /* tool strip */
+  --line:#262c4a;        /* hairlines */
+  --ink:#e6e9f5;         /* text */
+  --muted:#8a90b2;       /* secondary text */
+  --ore:#f0a83c;         /* the game's orange: active choice */
+  --bezel:#15182a;       /* phone body */
+  --f-display:'Saira Condensed','Arial Narrow',system-ui,sans-serif;
+  --f-data:'JetBrains Mono',ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);overflow:hidden}
+.app{height:100%;display:flex;flex-direction:column}
+.strip{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;background:var(--strip);border-bottom:1px solid var(--line);
+  padding-block:8px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.name{font:700 15px var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:var(--ore);margin-right:4px}
+.group{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.lbl{font:600 10px var(--f-display);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.chip{font:600 12px var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:none;border:1px solid var(--line);
+  border-radius:5px;padding:5px 9px;cursor:pointer;display:flex;gap:6px;align-items:baseline}
+.chip small{font:500 10px var(--f-data);letter-spacing:0;text-transform:none;color:var(--muted)}
+.chip:hover{border-color:var(--muted);color:var(--ink)}
+.chip[aria-pressed="true"]{border-color:var(--ore);color:var(--ore)}
+.chip[aria-pressed="true"] small{color:var(--ore)}
+.chip:disabled{opacity:.4;cursor:default}
+.chip:focus-visible{outline:2px solid var(--ore);outline-offset:2px}
+.note{margin-left:auto;font:500 11px var(--f-data);color:var(--muted)}
+.stage{flex:1;min-height:0;position:relative;display:grid;place-items:center;overflow:hidden}
+/* the phone: a bezel around a frame that is exactly the device's screen size, scaled as a whole */
+.phone{position:absolute;left:0;top:0;transform-origin:0 0;padding:12px;border-radius:38px;background:var(--bezel);
+  box-shadow:0 0 0 1px var(--line),0 30px 80px rgba(0,0,0,.6)}
+.phone iframe{display:block;border:0;border-radius:28px;background:var(--bg)}
+.stage.full .phone{position:static;padding:0;border-radius:0;box-shadow:none;background:none;transform:none!important;width:100%;height:100%}
+.stage.full .phone iframe{width:100%!important;height:100%!important;border-radius:0}
+/* a real phone: just the game */
+@media (max-width:600px),(max-height:500px) and (pointer:coarse){
+  .strip{display:none}
+  .stage .phone{position:static;padding:0;border-radius:0;box-shadow:none;background:none;transform:none!important;width:100%;height:100%}
+  .stage .phone iframe{width:100%!important;height:100%!important;border-radius:0}
+}
+@media (prefers-reduced-motion:no-preference){.phone{transition:transform .2s ease}}
+</style>
+
+<div class="app">
+  <div class="strip" role="toolbar" aria-label="Phone preview">
+    <span class="name">Star Quarry</span>
+    <div class="group" id="devs">
+      <span class="lbl">Screen</span>
+      <button class="chip" id="d-se" data-w="375" data-h="667" type="button">Small<small>375×667</small></button>
+      <button class="chip" id="d-ip" data-w="393" data-h="852" type="button">iPhone<small>393×852</small></button>
+      <button class="chip" id="d-px" data-w="412" data-h="915" type="button">Large Android<small>412×915</small></button>
+      <button class="chip" id="d-full" data-w="0" data-h="0" type="button">Full window</button>
+    </div>
+    <div class="group">
+      <button class="chip" id="rot" type="button" aria-pressed="false">Rotate</button>
+      <button class="chip" id="reload" type="button">Reload game</button>
+    </div>
+    <span class="note" id="scale"></span>
+  </div>
+  <div class="stage" id="stage">
+    <div class="phone" id="phone"><iframe id="game" src="game.html" title="Star Quarry game" allow="fullscreen; autoplay"></iframe></div>
+  </div>
+</div>
+
+<script>
+// remembered per viewer: which screen and whether it's turned sideways
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const stage=document.getElementById('stage'),phone=document.getElementById('phone'),frame=document.getElementById('game');
+const devs=[...document.querySelectorAll('#devs .chip')],rot=document.getElementById('rot'),note=document.getElementById('scale');
+let dev=store.get('sq_prev_dev')||'d-ip',turned=store.get('sq_prev_rot')==='1';
+function layout(){
+  const b=document.getElementById(dev)||document.getElementById('d-ip'),full=b.dataset.w==='0';
+  devs.forEach(x=>x.setAttribute('aria-pressed',String(x===b)));rot.disabled=full;rot.setAttribute('aria-pressed',String(turned&&!full));
+  stage.classList.toggle('full',full);
+  if(full){note.textContent='Full window';return}
+  let w=+b.dataset.w,h=+b.dataset.h;if(turned)[w,h]=[h,w];
+  frame.style.width=w+'px';frame.style.height=h+'px';
+  // scale the whole phone to fit the stage, never larger than life
+  const pad=24,bw=w+24,bh=h+24,s=Math.min(1,(stage.clientWidth-pad)/bw,(stage.clientHeight-pad)/bh);
+  const x=(stage.clientWidth-bw*s)/2,y=(stage.clientHeight-bh*s)/2;
+  phone.style.transform=`translate(${x}px,${y}px) scale(${s})`;
+  note.textContent=`${w}×${h} · ${Math.round(s*100)}%`}
+devs.forEach(b=>b.addEventListener('click',()=>{dev=b.id;store.set('sq_prev_dev',dev);layout()}));
+rot.addEventListener('click',()=>{turned=!turned;store.set('sq_prev_rot',turned?'1':'0');layout()});
+document.getElementById('reload').addEventListener('click',()=>{frame.src='game.html?t='+Date.now()});
+addEventListener('resize',layout);layout();
+</script>
