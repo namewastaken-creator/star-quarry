@@ -20,13 +20,18 @@ DIST = os.path.join(ROOT, 'dist')
 os.makedirs(DIST, exist_ok=True)
 CDN = '<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>'
 
+# always UTF-8 with LF line endings, so a build on Windows (whose default is cp1252 and CRLF) gives the same files and
+# hashes as anywhere else
+def read(path): return open(path, encoding='utf-8').read()
+def write(path, text): open(path, 'w', encoding='utf-8', newline='\n').write(text)
+
 # warn if gameplay changed without the user guide being updated (see guidecheck.py)
 import sys
 sys.path.insert(0, os.path.join(ROOT, 'src'))
 import guidecheck
 GUIDE_OK = guidecheck.check('--guide-ok' in sys.argv)
-src = open(SRC).read()
-three = open(THREE).read()
+src = read(SRC)
+three = read(THREE)
 body = src.replace(CDN, '<script>' + three + '</script>')
 body = re.sub(r'window\.__SQ=\{.*?\};\n', '', body)
 cut = body.index('</style>') + len('</style>')
@@ -48,7 +53,7 @@ def zipdir(folder, zpath, arcroot):
 # ---------- Android ----------
 android = f'<!doctype html><html lang="en"><head>{VIEWPORT}{head_part}</head><body>{rest}</body></html>'
 os.makedirs(f'{ANDROID}/app/src/main/assets', exist_ok=True)
-open(f'{ANDROID}/app/src/main/assets/index.html', 'w').write(android)
+write(f'{ANDROID}/app/src/main/assets/index.html', android)
 
 # ---------- Web (installable, full screen, offline) ----------
 WEB = ROOT  # the web game is built straight into the repository root (GitHub Pages serves it from there)
@@ -72,7 +77,7 @@ import base64
 web_head, web_rest = head_part, rest
 three_tag = '<script>' + three + '</script>'
 web_head = web_head.replace(three_tag, '<script src="three-r128.min.js"></script>'); web_rest = web_rest.replace(three_tag, '<script src="three-r128.min.js"></script>')
-open(f'{WEB}/three-r128.min.js', 'w').write(three)
+write(f'{WEB}/three-r128.min.js', three)
 m = re.search(r'const SKY_IMG="data:image/jpeg;base64,([^"]+)"', web_rest) or re.search(r'const SKY_IMG="data:image/jpeg;base64,([^"]+)"', web_head)
 SKY = None
 if m:
@@ -83,7 +88,7 @@ if m:
     web_head = web_head.replace(m.group(0), f'const SKY_IMG="{SKY}"'); web_rest = web_rest.replace(m.group(0), f'const SKY_IMG="{SKY}"')
 assert 'three-r128.min.js' in web_head + web_rest
 web = f'<!doctype html><html lang="en"><head>{VIEWPORT}{pwa_head}{web_head}</head><body>{web_rest}{sw_reg}</body></html>'
-open(f'{WEB}/index.html', 'w').write(web)
+write(f'{WEB}/index.html', web)
 
 manifest = {
     "name": "Star Quarry", "short_name": "Star Quarry",
@@ -97,7 +102,7 @@ manifest = {
         {"src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
     ]
 }
-open(f'{WEB}/manifest.webmanifest', 'w').write(json.dumps(manifest, indent=2))
+write(f'{WEB}/manifest.webmanifest', json.dumps(manifest, indent=2))
 
 version = hashlib.sha1(web.encode()).hexdigest()[:10]
 sw = f"""// Star Quarry offline support. The game page is always re-checked with the server when online (no-cache,
@@ -123,21 +128,21 @@ self.addEventListener('fetch',e=>{{
     return hit||net}}));
 }});
 """
-open(f'{WEB}/sw.js', 'w').write(sw)
+write(f'{WEB}/sw.js', sw)
 # version.json: what the running game compares itself against when checking for updates
 _vm = re.search(r"const APP_VER=\{name:'([^']+)',n:(\d+)\};", src)
 APP_NAME, APP_N = _vm.group(1), int(_vm.group(2))
-_cl = json.load(open(os.path.join(ROOT, 'src', 'changelog.json')))
+_cl = json.loads(read(os.path.join(ROOT, 'src', 'changelog.json')))
 _notes = '; '.join(c['t'] for c in _cl if c.get('v') == APP_NAME)
 # the last 40 versioned changes, so a game several versions behind can list everything new and see if any was important
 _log = [{"v": c["v"], "t": c["t"], **({"imp": True} if c.get("imp") else {})} for c in _cl if c.get("v")][:40]
-open(f'{WEB}/version.json', 'w').write(json.dumps({"name": APP_NAME, "n": APP_N, "notes": _notes, "log": _log}))
+write(f'{WEB}/version.json', json.dumps({"name": APP_NAME, "n": APP_N, "notes": _notes, "log": _log}))
 # keep the Android app's version in step (versionCode must rise with each build)
 _g = f'{ANDROID}/app/build.gradle.kts'
-_gs = open(_g).read()
+_gs = read(_g)
 _gs = re.sub(r'versionCode = \d+', f'versionCode = {max(1, APP_N)}', _gs)
 _gs = re.sub(r'versionName = "[^"]*"', f'versionName = "{APP_NAME}"', _gs)
-open(_g, 'w').write(_gs)
+write(_g, _gs)
 zipdir(ANDROID, f'{DIST}/StarQuarry-Android.zip', 'StarQuarryAndroid')
 # the web zip holds just the published files (not the repository's sources and tools)
 WEB_FILES = ['index.html', 'sw.js', 'version.json', 'manifest.webmanifest', 'three-r128.min.js', 'icon-192.png', 'icon-512.png',

@@ -38,11 +38,11 @@ def h(t):
     return hashlib.sha256(t.encode()).hexdigest()[:16]
 
 def check(ack=False):
-    s = open(SRC).read()
+    s = open(SRC, encoding='utf-8').read()  # explicit, or Windows reads cp1252 and the fingerprints differ
     now = {'rules': h(rules_text(s)), 'guide': h(guide_text(s))}
-    old = json.load(open(STATE)) if os.path.exists(STATE) else None
+    old = json.load(open(STATE, encoding='utf-8')) if os.path.exists(STATE) else None
     if old is None or ack or now['guide'] != old['guide'] or now['rules'] == old['rules']:
-        json.dump(now, open(STATE, 'w'))
+        json.dump(now, open(STATE, 'w', encoding='utf-8', newline='\n'))
         if ack and old and now['rules'] != old['rules']:
             print('guide check: gameplay change recorded as not affecting the user guide')
         return True

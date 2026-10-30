@@ -59,12 +59,12 @@ def main():
         if '--important' in flags:
             e['imp'] = True
         log.insert(0, e)
-        json.dump(log, open(LOG, 'w', encoding='utf-8'), ensure_ascii=False, indent=0)
+        json.dump(log, open(LOG, 'w', encoding='utf-8', newline='\n'), ensure_ascii=False, indent=0)
     changes = 'const CHANGES=' + json.dumps(log, ensure_ascii=False, separators=(',', ':')) + ';\n'
     s, k = re.subn(r"const CHANGES=\[.*?\];\n", lambda _: changes, s, count=1, flags=re.S)
     if not k:
         sys.exit('bump: CHANGES not found in src/game.html')
-    open(GAME, 'w', encoding='utf-8').write(s)
+    open(GAME, 'w', encoding='utf-8', newline='\n').write(s)
     print(('synced' if '--sync' in flags else 'version'), name, 'build', n, '| changelog entries', len(log))
 
 

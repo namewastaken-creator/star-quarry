@@ -6,7 +6,7 @@ skeleton the artifact host adds to a published page (doctype, charset, viewport,
 The artifact page itself (src/artifact/preview.html) loads game.html beside it in a phone-sized frame."""
 import os
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-src = open(os.path.join(ROOT, 'src', 'game.html')).read()
+src = open(os.path.join(ROOT, 'src', 'game.html'), encoding='utf-8').read()
 head = ('<!doctype html><html lang="en"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'
         '<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}'
@@ -14,5 +14,5 @@ head = ('<!doctype html><html lang="en"><head><meta charset="utf-8">'
         '</head><body>')
 out = os.path.join(ROOT, 'dist', 'artifact')
 os.makedirs(out, exist_ok=True)
-open(os.path.join(out, 'game.html'), 'w').write(head + src + '</body></html>')
+open(os.path.join(out, 'game.html'), 'w', encoding='utf-8', newline='\n').write(head + src + '</body></html>')
 print('game.html', round(len(head + src) / 1e6, 2), 'MB ->', os.path.relpath(os.path.join(out, 'game.html'), ROOT))
