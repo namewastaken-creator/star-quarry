@@ -46,13 +46,13 @@ Run from the repository root.
 
 ## Known issues to keep in mind
 
-The 26 Oct 2026 code review (project doc `claude/star-quarry-code-review-2026-10-26.md`) lists issues by priority. Its first four are fixed, each with a test that guards it:
+The 26 Oct 2026 code review is in `docs/code-review-2026-10-26.md`, with a status table at the top (checked 30 Oct 2026). Of its 18 items, 15 are fixed; the high-priority four are guarded by tests (`pwframe`, `pwsw`, `pwbadsave`). Still open from it:
 
-- Late-game parkRank freeze and stale parkRank cache: fixed in Beta 0.40.10.192 (`pwframe`).
-- Service worker caching error pages: fixed in Beta 0.40.11.193 (`pwsw`).
-- Bad saves silently replaced: fixed in Beta 0.40.11.193 (`pwbadsave`).
+- **Readability (17):** very long source lines, a 40-branch `if/else` click handler (an `ACTIONS` table would be clearer), and migrations that all run on every load (an `S.mig` version and an ordered list).
+- **File size (16, partly):** Three.js and the sky are separate cached files, but `index.html` is still about 750 KB per release.
+- **Getters (14, partly):** `econG`, `galNow` and `fmt` still guard with `typeof S` because of load order.
 
-Work through the rest of the review's list next. Also open:
+Also open:
 
 - Backups of unreadable saves (`starquarry_save_v1_bak`, `starquarry_save_v1_bak_<time>`) are kept, but players have no in-game way to export or restore them.
 - `.claude/launch.json` hard-codes port 8000, so the Preview pane's server can't start while another server holds that port.
