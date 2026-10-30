@@ -2,6 +2,7 @@
 
 > **About this copy (30 Oct 2026).** Moved here from Claude chat, text unchanged below this note. Where it disagrees with the repository, the repository wins:
 > - **Who changes the game** and **Publishing** describe the old chat workflow (`/home/claude/...` paths, a daily scheduled release, the artifact and Android zip after every change). Since 30 Oct 2026 the repository is the single source of truth; publishing follows `CLAUDE.md` and the `/release` routine.
+> - **Version and updates**: replaced by `docs/versioning.md` (the current version scheme and the repository's `src/bump.py`); its update prompt is in turn superseded by "Quiet updates" under Publishing.
 > - **Station thrusters**: the ranking is no longer "cached for a minute". See "Later changes" at the end.
 > - **Code review fixes (Beta 0.20.1–0.20.3)**: superseded in part by Beta 0.40.10 and 0.40.11. See "Later changes" at the end and `docs/code-review-2026-10-26.md`.
 
