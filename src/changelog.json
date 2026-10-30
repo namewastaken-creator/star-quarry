@@ -1,6 +1,11 @@
 [
 {
 "d": "2026-10-30",
+"v": "Beta 0.41.0.194",
+"t": "New on the Warp tab: Your save lets you export your game as a save code, move it to another device, and restore backups."
+},
+{
+"d": "2026-10-30",
 "v": "Beta 0.40.11.193",
 "t": "Saves are safer: a damaged save is always backed up and never overwritten, and playing offline is more reliable."
 },
