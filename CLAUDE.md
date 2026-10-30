@@ -4,7 +4,7 @@ A 3D idle space-mining game (Three.js r128, plain HTML/JS, no framework). Player
 
 The whole game is one source file, `src/game.html`. See `BUILDING.md` for the layout, requirements and the full publish routine.
 
-The game's rules, balance numbers and the history behind them are in `docs/design-notes.md`. Read the relevant section before changing gameplay, and add a short entry under "Later changes" at its end when a change alters rules, numbers or how a system works. Its sections on who changes the game and on publishing describe the old chat workflow; this file and `BUILDING.md` replace them. `docs/world-kits-proposal-2026-10-27.md` is the original plan for how each world type builds its base (fully built; the design notes describe it as it is now). `docs/versioning.md` covers the version scheme, the change log, the update check and the move into this repository.
+The game's rules, balance numbers and the history behind them are in `docs/design-notes.md`. Read the relevant section before changing gameplay, and add a short entry under "Later changes" at its end when a change alters rules, numbers or how a system works. Its sections on who changes the game and on publishing describe the old chat workflow; this file and `BUILDING.md` replace them. `docs/world-kits-proposal-2026-10-27.md` is the original plan for how each world type builds its base (fully built; the design notes describe it as it is now).
 
 ## Golden rules
 
