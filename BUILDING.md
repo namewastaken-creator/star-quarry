@@ -60,6 +60,8 @@ repository root (the scripts work out their own paths, so any clone in any folde
    Ten browser tests plus the overlap check (nothing on a planet stands inside the base or the mining field). All
    must pass. It takes several minutes (software WebGL). Also look at the change yourself: serve the root
    (`python3 -m http.server 8000`, then http://localhost:8000) and check at phone width (about 390 px).
+   http://localhost:8000/src/artifact/preview.html?src=/index.html shows the game in phone- and iPad-sized frames
+   with buttons for each screen size and Rotate.
 5. **Commit and push to `dev`.** Commit `src/`, the build outputs at the root and `android/app/build.gradle.kts`.
 6. **Publish:** merge `dev` into `main` and push. GitHub Pages redeploys within a minute or two; open games notice the
    new `version.json` (read from `main` on raw.githubusercontent.com) and offer the update.
