@@ -1,5 +1,11 @@
 [
 {
+"d": "2026-10-30",
+"v": "Beta 0.40.10.192",
+"t": "Station parking: opening the Park window no longer freezes the game on big saves, and the Best parking spot card stays up to date.",
+"imp": true
+},
+{
 "d": "2026-10-29",
 "v": "Beta 0.40.9.191",
 "t": "Molten worlds: lava lakes are larger, with bigger crust plates and fewer cracks."

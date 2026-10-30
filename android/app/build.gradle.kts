@@ -11,8 +11,8 @@ android {
         applicationId = "com.starquarry.game"
         minSdk = 26
         targetSdk = 34
-        versionCode = 191
-        versionName = "Beta 0.40.9.191"
+        versionCode = 192
+        versionName = "Beta 0.40.10.192"
     }
 
     buildTypes {
