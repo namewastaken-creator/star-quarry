@@ -11,6 +11,9 @@ The whole game is one source file, `src/game.html`. See `BUILDING.md` for the la
 - **Work on `dev`**; merge to `main` only when a build is ready to publish. Pushing to `main` updates the live game for every player.
 - **Never commit** the Android signing keystore, its passwords or `local.properties`.
 - **Saves live in players' browsers.** Any change to the save format needs a migration and must never silently overwrite an existing save.
+- **Publish only through the release routine** (`/release`, in `.claude/skills/release/SKILL.md`). Never merge into or push to `main` unless `tools/preflight.py` printed `READY TO PUBLISH` for that exact commit, and the user said yes in chat to publishing that version. Never force-push `main`.
+- **On Windows, `python3` is the Microsoft Store shortcut:** use `python` for every command below.
+- **Run multi-step commands so they stop at the first failure**, and check that a folder exists before running git in it, so a failed step can never carry on in the wrong repository.
 
 ## Versioning
 
@@ -29,6 +32,7 @@ Run from the repository root.
 
 - **Bump:** `python3 -I src/bump.py "what changed"` (`--minor`, `--major`, `--important`; `--sync` rewrites `CHANGES` from `src/changelog.json` without a new version)
 - **Build:** `python3 -I src/build.py` (runs `src/guidecheck.py`; if it warns that gameplay changed but the user guide didn't, update `GUIDE` in `src/game.html`, or rebuild with `--guide-ok` when the guide isn't affected)
+- **Release gate:** `python3 -I tools/preflight.py` (run on `dev` after the release is committed and pushed; checks the branch, the version bump, a reproducible build and all the checks, and ends with `READY TO PUBLISH` or `NOT READY` plus a fix)
 - **Check:** `python3 -I tools/check.py` (ten headless browser tests in `tools/tests/` plus the overlap check `tools/occcheck.py`; all must pass; needs `pip install playwright pillow` and `python3 -m playwright install chromium`)
 - **Test locally:** serve the repo root (for example `python3 -m http.server 8000`) and open http://localhost:8000. Use the Preview pane to check changes visually; http://localhost:8000/src/artifact/preview.html?src=/index.html shows the built game in device-sized frames (Small, iPhone, Large Android, iPad mini, iPad Pro 13″, rotated).
 - **Visual close-ups of the 3D scene:** `tools/featclose.py`, `tools/closeup.py`, `tools/eruptshots.py` and friends (usage at the top of each file; images go to `out/`).

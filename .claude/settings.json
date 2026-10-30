@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(python -I src/build.py)",
+      "PowerShell(python -I src/build.py *)",
+      "PowerShell(python -I tools/check.py)",
+      "PowerShell(python -I tools/check.py *)",
+      "PowerShell(python -I tools/preflight.py)",
+      "PowerShell(python -I tools/preflight.py *)",
+      "PowerShell(python -I src/artifact/mk.py)",
+      "PowerShell(git status)",
+      "PowerShell(git status *)",
+      "PowerShell(git diff)",
+      "PowerShell(git diff *)",
+      "PowerShell(git log)",
+      "PowerShell(git log *)",
+      "PowerShell(git --no-pager log *)",
+      "PowerShell(git --no-pager diff *)",
+      "PowerShell(git fetch)",
+      "PowerShell(git fetch *)",
+      "PowerShell(git show *)",
+      "PowerShell(git branch)",
+      "PowerShell(git branch -vv)",
+      "PowerShell(git branch -a)"
+    ],
+    "ask": [
+      "PowerShell(git push origin main)",
+      "PowerShell(git push origin main *)",
+      "PowerShell(git merge *)",
+      "PowerShell(git checkout main)",
+      "PowerShell(git reset *)",
+      "PowerShell(git push --force*)",
+      "PowerShell(git push -f *)"
+    ]
+  }
+}
