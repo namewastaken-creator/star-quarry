@@ -46,4 +46,14 @@ Run from the repository root.
 
 ## Known issues to keep in mind
 
-The 26 Oct 2026 code review (project doc `claude/star-quarry-code-review-2026-10-26.md`) lists open issues by priority, starting with the late-game parkRank freeze, the stale parkRank cache, the service worker caching error pages, and bad saves being silently replaced.
+The 26 Oct 2026 code review (project doc `claude/star-quarry-code-review-2026-10-26.md`) lists issues by priority. Its first four are fixed, each with a test that guards it:
+
+- Late-game parkRank freeze and stale parkRank cache: fixed in Beta 0.40.10.192 (`pwframe`).
+- Service worker caching error pages: fixed in Beta 0.40.11.193 (`pwsw`).
+- Bad saves silently replaced: fixed in Beta 0.40.11.193 (`pwbadsave`).
+
+Work through the rest of the review's list next. Also open:
+
+- Backups of unreadable saves (`starquarry_save_v1_bak`, `starquarry_save_v1_bak_<time>`) are kept, but players have no in-game way to export or restore them.
+- `.claude/launch.json` hard-codes port 8000, so the Preview pane's server can't start while another server holds that port.
+- The Preview pane's browser currently refuses to register any service worker; test offline behaviour with `pwsw` or headless Chromium instead.
