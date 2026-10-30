@@ -16,6 +16,8 @@ repository root (the scripts work out their own paths, so any clone in any folde
 | `src/guidecheck.py` | Warns when gameplay code changed but the in-game user guide (`GUIDE`) didn't. |
 | `src/artifact/` | The Claude artifact phone preview: `preview.html` (the frame page) and `mk.py`. |
 | `android/` | The Android Studio project (a full-screen WebView around the game). |
+| `docs/design-notes.md` | The game's rules, balance numbers and design history. Add to "Later changes" when a release changes them. |
+| `docs/code-review-2026-10-26.md` | The 26 Oct 2026 code review, with a status table at the top. |
 | `tools/check.py` | Runs the standard checks (browser tests in `tools/tests/` and the overlap check). |
 | `tools/tests/lategame.json` | A maxed late-game save (every planet, crew, point, perk, program, settlement and research). `pwframe` loads it to time frames; remake it with `tools/tests/mklategame.py` after a save-format change. |
 | `tools/*.py` | Visual check tools that render close-ups of the 3D scene (see the top of each file). |
@@ -54,16 +56,19 @@ repository root (the scripts work out their own paths, so any clone in any folde
    If it prints a **guide check WARNING**, gameplay changed but the user guide (`GUIDE` in `src/game.html`, shown
    from the Warp tab) didn't: update the guide, or if nothing in it is affected, rebuild with
    `python3 -I src/build.py --guide-ok`.
+   If the release changes the game's rules, numbers or how a system works, add an entry for it under "Later
+   changes" at the end of `docs/design-notes.md`, headed with the new version name.
 4. **Check:**
    ```
    python3 -I tools/check.py
    ```
-   Ten browser tests plus the overlap check (nothing on a planet stands inside the base or the mining field). All
+   The browser tests in `tools/tests/` plus the overlap check (nothing on a planet stands inside the base or the mining field). All
    must pass. It takes several minutes (software WebGL). Also look at the change yourself: serve the root
    (`python3 -m http.server 8000`, then http://localhost:8000) and check at phone width (about 390 px).
    http://localhost:8000/src/artifact/preview.html?src=/index.html shows the game in phone- and iPad-sized frames
    with buttons for each screen size and Rotate.
-5. **Commit and push to `dev`.** Commit `src/`, the build outputs at the root and `android/app/build.gradle.kts`.
+5. **Commit and push to `dev`.** Commit `src/`, the build outputs at the root, `android/app/build.gradle.kts` and
+   `docs/design-notes.md` if it changed.
 6. **Gate:**
    ```
    python3 -I tools/preflight.py

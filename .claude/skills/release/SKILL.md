@@ -42,6 +42,11 @@ into the next one.
 - If the build prints a **guide check WARNING**, gameplay changed but the user guide didn't. Read `GUIDE` in
   `src/game.html`. If a section is affected, update it (in the same plain style) and build again. If nothing in the
   guide is affected, tell the user why, and with their OK run `python -I src/build.py --guide-ok`.
+- **Design notes:** if anything in this release changes the game's rules, numbers or how a system works, check that
+  `docs/design-notes.md` has an entry for it under "Later changes", headed with the new version name from the bump
+  (for example `**Offline copy (Beta 0.40.11.193).**`). Add or fix the entry if it's missing, in the notes' style:
+  what changed, the numbers, the function names, and the test that guards it. Releases with only visual polish or
+  tooling don't need an entry; say so to the user.
 
 ## 4. Look at it
 
@@ -53,7 +58,8 @@ into the next one.
 
 ## 5. Commit and push to dev
 
-- Commit `src/`, the build outputs at the repository root and `android/app/build.gradle.kts`. Use the message
+- Commit `src/`, the build outputs at the repository root, `android/app/build.gradle.kts` and, if it changed,
+  `docs/design-notes.md`. Use the message
   `<version name>: <a short lower-case summary of the change>`, matching earlier releases, for example
   `Beta 0.40.9.191: larger lava lakes with fewer cracks`.
 - `git push origin dev`
