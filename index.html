@@ -656,18 +656,44 @@ function newRun(keep){keep=keep||{};return{v:1,econ:2,lifeAt:JSON.parse(JSON.str
  inv:{},bars:{},research:{},auto:{},slots:[{r:null,p:0,a:false},{r:null,p:0,a:false},{r:null,p:0,a:false}],
  od:{until:0,ready:0},last:Date.now(),tut:0,sel:0}}
 let S;
-/* Loading never silently loses a save (Beta 0.20.1): a save that can't be read is copied to KEY+'_bak' before a new
-   game starts; a save from a newer format (v above 1) is copied too and never overwritten by this older code
-   (SAVE_BLOCK); a save written by a newer build is played as usual (unknown fields are kept) but copied once first.
+/* Loading never loses a save (Beta 0.20.1, Beta 0.40.11):
+   - a save that can't be used is copied to a backup before a new game starts: one that isn't JSON, isn't format 1,
+     or is the wrong shape (saveShape: no planets, or a part that's there but isn't what the game expects; a part an
+     old save simply doesn't have gets an empty one, as a new game would);
+   - a save from a newer format (v above 1) is copied too and never overwritten by this older code (SAVE_BLOCK);
+   - a save written by a newer build is played as usual (unknown fields are kept) but copied first;
+   - a backup never replaces an older one: the first goes to KEY+'_bak', later ones to KEY+'_bak_<time>';
+   - if the backup can't be written (storage full), the game starts but won't save over the original (SAVE_BLOCK);
+   - if starting the game with the save fails anyway, nothing is saved (SAVE_BLOCK), and the page reloads once
+     treating that save as unreadable (BOOT_FAIL remembers which save it was for this tab).
    LOAD_NOTE is shown as a toast once the game is up. */
-const BAK=KEY+'_bak';let SAVE_BLOCK=false,LOAD_NOTE='',saveWarned=false;
-{let raw=null;try{raw=localStorage.getItem(KEY)}catch(e){}
+const BAK=KEY+'_bak',BOOT_FAIL='sq_bootfail';let SAVE_BLOCK=false,LOAD_NOTE='',saveWarned=false,BOOTED=false,LOAD_RAW=null;
+const isObj=x=>!!x&&typeof x==='object'&&!Array.isArray(x);
+// a short fingerprint of a save, to recognise it after a reload without keeping a second copy in session storage
+const saveFp=raw=>{let h=2166136261;for(let k=0;k<raw.length;k++){h^=raw.charCodeAt(k);h=Math.imul(h,16777619)}return raw.length+':'+(h>>>0)};
+function saveShape(s){if(!isObj(s)||!Array.isArray(s.planets)||!s.planets.length||!s.planets.every(isObj))return false;
+  const fresh={research:{},inv:{},bars:{},auto:{},od:{until:0,ready:0}};
+  for(const k in fresh){if(s[k]===undefined)s[k]=fresh[k];else if(!isObj(s[k]))return false}
+  if(s.slots===undefined)s.slots=newRun().slots;else if(!Array.isArray(s.slots)||!s.slots.every(isObj))return false;
+  for(const k of ['perm','life','lifeAt','ev','probe','probeLife','music','st','park'])if(s[k]!=null&&!isObj(s[k]))return false;
+  for(const k of ['cash','dm','lifetime','runEarned'])if(s[k]!=null&&typeof s[k]!=='number')return false;
+  return true}
+{let raw=null;try{raw=localStorage.getItem(KEY)}catch(e){}LOAD_RAW=raw;
   try{S=raw?JSON.parse(raw):null}catch(e){S=null}
-  const keep=()=>{try{localStorage.setItem(BAK,raw)}catch(e){}};
-  if(raw&&(!S||typeof S!=='object')){keep();S=null;LOAD_NOTE="Your save couldn't be read, so a new game started. The old save was kept as a backup."}
+  let failed=false;try{failed=!!raw&&sessionStorage.getItem(BOOT_FAIL)===saveFp(raw)}catch(e){}
+  // copy the save to a backup that doesn't replace an older one; false if it couldn't be written
+  const keep=()=>{try{let old=null;try{old=localStorage.getItem(BAK)}catch(e){}
+      if(old===raw)return true;for(const k of Object.keys(localStorage))if(k.startsWith(BAK+'_')&&localStorage.getItem(k)===raw)return true;
+      localStorage.setItem(old==null?BAK:BAK+'_'+Date.now(),raw);return true}catch(e){return false}};
+  const noBak=" It couldn't be backed up (storage is full), so this version won't save over it: free some space for this site and reload.";
+  const bad=()=>{const ok=keep();if(!ok)SAVE_BLOCK=true;S=null;LOAD_NOTE="Your save couldn't be read, so a new game started."+(ok?' The old save was kept as a backup.':noBak)};
+  if(raw&&(!S||typeof S!=='object'||failed))bad();
   else if(S&&S.v>1){keep();SAVE_BLOCK=true;S=null;LOAD_NOTE='Your save is from a newer version of Star Quarry. Update the game to keep playing it; this version won\'t save over it.'}
-  else if(S&&S.v!==1){keep();S=null;LOAD_NOTE="Your save couldn't be read, so a new game started. The old save was kept as a backup."}
-  else if(S&&S.build>APP_VER.n)keep()}
+  else if(S&&(S.v!==1||!saveShape(S)))bad();
+  else if(S&&S.build>APP_VER.n&&!keep()){SAVE_BLOCK=true;LOAD_NOTE='Your save is from a newer version of Star Quarry and couldn\'t be backed up (storage is full), so this version won\'t save over it.'}}
+// starting the game with this save failed: save nothing, and reload once treating the save as unreadable
+addEventListener('error',function bootFail(){if(BOOTED||!LOAD_RAW)return;SAVE_BLOCK=true;
+  try{const fp=saveFp(LOAD_RAW);if(sessionStorage.getItem(BOOT_FAIL)!==fp){sessionStorage.setItem(BOOT_FAIL,fp);location.reload()}}catch(e){}});
 if(!S||S.v!==1)S=newRun();
 while(S.planets.length<PLANETS.length)S.planets.push({u:false,teams:[],stock:0,t:0,load:0});
 // Older saves: planet levels are gone; an existing mining crew becomes the planet's first team.
@@ -5883,6 +5909,6 @@ if(!S.st.name)setTimeout(()=>nameStation(S.tut===0||S.lifetime<1),1200);
 if(S.tut===0){S.tut=1;setTimeout(()=>toast('Your hauler is mining Cinder. When ore arrives, sell it in the Market.',5000),800)}
 
 setTab('planet');hud();
-requestAnimationFrame(frame);
+requestAnimationFrame(frame);BOOTED=true;try{sessionStorage.removeItem(BOOT_FAIL)}catch(e){}
 </script>
 <script>if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'))window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));</script></body></html>
