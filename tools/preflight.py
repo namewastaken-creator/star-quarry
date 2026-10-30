@@ -9,7 +9,7 @@ Steps, in order (it stops at the first failure and says what to do):
   2. dev is pushed (matches origin/dev) and main can fast-forward to it (origin/main is behind dev, not beside it)
   3. the build number in src/game.html is higher than on origin/main, and the newest change-log entry is this version
   4. a fresh build gives no guide-check warning and changes nothing (the committed outputs are this source's build)
-  5. all eleven checks pass (tools/check.py)
+  5. all the checks pass (tools/check.py)
 """
 import os, re, json, subprocess, sys
 
@@ -75,7 +75,7 @@ ok(out.splitlines()[-1])
 if '--no-tests' in sys.argv:
     print('\nskipped the browser checks (--no-tests): NOT READY TO PUBLISH until they run')
     sys.exit(1)
-print('...   running the eleven checks (several minutes)', flush=True)
+print('...   running all the checks (several minutes)', flush=True)
 r = subprocess.run(PY + [os.path.join(ROOT, 'tools', 'check.py')], cwd=ROOT, capture_output=True, encoding='utf-8', errors='replace')
 print('\n'.join('      ' + l for l in r.stdout.strip().splitlines()))
 if r.returncode: fail('checks failed (see above)', 'fix the cause, then build, commit, push and run this again')

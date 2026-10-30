@@ -70,7 +70,7 @@ repository root (the scripts work out their own paths, so any clone in any folde
    ```
    It checks that you're on a clean, pushed `dev` that `main` can fast-forward to, that the version was bumped past
    `main`'s with a matching change-log entry, that a fresh build changes nothing and gives no guide warning, and that
-   all eleven checks pass. Publish only when it ends with `READY TO PUBLISH`; otherwise it says what to fix.
+   all the checks pass. Publish only when it ends with `READY TO PUBLISH`; otherwise it says what to fix.
 7. **Publish:** `git checkout main`, `git pull --ff-only`, `git merge --ff-only dev`, `git push origin main`, then
    `git checkout dev`. GitHub Pages redeploys within a minute or two; open games notice the new `version.json` (read
    from `main` on raw.githubusercontent.com) and offer the update. Never force-push `main`; fix a bad release with a

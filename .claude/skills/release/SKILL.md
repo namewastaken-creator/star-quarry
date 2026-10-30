@@ -60,7 +60,7 @@ into the next one.
 
 ## 6. Gate
 
-- `python -I tools/preflight.py`. It takes several minutes (it runs all eleven checks). Run it in the background and
+- `python -I tools/preflight.py`. It takes several minutes (it runs all the checks). Run it in the background and
   wait for it to finish.
 - It must end with `READY TO PUBLISH <version>`. If it prints `NOT READY`, follow its `fix:` line, then repeat from
   the step that line points to, and run the gate again. Never publish on an older READY: the gate must pass on the
