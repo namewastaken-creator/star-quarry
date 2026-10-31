@@ -54,7 +54,9 @@ with sync_playwright() as p:
     pg.fill('#svCode',c);pg.click('#svMain');pg.wait_for_timeout(100)
     msg=E("$('svMsg').textContent");hid=E("$('svGo').hidden")
     need(want in msg and hid,f'{name} is refused ({msg[:60]})')
-  need(E("localStorage.getItem('starquarry_save_v1')")==fresh and E("S.planets.filter(q=>q.u).length")==1,'refused codes change nothing')
+  # the game autosaves as it runs, so compare which game is stored (born is set once), not the whole save
+  now=json.loads(E("localStorage.getItem('starquarry_save_v1')"))
+  need(now.get('born') and now.get('born')==json.loads(fresh).get('born') and E("S.planets.filter(q=>q.u).length")==1,'refused codes change nothing')
   # Load file, then the code itself: one tap arms, the second replaces
   pg.set_input_files('#svPick',path);pg.wait_for_timeout(400)
   need(E("$('svCode').value")==code and not E("$('svGo').hidden"),'Load file reads the downloaded file and checks it')

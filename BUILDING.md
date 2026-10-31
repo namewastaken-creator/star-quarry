@@ -63,7 +63,9 @@ repository root (the scripts work out their own paths, so any clone in any folde
    python3 -I tools/check.py
    ```
    The browser tests in `tools/tests/` plus the overlap check (nothing on a planet stands inside the base or the mining field). All
-   must pass. It takes several minutes (software WebGL). Also look at the change yourself: serve the root
+   must pass. It takes about 5–6 minutes (software WebGL): tests run side by side, a quarter of the logical cores'
+   worth at a time (`-j N` to change), and `pwframe` runs last and alone. Name tests to run just those, for
+   example `python3 -I tools/check.py pwtab occcheck`. Also look at the change yourself: serve the root
    (`python3 -m http.server 8000`, then http://localhost:8000) and check at phone width (about 390 px).
    http://localhost:8000/src/artifact/preview.html?src=/index.html shows the game in phone- and iPad-sized frames
    with buttons for each screen size and Rotate. Build: Local / Live (or `?src=live`) switches to the published
