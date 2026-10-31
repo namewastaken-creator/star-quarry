@@ -32,5 +32,20 @@
       "PowerShell(git push --force*)",
       "PowerShell(git push -f *)"
     ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python -I \"$CLAUDE_PROJECT_DIR/tools/queued.py\" 2>/dev/null || true",
+            "timeout": 30,
+            "statusMessage": "Checking what's queued for release"
+          }
+        ]
+      }
+    ]
   }
 }
