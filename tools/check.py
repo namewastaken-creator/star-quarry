@@ -12,7 +12,7 @@ import os, subprocess, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 # the game's text includes characters like U+202F; Windows pipes default to cp1252, which can't print them
 sys.stdout.reconfigure(errors='backslashreplace')
-TESTS = ['pwobj', 'pwchip', 'pwmed', 'pwtab', 'pwsave', 'pwbadsave', 'pwsavecode', 'pwland', 'pwrc', 'pwneb', 'pwpark2', 'pwframe', 'pwsw', 'pwaudit']
+TESTS = ['pwobj', 'pwchip', 'pwmed', 'pwtab', 'pwsave', 'pwbadsave', 'pwsavecode', 'pwmig', 'pwland', 'pwrc', 'pwneb', 'pwpark2', 'pwframe', 'pwsw', 'pwaudit']
 want = sys.argv[1:] or TESTS + ['occcheck']
 bad = []
 for k, name in enumerate(want):

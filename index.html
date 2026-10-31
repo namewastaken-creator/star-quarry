@@ -659,7 +659,35 @@ function buyResearch(r){if(!canResearch(r))return false;S.cash-=r.cost;r.ore.for
 
 /* ===================== STATE ===================== */
 const KEY='starquarry_save_v1';
-function newRun(keep){keep=keep||{};return{v:1,econ:2,lifeAt:JSON.parse(JSON.stringify(keep.life||newLife())),warpLog:keep.warpLog||[],probe:{nextAt:Date.now()+ECON.PROBE_FIRST*1000,out:null,st:{launched:0,returned:0,value:0,best:null,byOre:{},log:[]}},probeLife:keep.probeLife||{returned:0,value:0},overAt:Date.now()+OVER_EVERY*1000,life:keep.life||newLife(),perm:keep.perm||newPerm(),ev:keep.ev||{taken:{}},st:keep.st||{name:'',hist:[]},born:Date.now(),park:{i:0,from:0,t0:0,dur:1,cd:0,done:1},music:keep.music||{on:true,vol:.6},nfmt:keep.nfmt||'named',words:!!keep.words,cash:0,dm:keep.dm||0,runEarned:0,lifetime:keep.lifetime||0,warps:keep.warps||0,
+/* Save migrations (Beta 0.41.1): one-time conversions of saves from older versions, in the order they were added.
+   S.mig counts the steps a save has had, so each runs once (migrate); a new game starts with them all done.
+   Never reorder or remove a step: add new ones at the end. Each step still checks for the old data itself, so a save
+   from before S.mig (which runs them all) is converted only where it needs to be. */
+const MIGRATIONS=[
+  // planet levels are gone; an existing mining crew becomes the planet's first team
+  ()=>{if(S.econ===2)return;S.planets.forEach((p,i)=>{const mn=p.mn;p.teams=[];
+      if(p.u||i===0){p.u=true;p.teams.push(mn?{n:mn.n,t:{m:mn.t.m||0,s:mn.t.s||0,c:mn.t.c||0}}:{n:0,t:{}})}
+      delete p.m;delete p.s;delete p.c;delete p.mn});S.econ=2},
+  // star dust is +1% per unit at the original award rate. A short-lived version awarded 10x dust (save flag dust1); undo that.
+  ()=>{if(S.dust1){S.dm=Math.floor((S.dm||0)/10);delete S.dust1}},
+  // saves from before smelting became a flow (Beta 0.17.6): a furnace mid-bar had taken 8 ore up front; the part not
+  // yet smelted goes back to stock, so p becomes the share of the bar already in the furnace
+  ()=>(S.slots||[]).forEach(sl=>{if(sl.a&&sl.r!==null){S.inv[sl.r]=(S.inv[sl.r]||0)+(1-(sl.p||0))*BAR_IN}sl.a=false}),
+  // Beta 1.0.77 removed Handling: its points come back as free points, and Dock training, the − 2 s quirk and the
+  // − 2 s perk are dropped (a planet that had that perk gets a free swap to refill the slot)
+  ()=>S.planets.forEach(p=>{if(p.al&&p.al.d){delete p.al.d}if(p.done&&p.done.dock)delete p.done.dock;if(p.prog&&p.prog.id==='dock')p.prog=null;
+    (p.teams||[]).forEach(tm=>{if(tm&&tm.q==='h2')delete tm.q});(p.perks||[]).forEach((sl,l)=>{if(sl&&sl.id==='hand2'){p.perks[l]=null;p.swapFree=true}})}),
+  // saves from before the point pool (Beta 1.0.76): every crew's points move into the planet's pool, allocated where
+  // they were; Prospectors count as finished Prospecting (Dockhands' points come back as free points); quirks that suit the crew's
+  // new job are kept; old veteran perks are dropped, and planets with a Shift Crew get a free swap to fill its slots
+  ()=>S.planets.forEach((p,i)=>{if(!p.teams||!p.teams.some(tm=>tm&&('n' in tm||'t' in tm||'r' in tm)))return;p.al=null;crewState(p);let pts=0;const al={},TR={m:1,s:1,c:1,v:1};
+    p.teams.forEach((tm,j)=>{pts+=Math.min(MINER_MAX,tm.n||0);const t=tm.t||{};for(const k in t)if(TR[k])al[k]=(al[k]||0)+(t[k]||0);
+      if(tm.r==='pros')p.done.pros=1;const nt={};if(tm.nm)nt.nm=tm.nm;if(j>0&&tm.q&&QUIRK_POOL[j]&&QUIRK_POOL[j].includes(tm.q))nt.q=tm.q;p.teams[j]=nt});
+    p.pts=pts;p.bought=pts;p.al=al;if(p.teams.length>1)p.swapFree=true;delete p.rtFree;delete p.rtPrio})];
+// run the steps this save hasn't had; a save from a newer build (a higher S.mig) keeps its number
+function migrate(){const from=Number.isInteger(S.mig)&&S.mig>0?S.mig:0;
+  for(let k=from;k<MIGRATIONS.length;k++)MIGRATIONS[k]();if(from<MIGRATIONS.length)S.mig=MIGRATIONS.length}
+function newRun(keep){keep=keep||{};return{v:1,econ:2,mig:MIGRATIONS.length,lifeAt:JSON.parse(JSON.stringify(keep.life||newLife())),warpLog:keep.warpLog||[],probe:{nextAt:Date.now()+ECON.PROBE_FIRST*1000,out:null,st:{launched:0,returned:0,value:0,best:null,byOre:{},log:[]}},probeLife:keep.probeLife||{returned:0,value:0},overAt:Date.now()+OVER_EVERY*1000,life:keep.life||newLife(),perm:keep.perm||newPerm(),ev:keep.ev||{taken:{}},st:keep.st||{name:'',hist:[]},born:Date.now(),park:{i:0,from:0,t0:0,dur:1,cd:0,done:1},music:keep.music||{on:true,vol:.6},nfmt:keep.nfmt||'named',words:!!keep.words,cash:0,dm:keep.dm||0,runEarned:0,lifetime:keep.lifetime||0,warps:keep.warps||0,
  // Cinder's hauler starts already loaded and on its way home, so the first delivery comes quickly
  planets:PLANETS.map((p,i)=>({u:i===0,teams:i===0?[{}]:[],pts:0,bought:0,al:{},perks:[],done:{},stock:0,t:i===0?.66:Math.random()*.4,load:i===0?8:0})),
  inv:{},bars:{},research:{},auto:{},slots:[{r:null,p:0,a:false},{r:null,p:0,a:false},{r:null,p:0,a:false}],
@@ -707,13 +735,9 @@ try{const w=sessionStorage.getItem('sq_loaded');if(w){sessionStorage.removeItem(
 addEventListener('error',function bootFail(){if(BOOTED||!LOAD_RAW)return;SAVE_BLOCK=true;
   try{const fp=saveFp(LOAD_RAW);if(sessionStorage.getItem(BOOT_FAIL)!==fp){sessionStorage.setItem(BOOT_FAIL,fp);location.reload()}}catch(e){}});
 if(!S||S.v!==1)S=newRun();
+// parts an older save doesn't have are filled in on every load (cheap, and it also covers imported saves); one-time
+// conversions of older saves are in MIGRATIONS
 while(S.planets.length<PLANETS.length)S.planets.push({u:false,teams:[],stock:0,t:0,load:0});
-// Older saves: planet levels are gone; an existing mining crew becomes the planet's first team.
-if(S.econ!==2){S.planets.forEach((p,i)=>{const mn=p.mn;p.teams=[];
-    if(p.u||i===0){p.u=true;p.teams.push(mn?{n:mn.n,t:{m:mn.t.m||0,s:mn.t.s||0,c:mn.t.c||0}}:{n:0,t:{}})}
-    delete p.m;delete p.s;delete p.c;delete p.mn});S.econ=2}
-// star dust is +1% per unit at the original award rate. A short-lived version awarded 10x dust (save flag dust1); undo that.
-if(S.dust1){S.dm=Math.floor((S.dm||0)/10);delete S.dust1}
 S.planets.forEach(p=>{if(!p.teams)p.teams=[]});
 if(!S.music)S.music={on:true,vol:.6};
 if(!S.probe)S.probe={nextAt:Date.now()+ECON.PROBE_FIRST*1000,out:null};
@@ -837,20 +861,9 @@ function progTick(now,quiet){S.planets.forEach((p,i)=>{if(!p.prog||now<p.prog.un
   if(id==='pros'&&!p.vein)p.vein=now+veinEvery(i)*1000;if(!quiet)toast(`${PLANETS[i].n}: ${PROGRAMS[id].n} complete. ${PROGRAMS[id].d}`,4500)})}
 // switching a furnace's ore: the ore already in it for the next bar goes back to stock
 function setSlot(sl,r){if(sl.r===r)return;if(sl.r!==null&&sl.p>0)S.inv[sl.r]=(S.inv[sl.r]||0)+sl.p*BAR_IN;sl.r=r;sl.p=0;sl.a=false}
-// saves from before smelting became a flow (Beta 0.17.6): a furnace mid-bar had taken 8 ore up front; the part not
-// yet smelted goes back to stock, so p becomes the share of the bar already in the furnace
-(S.slots||[]).forEach(sl=>{if(sl.a&&sl.r!==null){S.inv[sl.r]=(S.inv[sl.r]||0)+(1-(sl.p||0))*BAR_IN}sl.a=false;if(!(sl.p>=0&&sl.p<1))sl.p=0});
-// Beta 1.0.77 removed Handling: its points come back as free points, and Dock training, the − 2 s quirk and the
-// − 2 s perk are dropped (a planet that had that perk gets a free swap to refill the slot)
-S.planets.forEach(p=>{if(p.al&&p.al.d){delete p.al.d}if(p.done&&p.done.dock)delete p.done.dock;if(p.prog&&p.prog.id==='dock')p.prog=null;
-  (p.teams||[]).forEach(tm=>{if(tm&&tm.q==='h2')delete tm.q});(p.perks||[]).forEach((sl,l)=>{if(sl&&sl.id==='hand2'){p.perks[l]=null;p.swapFree=true}})});
-// saves from before the point pool (Beta 1.0.76): every crew's points move into the planet's pool, allocated where
-// they were; Prospectors count as finished Prospecting (Dockhands' points come back as free points); quirks that suit the crew's
-// new job are kept; old veteran perks are dropped, and planets with a Shift Crew get a free swap to fill its slots
-S.planets.forEach((p,i)=>{if(!p.teams||!p.teams.some(tm=>tm&&('n' in tm||'t' in tm||'r' in tm)))return;p.al=null;crewState(p);let pts=0;const al={},TR={m:1,s:1,c:1,v:1};
-  p.teams.forEach((tm,j)=>{pts+=Math.min(MINER_MAX,tm.n||0);const t=tm.t||{};for(const k in t)if(TR[k])al[k]=(al[k]||0)+(t[k]||0);
-    if(tm.r==='pros')p.done.pros=1;const nt={};if(tm.nm)nt.nm=tm.nm;if(j>0&&tm.q&&QUIRK_POOL[j]&&QUIRK_POOL[j].includes(tm.q))nt.q=tm.q;p.teams[j]=nt});
-  p.pts=pts;p.bought=pts;p.al=al;if(p.teams.length>1)p.swapFree=true;delete p.rtFree;delete p.rtPrio});
+// the save's one-time conversions run here, once the crew helpers they use are defined
+migrate();
+(S.slots||[]).forEach(sl=>{if(!(sl.p>=0&&sl.p<1))sl.p=0});
 crewVer++;
 // when a station move finishes: the planet it parked at, and planets left badly short of ships, get one free and
 // instant perk swap (until the next move)

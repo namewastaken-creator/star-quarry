@@ -12,7 +12,7 @@ The game's rules, balance numbers and the history behind them are in `docs/desig
 - **Every publish bumps the version** with `src/bump.py`, then builds. Never change `APP_VER`, `CHANGES`, `src/changelog.json` or `version.json` by hand.
 - **Work on `dev`**; merge to `main` only when a build is ready to publish. Pushing to `main` updates the live game for every player.
 - **Never commit** the Android signing keystore, its passwords or `local.properties`.
-- **Saves live in players' browsers.** Any change to the save format needs a migration and must never silently overwrite an existing save.
+- **Saves live in players' browsers.** Any change to the save format needs a migration and must never silently overwrite an existing save. Add a one-time conversion as a new step at the end of `MIGRATIONS` in `src/game.html` (never reorder or remove steps; `S.mig` counts the ones a save has had) and a case to `tools/tests/pwmig.py`.
 - **Publish only through the release routine** (`/release`, in `.claude/skills/release/SKILL.md`). Never merge into or push to `main` unless `tools/preflight.py` printed `READY TO PUBLISH` for that exact commit, and the user said yes in chat to publishing that version. Never force-push `main`.
 - **On Windows, `python3` is the Microsoft Store shortcut:** use `python` for every command below.
 - **Run multi-step commands so they stop at the first failure**, and check that a folder exists before running git in it, so a failed step can never carry on in the wrong repository.
@@ -50,12 +50,11 @@ Run from the repository root.
 
 The 26 Oct 2026 code review is in `docs/code-review-2026-10-26.md`, with a status table at the top (checked 30 Oct 2026). Of its 18 items, 15 are fixed; the high-priority four are guarded by tests (`pwframe`, `pwsw`, `pwbadsave`). Still open from it:
 
-- **Readability (17):** very long source lines, a 40-branch `if/else` click handler (an `ACTIONS` table would be clearer), and migrations that all run on every load (an `S.mig` version and an ordered list).
+- **Readability (17, partly):** very long source lines and a 40-branch `if/else` click handler (an `ACTIONS` table would be clearer). Migrations are done: they run once each (`S.mig`, `MIGRATIONS`).
 - **File size (16, partly):** Three.js and the sky are separate cached files, but `index.html` is still about 750 KB per release.
 - **Getters (14, partly):** `econG`, `galNow` and `fmt` still guard with `typeof S` because of load order.
 
 Also open:
 
-- Backups of unreadable saves (`starquarry_save_v1_bak`, `starquarry_save_v1_bak_<time>`) are kept, but players have no in-game way to export or restore them.
 - `.claude/launch.json` hard-codes port 8000, so the Preview pane's server can't start while another server holds that port.
 - The Preview pane's browser currently refuses to register any service worker; test offline behaviour with `pwsw` or headless Chromium instead.

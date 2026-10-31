@@ -22,7 +22,7 @@ The review below was written against Beta 0.20.0.124. Most of it has been fixed 
 | 14 | Side effects in getters | Partly. `galNowCalc` no longer writes the save, but `econG`, `galNow` and `fmt` still guard with `typeof S`. |
 | 15 | Fragile hull rim shader patch | Fixed. Falls back to a second hook and logs if neither is found. |
 | 16 | File size and daily updates | Partly. Three.js and the sky are separate cached files, but `index.html` is still about 750 KB per release. |
-| 17 | Readability | Open. Very long source lines, a 40-branch click handler, and migrations that all run on every load. |
+| 17 | Readability | Partly. Migrations run once each, in order (`S.mig`, `MIGRATIONS`; test `pwmig`). Still open: very long source lines and a 40-branch click handler. |
 | 18 | Accessibility | Fixed. Pinch-zoom is allowed; focus survives redraws (item 7). |
 
 Reviewed: `dev` at Beta 0.20.0.124 (commit c600392): `index.html` (game script), `sw.js`, `manifest.webmanifest`, `version.json`. This session only read the code and measured it in headless Chromium. Per the project rule, **the owning chat makes any changes**. Function names are given rather than line numbers, because the repository holds build output.
