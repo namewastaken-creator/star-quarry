@@ -5331,7 +5331,8 @@ function viewWarp(){
    <button class="btn ghost wide" data-act="rename" type="button">${st.name?'Rename station':'Name your station'}</button>
    <div class="stat"><span>Offline limit</span><span>${offlineCapSec()/3600}h</span></div></div>`;
   h+=viewStats();
-  h+=`<div class="card"><h3>Sound</h3><div class="vol"><label for="vol" style="color:var(--muted)">Music volume</label><input type="range" id="vol" min="0" max="100" step="1" value="${Math.round(S.music.vol*100)}"><span class="num" style="min-width:3ch;text-align:right">${Math.round(S.music.vol*100)}</span></div>
+  h+=`<div class="head"><h2>Settings</h2></div>
+   <div class="card"><h3>Sound</h3><div class="vol"><label for="vol" style="color:var(--muted)">Music volume</label><input type="range" id="vol" min="0" max="100" step="1" value="${Math.round(S.music.vol*100)}"><span class="num" style="min-width:3ch;text-align:right">${Math.round(S.music.vol*100)}</span></div>
    <p style="font-size:12px">Original music made by the game as it plays. Free to use, no licence needed.</p></div>
    <p>Star Quarry has no ads, no purchases and no premium currency. Every boost, including Market Surge, is free and earned by playing.</p>
 `;
@@ -5872,7 +5873,7 @@ const GUIDE=[
 <li>You earn star dust based on the credits earned this run. Each unit makes everything sell for 1% more, for good.</li>
 <li>Star dust, permanent event boosts, lifetime stats and the Captain's log stay with you.</li>
 <li>The <b>Star dust</b> card at the top of the Warp tab holds the warp button. Above it, <b>If you warp now</b> shows the star dust you'd get, how much more every sale would be worth, and when the next unit of star dust comes at your current income.</li>
-<li>Below it, the <b>Captain's Log</b> holds your Station, This galaxy and All time.</li>
+<li>Below it, the <b>Captain's Log</b> holds your Station, This galaxy and All time. <b>Settings</b> at the bottom holds sound, the user guide, version and updates, and your save.</li>
 <li><b>Galaxy value</b>, in the This galaxy card, adds up what this galaxy is worth in credits: credits and stock at today's prices, plus claims and crews, upgrade points, training, settlements and research at what they'd cost to buy again. That's what a warp gives up.</li>
 <li><b>Statistics:</b> the This galaxy card also shows time played, earnings, your average and current income per hour, what you've built and what your fleet has done. All time adds up every galaxy, and lists your recent warps with how long each galaxy took.</li></ul>`],
 ['Time away',`<ul>
