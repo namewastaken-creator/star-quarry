@@ -2886,15 +2886,15 @@ function convMat(T){const K=kitMats(),M=minerMats();
   if(T==='gas')return DM.gasTube||(DM.gasTube=new THREE.MeshStandardMaterial({color:0x7fe9ff,emissive:0x5fd4f0,emissiveIntensity:.9,transparent:true,opacity:.6,roughness:.3}));
   return T==='lava'?M.heat:T==='veg'?K.timber:T==='ice'?K.insul:DM.tube}
 // a covered conveyor between two points of the plot, on trestles (none over gas), with ore pods riding along it
-function oreLine(g,R,s,a2,b2,H,T,part){const K=kitMats(),M=minerMats(),a=locDir(...a2),b=locDir(...b2),n=Math.max(8,Math.ceil(a.angleTo(b)/.012)),pts=[];
+function oreLine(g,R,s,a2,b2,H,T,part,lift,w){const K=kitMats(),M=minerMats(),a=locDir(...a2),b=locDir(...b2),n=Math.max(8,Math.ceil(a.angleTo(b)/.012)),pts=[];
   for(let k=0;k<=n;k++)pts.push(slerpDir(a,b,k/n,new THREE.Vector3()).multiplyScalar(R+H*s));
   put(g,new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),n*2,.06*s,8,false),convMat(T))).userData.noSup=1;
   const legM=T==='veg'?K.timberD:T==='lava'?M.heat:T==='ice'?K.insul:DM.hull;
   if(T!=='gas')for(let k=3;k<n-1;k+=6){const tr=new THREE.Group();setOnSurface(tr,R,slerpDir(a,b,k/n,new THREE.Vector3()),-.01*s);g.add(tr);
     for(const x of[-.06,.06]){const l=put(tr,new THREE.Mesh(new THREE.CylinderGeometry(.013*s,.017*s,H*s,5),legM));l.position.set(x*s,H/2*s,0)}
     put(tr,new THREE.Mesh(new THREE.BoxGeometry(.18*s,.02*s,.04*s),legM)).position.y=(H-.05)*s;orient(tr,slerpDir(a,b,k/n,new THREE.Vector3()),b.clone().sub(a).normalize());tr.rotateY(Math.PI/2)}
-  const lift=T==='gas'?.5*s:T==='water'?.05*s:0,pods=[];for(let k=0;k<4;k++)pods.push(put(g,new THREE.Mesh(new THREE.BoxGeometry(.09*s,.09*s,.09*s),T==='lava'?lavaPoolMat():DM.amber)));
-  part.anim.push(()=>pods.forEach((pd,k)=>{slerpDir(a,b,(simTime*.07+k/4)%1,_b);pd.position.copy(_b).multiplyScalar(R+H*s+lift)}))}
+  const pods=[];for(let k=0;k<4;k++)pods.push(put(g,new THREE.Mesh(new THREE.BoxGeometry(.09*s,.09*s,.09*s),T==='lava'?lavaPoolMat():DM.amber)));
+  part.anim.push(()=>pods.forEach((pd,k)=>{slerpDir(a,b,(simTime*.07+k/4)%1,_b);pd.position.copy(_b).multiplyScalar(R+H*s+lift+(w?gasRise(w):0))}))}
 /* The works pad and its unloading station (Beta 0.33), in the world's own materials:
      the pad   a round deck with a rim, edge lights and painted lanes the haulers follow in (timber planks on terrestrial
                worlds, a heat plate with an ember rim on molten ones, an insulated deck on icy ones; it floats on gas
@@ -2943,7 +2943,7 @@ function worksPad(w,i,t,g,part,T){const s=w.facS,R=w.facR,K=kitMats(),M=minerMat
     for(const x of[-.18,.18]){const rl=put(rp,new THREE.Mesh(new THREE.BoxGeometry(.02*s,.03*s,L*1.04),rimM));rl.rotation.x=sl;rl.position.set(x*s,.04*s,0)}
     for(let k=0;k<4;k++){const st=put(rp,new THREE.Mesh(new THREE.BoxGeometry(.34*s,.006*s,.02*s),T==='veg'?K.timberD:DM.amber));st.rotation.x=sl;st.position.set(0,(.037+(k-1.5)*-.01)*s,(k-1.5)*L*.22)}}
   // the conveyor south from the station to the garage
-  oreLine(g,R,s,[WORKS[0],WORKS[1]-P+.02],[0,3.95],.22,T,part)}
+  oreLine(g,R,s,[WORKS[0],WORKS[1]-P+.02],[0,3.95],.22,T,part,T==='gas'?gasLift(w):T==='water'?.05*s:0,w)}
 function rockMine(w,i,t,g,part){const P=PLANETS[i],s=w.facS,R=w.facR;w.rovers=[];
   const site=placeLocal(g,R,...LAY.hall,s);footing(site,s,[2.1,2.1]);
   const hall=new THREE.Mesh(new THREE.BoxGeometry(1.1*s,.5*s,.8*s),DM.dark);hall.position.y=.25*s;site.add(hall);
@@ -2969,9 +2969,9 @@ function rockMine(w,i,t,g,part){const P=PLANETS[i],s=w.facS,R=w.facR;w.rovers=[]
   const pts=[];for(let k=0;k<=16;k++){const tt=k/16,d=slerpDir(FAC_DIR,CONV_END,tt,new THREE.Vector3());pts.push(d.multiplyScalar(R+.12*s+Math.sin(tt*Math.PI)*.06*s))}
   g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),32,.06*s,8,false),convMat(T)));
   const pods=[];for(let k=0;k<3;k++){const pod=new THREE.Mesh(new THREE.BoxGeometry(.1*s,.1*s,.1*s),T==='lava'?lavaPoolMat():DM.amber);g.add(pod);pods.push(pod)}
-  const lift=T==='gas'?.5*s:T==='water'?.05*s:0;
+  const lift=T==='gas'?gasLift(w):T==='water'?.05*s:0;
   part.anim.push(dt=>{drill.rotation.y+=dt*6;beacon.material.emissiveIntensity=(simTime*.9)%1<.5?1.8:.3;
-    pods.forEach((pod,k)=>{const tt=(simTime*.16+k/3)%1;slerpDir(FAC_DIR,CONV_END,tt,_b);pod.position.copy(_b).multiplyScalar(R+.12*s+Math.sin(tt*Math.PI)*.06*s+lift)})});
+    pods.forEach((pod,k)=>{const tt=(simTime*.16+k/3)%1;slerpDir(FAC_DIR,CONV_END,tt,_b);pod.position.copy(_b).multiplyScalar(R+.12*s+Math.sin(tt*Math.PI)*.06*s+lift+gasRise(w))})});
   for(let k=0;k<t;k++){addSolarBlock(g,R,s,k,T,part);addDepositsAndRovers(w,k,g,part)}
   if(t>=2){// habitat module, joined to the mine head's east wall by a walkway
     const hab=placeLocal(g,R,...LAY.hab,s);footing(hab,s,.62);kitHabitat(T,hab,s,part);
@@ -3066,22 +3066,44 @@ const MINE_WORKS={
     if(t>=2)for(let k=0;k<3;k++){const wall=new THREE.Mesh(new THREE.TorusGeometry((.7+k*.18)*s,.04*s,4,24,Math.PI*.9),new THREE.MeshStandardMaterial({color:0x7a6a50,roughness:1}));wall.rotation.x=-Math.PI/2;wall.rotation.z=Math.PI*.55;wall.position.y=.03*s;c.add(wall)}
     if(t>=3){const hall=placeLocal(g,R,...LAY.hall,s);const roof=new THREE.Mesh(roundBox(1.15*s,.08*s,.85*s,.04*s),M.leaf);roof.position.y=.54*s;hall.add(roof);
       for(let k=0;k<9;k++){const v=new THREE.Mesh(new THREE.CylinderGeometry(.006*s,.004*s,(.12+(k%3)*.08)*s,4),M.leaf);v.position.set((-.5+k*.125)*s,(.46-(k%3)*.04)*s,.42*s);hall.add(v)}}}};
+/* (Beta 0.41.1) gas giants: the whole base (pad, mine, works, refinery and settlement) floats at one height, gasLift.
+   It skims the cloud tops (GAS_LO) until every track reaches tier 3 (w.lift, set in syncBase), then rises to GAS_HI,
+   half the settlement's old height, on pulsing lift rings. While it's low, each platform's keel is shallower so its
+   thrusters stay just above the clouds (gasRoom: how far below a deck anything may reach). */
+const GAS_LO=.15,GAS_HI=.475;
+const gasLift=w=>(w.lift?GAS_HI:GAS_LO)*w.facS,gasRoom=w=>gasLift(w)-.04*w.facS; // .04: the platforms bob by up to .018
+/* When w.lift changes the base is rebuilt at its new height, then eased there from where it was over GAS_RISE_T
+   seconds (syncBase sets w.riseFrom; animateSurface moves w.riseK from 0 to 1 while the base is in view, a frame
+   counting at most .05 s, so the long frame after the rebuild doesn't skip it): gasRise is how far it still is from
+   its new height, 0 once there. Whatever is placed at the base's height adds it each frame: the bobbing platforms,
+   and through onRise the tubes, transit lights and tube supports, which are otherwise placed once. */
+const GAS_RISE_T=4;
+function gasRise(w){if(!w.riseFrom)return 0;const e=Math.min(1,w.riseK||0);return w.riseFrom*(1-e*e*(3-2*e))}
+function onRise(w,anim,f){let last=0;anim.push(()=>{const r=gasRise(w);if(r!==last){last=r;f(r)}})}
+// two glowing rings under a raised platform's keel (top: the keel's bottom), the pulse running down from one to the other
+function liftRings(w,c,r,top,anim){const s=w.facS;
+  if(!w.ringMats)w.ringMats=[0,1].map(()=>new THREE.MeshStandardMaterial({color:0x7fe9ff,emissive:0x5fd4f0,emissiveIntensity:1}));
+  if(!anim.rings){anim.rings=1;anim.push(()=>w.ringMats.forEach((m,j)=>m.emissiveIntensity=.25+1.6*Math.max(0,Math.sin(simTime*2.6-j*1.3))))}
+  [[.62,.06],[.42,.13]].forEach(([k,d],j)=>{const ring=new THREE.Mesh(new THREE.TorusGeometry(r*k,.016*s,6,36),w.ringMats[j]);ring.rotation.x=Math.PI/2;
+    ring.position.y=Math.max(-gasRoom(w),top-d*s);c.add(ring)})}
 // gas and water: the mine head and its support buildings float (hover platforms over the clouds, pontoons on the sea)
-function kitFloat(w,g,T,part){const s=w.facS,R=w.facR,L=(T==='gas'?.5:.05)*s,f=(R+L)/R;
+function kitFloat(w,g,T,part){const s=w.facS,R=w.facR,L=T==='gas'?gasLift(w):.05*s,f=(R+L)/R;
   if(!w.hoverMat){const P=PLANETS[w.idx];w.hoverMat=new THREE.MeshStandardMaterial({color:new THREE.Color(P.c1).lerp(new THREE.Color(0x2b3150),.6),metalness:.6,roughness:.45});w.hoverGlow=new THREE.MeshStandardMaterial({color:P.c2,emissive:P.c2,emissiveIntensity:1.4})}
   if(!w.floatMat){w.floatMat=new THREE.MeshStandardMaterial({color:0xe8edf2,metalness:.3,roughness:.5})}
   [...g.children].forEach((c,k)=>{if(c.userData.mobile||c.userData.ground)return;
-    if(c.isMesh&&c.geometry&&c.geometry.type==='TubeGeometry'){c.scale.setScalar(f);return}
-    if(c.isMesh){if(c.geometry&&c.geometry.type!=='BufferGeometry')c.position.multiplyScalar(f);return}
+    if(c.isMesh&&c.geometry&&c.geometry.type==='TubeGeometry'){c.scale.setScalar(f);if(T==='gas')onRise(w,part.anim,r=>c.scale.setScalar((R+L+r)/R));return}
+    if(c.isMesh){if(c.geometry&&c.geometry.type!=='BufferGeometry'){const p0=c.position.clone();c.position.multiplyScalar(f);if(T==='gas')onRise(w,part.anim,r=>c.position.copy(p0).multiplyScalar((R+L+r)/R))}return}
     if(!c.isGroup||c.userData.float)return;const dir=c.position.clone().normalize();c.position.addScaledVector(dir,L);
     // solar blocks: a round deck like every other, sized so neighbouring decks never meet; the square footing goes
     const r=c.userData.rect?.66*s:Math.max(.25*s,footprint(c)*1.05);if(c.userData.rect)c.children.forEach(m=>{if(m.material===DM.footing)m.visible=false});
     if(T==='gas'){const deck=new THREE.Mesh(new THREE.CylinderGeometry(r,r*.96,.05*s,28),DM.pad);deck.position.y=-.01*s;c.add(deck);
-      const keel=new THREE.Mesh(new THREE.SphereGeometry(r*.95,24,8,0,Math.PI*2,Math.PI/2,Math.PI/2),w.hoverMat);keel.scale.y=.3;keel.position.y=-.035*s;c.add(keel);
+      // lift thrusters under the keel, as under the launch pad; while the base is low the keel is shallower so they clear the clouds
+      const js=Math.min(.05,r/s*.12)*s,ty=Math.min(.035*s+r*.24,gasRoom(w)-js);
+      const keel=new THREE.Mesh(new THREE.SphereGeometry(r*.95,24,8,0,Math.PI*2,Math.PI/2,Math.PI/2),w.hoverMat);keel.scale.y=Math.min(.3,Math.max(.02,(ty-.035*s)/(r*.95)));keel.position.y=-.035*s;c.add(keel);
       const rim=new THREE.Mesh(new THREE.TorusGeometry(r*.99,.018*s,6,32),w.hoverGlow);rim.rotation.x=Math.PI/2;rim.position.y=-.03*s;c.add(rim);
-      // lift thrusters under the keel, as under the launch pad
-      const nj=r>.6*s?4:3;for(let q=0;q<nj;q++){const a=q/nj*6.283+.785,jt=new THREE.Mesh(new THREE.SphereGeometry(Math.min(.05,r/s*.12)*s,8,6),minerMats().lift);jt.position.set(Math.cos(a)*r*.5,-.035*s-r*.24,Math.sin(a)*r*.5);c.add(jt)}
-      const base=c.position.clone();part.anim.push(()=>c.position.copy(base).addScaledVector(dir,Math.sin(simTime*.9+k)*.015*s))}
+      const nj=r>.6*s?4:3;for(let q=0;q<nj;q++){const a=q/nj*6.283+.785,jt=new THREE.Mesh(new THREE.SphereGeometry(js,8,6),minerMats().lift);jt.position.set(Math.cos(a)*r*.5,-ty,Math.sin(a)*r*.5);c.add(jt)}
+      if(w.lift)liftRings(w,c,r,-.035*s-r*.95*keel.scale.y,part.anim);
+      const base=c.position.clone();part.anim.push(()=>c.position.copy(base).addScaledVector(dir,Math.sin(simTime*.9+k)*.015*s+gasRise(w)))}
     else{const deck=new THREE.Mesh(new THREE.CylinderGeometry(r,r,.04*s,28),DM.pad);deck.position.y=-.02*s;c.add(deck);
       const col=new THREE.Mesh(new THREE.TorusGeometry(r,.04*s,8,32),w.floatMat);col.rotation.x=Math.PI/2;col.position.y=-.035*s;c.add(col);
       const base=c.position.clone();part.anim.push(()=>c.position.copy(base).addScaledVector(dir,Math.sin(simTime*.7+k)*.01*s))}})}
@@ -3112,13 +3134,13 @@ function kitRefinery(T){return(w,i,t,g,part)=>{const s=w.facS,R=w.facR,K=kitMats
   if(t<1)return;
   refPipe(g,R,s,[REF_A[0]-.55,REF_A[1]+.3],[1.22,-.72],null,true);
   // (Beta 0.34) refined ore pulses down the pipe to the pad: glowing slugs in the planet's colour
-  {const a=locDir(REF_A[0]-.55,REF_A[1]+.3),b=locDir(1.22,-.72),lift=T==='gas'?.5*s:T==='water'?.05*s:0,col=new THREE.Color(PLANETS[i].c2).lerp(new THREE.Color(0xffc070),.5),ps=[];
+  {const a=locDir(REF_A[0]-.55,REF_A[1]+.3),b=locDir(1.22,-.72),lift=T==='gas'?gasLift(w):T==='water'?.05*s:0,col=new THREE.Color(PLANETS[i].c2).lerp(new THREE.Color(0xffc070),.5),ps=[];
    // each slug is a glowing collar riding the outside of the pipe, with a soft halo
    const rm=new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:1.6}),ZA=new THREE.Vector3(0,0,1),nx=new THREE.Vector3();
    for(let k=0;k<4;k++){const r=new THREE.Mesh(new THREE.TorusGeometry(.058*s,.018*s,6,16),rm),sp=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color:col,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
      sp.scale.setScalar(.22*s);g.add(r);g.add(sp);ps.push([r,sp])}
-   part.anim.push(()=>ps.forEach(([r,sp],k)=>{const u=(simTime*.18+k/4)%1;slerpDir(a,b,u,_b);slerpDir(a,b,Math.min(1,u+.01),nx);const p0=_b.clone().multiplyScalar(R+.12*s+lift);
-     r.position.copy(p0);r.quaternion.setFromUnitVectors(ZA,nx.multiplyScalar(R+.12*s+lift).sub(p0).normalize());sp.position.copy(p0);const f=Math.sin(u*Math.PI);r.scale.setScalar(.4+.6*f);sp.material.opacity=f*.8}))}
+   part.anim.push(()=>ps.forEach(([r,sp],k)=>{const u=(simTime*.18+k/4)%1;slerpDir(a,b,u,_b);slerpDir(a,b,Math.min(1,u+.01),nx);const lr=lift+gasRise(w),p0=_b.clone().multiplyScalar(R+.12*s+lr);
+     r.position.copy(p0);r.quaternion.setFromUnitVectors(ZA,nx.multiplyScalar(R+.12*s+lr).sub(p0).normalize());sp.position.copy(p0);const f=Math.sin(u*Math.PI);r.scale.setScalar(.4+.6*f);sp.material.opacity=f*.8}))}
   if(t>=2)refPipe(g,R,s,[REF_B[0]+.5,REF_B[1]+.25],[REF_A[0]-.4,REF_A[1]-.45]);
   if(t>=3)refPipe(g,R,s,[REF_C[0]-.25,REF_C[1]+.7],[REF_A[0]+.1,REF_A[1]-.6]);
   if(T==='rock'){const a=at(REF_A);footing(a,s,.7);
@@ -3268,15 +3290,16 @@ function kitPad(T){return(w,i,t,g,part)=>{w.dust=null;const P=PLANETS[i],s=P.siz
       part.anim.push(()=>ll.forEach((l,k)=>l.material.emissiveIntensity=.4+1.4*Math.max(0,Math.sin(simTime*4-k*.8))));
       put(pg,new THREE.Mesh(new THREE.CylinderGeometry(.015*s,.02*s,.8*s,6),K.steel)).position.set(1.45*s,.4*s,.2*s);
       const sock=put(pg,new THREE.Mesh(new THREE.ConeGeometry(.05*s,.2*s,8,1,true),K.orange));sock.rotation.z=Math.PI/2;sock.position.set(1.45*s,.78*s,.32*s);part.anim.push(()=>sock.rotation.y=Math.sin(simTime*.7)*.6)}}
-  else if(T==='gas'){const H=.5;padCore(w,pg,s,H,DM.pad);const keel=put(pg,new THREE.Mesh(new THREE.SphereGeometry(1.0*s,28,8,0,Math.PI*2,Math.PI/2,Math.PI/2),w.hoverMat||K.heat));keel.scale.y=.25;keel.position.y=(H-.1)*s;
+  else if(T==='gas'){const H=gasLift(w)/s,jy=Math.max(H-.3,.07);padCore(w,pg,s,H,DM.pad);const keel=put(pg,new THREE.Mesh(new THREE.SphereGeometry(1.0*s,28,8,0,Math.PI*2,Math.PI/2,Math.PI/2),w.hoverMat||K.heat));keel.scale.y=Math.min(.25,Math.max(.02,H-.1-jy));keel.position.y=(H-.1)*s;
     const rim=put(pg,new THREE.Mesh(new THREE.TorusGeometry(1.05*s,.02*s,6,40),K.lift));rim.rotation.x=Math.PI/2;rim.position.y=(H-.08)*s;
-    for(let k=0;k<4;k++){const a=k/4*6.283+.785,j=put(pg,new THREE.Mesh(new THREE.SphereGeometry(.05*s,8,6),K.lift));j.position.set(Math.cos(a)*.55*s,(H-.3)*s,Math.sin(a)*.55*s)}
+    for(let k=0;k<4;k++){const a=k/4*6.283+.785,j=put(pg,new THREE.Mesh(new THREE.SphereGeometry(.05*s,8,6),K.lift));j.position.set(Math.cos(a)*.55*s,jy*s,Math.sin(a)*.55*s)}
+    if(w.lift){const rr=new THREE.Group();rr.position.y=H*s;pg.add(rr);liftRings(w,rr,1.0*s,(-.1-keel.scale.y)*s,part.anim)}
     bcn=put(pg,new THREE.Mesh(new THREE.SphereGeometry(.06*s,10,8),DM.amber.clone()));bcn.position.set(1.0*s,(H+.05)*s,-.6*s);
     if(t>=2){for(const a of[.6,1.7,4.4]){const arm=put(pg,new THREE.Mesh(new THREE.BoxGeometry(.7*s,.04*s,.06*s),K.steel));arm.position.set(Math.cos(a)*1.3*s,H*s,Math.sin(a)*1.3*s);arm.rotation.y=-a}
       for(const z of[.95,1.35]){put(pg,new THREE.Mesh(new THREE.SphereGeometry(.16*s,14,10),K.sphere)).position.set(.95*s,(H+.12)*s,z*s)}}
     if(t>=3){const beam=put(pg,new THREE.Mesh(new THREE.CylinderGeometry(.12*s,.6*s,.9*s,20,1,true),K.beam.clone()));beam.position.y=(H+.5)*s;
       part.anim.push(()=>beam.material.opacity+=((landing()?.35:.06)-beam.material.opacity)*.1)}
-    const base=pg.position.clone();part.anim.push(()=>pg.position.copy(base).addScaledVector(PORT_DIR,Math.sin(simTime*.8)*.01*s))}
+    const base=pg.position.clone();part.anim.push(()=>pg.position.copy(base).addScaledVector(PORT_DIR,Math.sin(simTime*.8)*.01*s+gasRise(w)))}
   else if(T==='water'){const H=.2;padCore(w,pg,s,H,DM.pad);const col=put(pg,new THREE.Mesh(new THREE.TorusGeometry(1.05*s,.07*s,8,40),K.hullW));col.rotation.x=Math.PI/2;col.position.y=.06*s;
     const bd=put(pg,new THREE.Mesh(new THREE.TorusGeometry(1.08*s,.02*s,6,40),DM.amber));bd.rotation.x=Math.PI/2;bd.position.y=.1*s;bcn=mast(pg,s,1.0,-.6,.55);
     /* (Beta 0.33.10) the breakwater: a continuous rubble wall round the pad at 1.75, packed tight so it reads as one
@@ -3517,7 +3540,7 @@ function settleWalkways(w,g,s,R){g.children.forEach((c,j)=>{if(!(c.isMesh&&c.geo
     c.material=w.floatMat;for(let q=0;q<=n;q++){const p=path.getPoint(q/n),fl=put(c,new THREE.Mesh(new THREE.SphereGeometry(.05*s,10,6),w.floatBand));fl.position.copy(p).setLength((R+.012*s)/f2);fl.scale.y=.55}
     const ph=j*.9;w.setAnim.push(()=>c.scale.setScalar(f2*(1+Math.sin(simTime*.7+ph)*.007*s/R)))})}
 function settleGas(w,i,k){const g=w.settle[k],P=PLANETS[i],s=w.facS,R=w.facR;
-const L=.95*s*SET_SC,f=(R+L)/R;
+const L=gasLift(w)*SET_SC,f=(R+L)/R; // (Beta 0.41.1) level with the rest of the base (was .95 s)
     if(!DM.liftBeam)DM.liftBeam=new THREE.MeshBasicMaterial({color:0x7fe9ff,transparent:true,opacity:.16,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide});
     if(!DM.cloudShade)DM.cloudShade=new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.28,depthWrite:false});
     if(!DM.bridge)DM.bridge=new THREE.MeshStandardMaterial({color:0x7fe9ff,emissive:0x5fd4f0,emissiveIntensity:1.1,transparent:true,opacity:.72,roughness:.3});
@@ -3525,20 +3548,22 @@ const L=.95*s*SET_SC,f=(R+L)/R;
       w.hoverGlow=new THREE.MeshStandardMaterial({color:P.c2,emissive:P.c2,emissiveIntensity:1.4})}
     [...g.children].forEach(c=>{
       if(c.userData.sup){c.visible=false;return}
-      if(c.isMesh&&c.geometry&&c.geometry.type==='TubeGeometry'){c.scale.setScalar(f);c.material=DM.bridge;return}
-      if(c.isMesh){c.position.multiplyScalar(f);return} // light rings along the transit line
+      if(c.isMesh&&c.geometry&&c.geometry.type==='TubeGeometry'){c.scale.setScalar(f);c.material=DM.bridge;onRise(w,w.setAnim,r=>c.scale.setScalar((R+L+r)/R));return}
+      if(c.isMesh){const p0=c.position.clone();c.position.multiplyScalar(f);onRise(w,w.setAnim,r=>c.position.copy(p0).multiplyScalar((R+L+r)/R));return} // light rings along the transit line
       if(!c.isGroup)return;
       const dir=c.position.clone().normalize();c.position.addScaledVector(dir,L);
       const key=_sk(c.position),ph=(Object.keys(w.setSpots).length*1.7)%6.28,spot=w.setSpots[key]||(w.setSpots[key]={ph,done:false});
       if(!spot.done){spot.done=true;const r=footprint(c)*1.08,u=s;
         const deck=new THREE.Mesh(new THREE.CylinderGeometry(r,r*.96,.06*u,32),DM.pad);deck.position.y=-.01*u;c.add(deck);
-        const keel=new THREE.Mesh(new THREE.SphereGeometry(r*.96,28,10,0,Math.PI*2,Math.PI/2,Math.PI/2),w.hoverMat);keel.scale.y=.32;keel.position.y=-.04*u;c.add(keel);
+        const ty=Math.min(.04*u+r*.3,gasRoom(w)/SET_SC-.035*u); // thrusters (and the keel above them) clear the clouds while the base is low
+        const keel=new THREE.Mesh(new THREE.SphereGeometry(r*.96,28,10,0,Math.PI*2,Math.PI/2,Math.PI/2),w.hoverMat);keel.scale.y=Math.min(.32,Math.max(.02,(ty-.04*u)/(r*.96)));keel.position.y=-.04*u;c.add(keel);
         const rim=new THREE.Mesh(new THREE.TorusGeometry(r*.99,.02*u,6,40),w.hoverGlow);rim.rotation.x=Math.PI/2;rim.position.y=-.03*u;c.add(rim);
-        for(let j=0;j<3;j++){const a=j/3*6.2832+ph,jet=new THREE.Mesh(new THREE.SphereGeometry(.035*u,8,6),DM.teal);jet.position.set(Math.cos(a)*r*.55,-.04*u-r*.3,Math.sin(a)*r*.55);c.add(jet)}
+        for(let j=0;j<3;j++){const a=j/3*6.2832+ph,jet=new THREE.Mesh(new THREE.SphereGeometry(.035*u,8,6),DM.teal);jet.position.set(Math.cos(a)*r*.55,-ty,Math.sin(a)*r*.55);c.add(jet)}
+        if(w.lift)liftRings(w,c,r,-.04*u-r*.96*keel.scale.y,w.setAnim);
         // a faint lift beam down to the cloud tops, and the platform's shadow on them, show how high it floats
         const hl=L/SET_SC,beam=new THREE.Mesh(new THREE.CylinderGeometry(r*.45,r*.95,hl,24,1,true),DM.liftBeam);beam.position.y=-hl/2-.04*u;c.add(beam);
         const shade=new THREE.Mesh(new THREE.CircleGeometry(r*1.05,28),DM.cloudShade);shade.rotation.x=-Math.PI/2;shade.position.y=-hl+.01*u;c.add(shade)}
-      const base=c.position.clone();w.setAnim.push(()=>c.position.copy(base).addScaledVector(dir,Math.sin(simTime*.9+spot.ph)*.018*s))})
+      const base=c.position.clone();w.setAnim.push(()=>c.position.copy(base).addScaledVector(dir,Math.sin(simTime*.9+spot.ph)*.018*s+gasRise(w)))})
   if(k===2)settleAerostats(w,g,s)}
 function settleWater(w,i,k){const g=w.settle[k],P=PLANETS[i],s=w.facS,R=w.facR;
 const L=.06*s*SET_SC,f=(R+L)/R;
@@ -3591,7 +3616,7 @@ const L=.12*s*SET_SC,f=(R+L)/R;
 const SETTLE_KIT={rock:settleRock,lava:settleLava,ice:settleIce,gas:settleGas,water:settleWater,veg:settleVeg};
 function kitSettle(w,i,k){if(!w.setAnim)w.setAnim=[];if(!w.setSpots)w.setSpots={};kitOf(i).settle(w,i,k)}
 function syncSettlement(w,i){const lv=settleLv(i);if(!w.settle)w.settle=[];if(!w.setGlows)w.setGlows=[];
-  for(let k=0;k<3;k++){if(lv>k&&!w.settle[k]){buildSettleLevel(w,i,k);kitSettle(w,i,k);groundAndSupports(w,i,w.settle[k]);glowify(w.settle[k],w.setGlows)}if(w.settle[k])w.settle[k].visible=lv>k}}
+  for(let k=0;k<3;k++){if(lv>k&&!w.settle[k]){buildSettleLevel(w,i,k);kitSettle(w,i,k);groundAndSupports(w,i,w.settle[k],w.setAnim);glowify(w.settle[k],w.setGlows)}if(w.settle[k])w.settle[k].visible=lv>k}}
 function animateSettlement(w,dt){if(!w.settle)return;if(w.setAnim&&w.settle[0]&&w.settle[0].visible)w.setAnim.forEach(f=>f(dt));
   if(w.settle[0]&&w.settle[0].visible)updateGlows(w.setGlows);
   if(w.setHalo&&w.settle[2]&&w.settle[2].visible){w.setHalo.rotation.y+=dt*.6;w.setBeacon.material.emissiveIntensity=1+Math.sin(simTime*2.2);
@@ -3695,7 +3720,7 @@ function ensureSite(w,i){if(w.siteG)return;w.siteG=new THREE.Group();w.siteG.qua
               short post, on gas giants a small glowing hover node. Tubes that already carry their own (the settlement's
               transit line, the ore conveyor, terrestrial timber walks, floating walkways and light-bridges) are marked
               userData.noSup and skipped. */
-function groundAndSupports(w,i,root){const T=PTYPE(i),R=w.facR,s=w.facS,K=kitMats(),M=minerMats();
+function groundAndSupports(w,i,root,anim){const T=PTYPE(i),R=w.facR,s=w.facS,K=kitMats(),M=minerMats();
   const legM=T==='veg'?K.timberD:T==='lava'?M.heat:T==='ice'?K.insul:DM.hull,floatW=T==='water';
   // slabs
   if(T!=='gas'&&T!=='water'){const list=[];root.traverse(o=>{if(!o.isMesh||!o.parent||o.userData.slabDone)return;const g=o.geometry,q=g.parameters;if(!q)return;
@@ -3720,7 +3745,8 @@ function groundAndSupports(w,i,root){const T=PTYPE(i),R=w.facR,s=w.facS,K=kitMat
       const sp=new THREE.Group();sp.userData.supDone=1;setOnSurface(sp,R,d,-.01*s);orient(sp,d,tg.clone().addScaledVector(d,-tg.dot(d)).normalize());o.parent.add(sp);
       const H=hgt+.01*s;
       if(T==='gas'){const node=put(sp,new THREE.Mesh(new THREE.SphereGeometry(.035*s,10,8),M.lift));node.position.y=H-.02*s;
-        const ring=put(sp,new THREE.Mesh(new THREE.TorusGeometry(.05*s,.008*s,6,16),M.lift));ring.rotation.x=Math.PI/2;ring.position.y=H-.05*s;continue}
+        const ring=put(sp,new THREE.Mesh(new THREE.TorusGeometry(.05*s,.008*s,6,16),M.lift));ring.rotation.x=Math.PI/2;ring.position.y=H-.05*s;
+        if(anim)onRise(w,anim,r=>{node.position.y=H-.02*s+r;ring.position.y=H-.05*s+r});continue} // they follow the tube while the base rises
       if(floatW){if(!w.floatMat)w.floatMat=new THREE.MeshStandardMaterial({color:0xe8edf2,metalness:.3,roughness:.5});
         const fl=put(sp,new THREE.Mesh(new THREE.CylinderGeometry(.07*s,.075*s,.05*s,14),w.floatMat));fl.position.y=.03*s;
         const bd=put(sp,new THREE.Mesh(new THREE.TorusGeometry(.072*s,.008*s,6,18),DM.amber));bd.rotation.x=Math.PI/2;bd.position.y=.035*s;
@@ -3730,12 +3756,19 @@ function groundAndSupports(w,i,root){const T=PTYPE(i),R=w.facR,s=w.facS,K=kitMat
         const ft=put(sp,new THREE.Mesh(new THREE.BoxGeometry((tr*2+.08*s),.015*s,.06*s),legM));ft.position.y=.01*s}
       else{const pst=put(sp,new THREE.Mesh(new THREE.CylinderGeometry(.011*s,.015*s,H,6),legM));pst.position.y=H/2;
         const sad=put(sp,new THREE.Mesh(new THREE.BoxGeometry(.05*s,.014*s,.03*s),legM));sad.position.y=H-tr*.5}}})}
-function syncPart(w,i,key,t){const cur=w.parts[key];if(cur&&cur.t===t)return false;
+function syncPart(w,i,key,t){const cur=w.parts[key];if(cur&&cur.t===t&&cur.lift===w.lift)return false;
   if(cur){(key==='pad'?w.siteG:w.fac).remove(cur.g)}
-  const g=new THREE.Group(),part={t,g,anim:[],glows:[]};w.parts[key]=part;(key==='pad'?w.siteG:w.fac).add(g);
+  const g=new THREE.Group(),part={t,lift:w.lift,g,anim:[],glows:[]};w.parts[key]=part;(key==='pad'?w.siteG:w.fac).add(g);
   if(key==='mine')w.rovers=[];
-  kitOf(i)[key](w,i,t,g,part);groundAndSupports(w,i,g);glowify(g,part.glows);return true}
+  kitOf(i)[key](w,i,t,g,part);groundAndSupports(w,i,g,part.anim);glowify(g,part.glows);return true}
 function syncBase(w,i){const T=tierOf(i);if(!T)return;ensureSite(w,i);
+  // (Beta 0.41.1) a gas giant's base rises once every track is at tier 3 (gasLift): every structure is rebuilt at the new height
+  const lift=PTYPE(i)==='gas'&&T.mine>=3&&T.pad>=3&&T.refinery>=3&&T.settle>=3;
+  // then it eases there from where it was (gasRise)
+  if(w.lift!==undefined&&w.lift!==lift){const from=gasLift(w)+gasRise(w);w._padLift=null;
+    if(w.settle){w.settle.forEach(g=>g&&w.fac.remove(g));w.settle=[];w.setAnim=[];w.setSpots={};w.setGlows=[]}
+    w.lift=lift;w.riseFrom=from-gasLift(w);w.riseK=0}
+  w.lift=lift;
   syncPart(w,i,'pad',T.pad);syncPart(w,i,'mine',T.mine);syncPart(w,i,'refinery',T.refinery);
   syncSettlement(w,i)}
 // close-ups look between the pad and the mine works, or (with a settlement) between all three wedges
@@ -3755,17 +3788,18 @@ function animateSurface(w,i,dt){
   if(w.parts)for(const k in w.parts)updateGlows(w.parts[k].glows);
   if(w.portBeacon){const on=(simTime*1.2+i)%1<.5;w.portBeacon.material.emissiveIntensity=on?2+nt:.2;w.portLights.forEach((l,k)=>l.material.emissiveIntensity=(.4+1.2*Math.max(0,Math.sin(simTime*4-k)))*(1+1.2*nt))}
   if(!w.fac||!w.siteG||!w.siteG.parent)return;const R=w.facR,s=w.facS;
+  if(w.riseFrom){w.riseK=(w.riseK||0)+Math.min(dt,.05)/GAS_RISE_T;if(w.riseK>=1.02)w.riseFrom=0} // a gas base easing to its new height (gasRise)
   for(const k in w.parts)w.parts[k].anim.forEach(f=>f(dt));
   animateSettlement(w,dt);
   // all rovers share one cycle and are spread evenly around it, so departures and returns are staggered
   // (Beta 0.32) each miner's trip takes as long as its drive needs at a steady speed (DRIVE radians a second): out,
   // mine, back, then tip the load into the hopper. Trips are staggered so the miners don't arrive together.
-  const active=w.rovers.length,DRIVE=.06,MINE_T=2.6,TIP_T=2.4;if(w._padLift==null){const T=PTYPE(i);w._floatHaul=T==='gas'||T==='water';w._padLift=T==='gas'?.56*s:T==='water'?.1*s:.045*s}
+  const active=w.rovers.length,DRIVE=.06,MINE_T=2.6,TIP_T=2.4;if(w._padLift==null){const T=PTYPE(i);w._floatHaul=T==='gas'||T==='water';w._padLift=T==='gas'?gasLift(w)+.06*s:T==='water'?.1*s:.045*s}
   w.rovers.forEach((rv,j)=>{const T1=rv.route.total*(rv.stop||1)/DRIVE,CYC=2*T1+MINE_T+TIP_T,tt=((simTime/CYC+j/active+i*.137)%1)*CYC;let u,carrying=false,mining=false,inside=false;
     if(tt<T1)u=tt/T1;else if(tt<T1+MINE_T){u=1;mining=true}else if(tt<2*T1+MINE_T){u=1-(tt-T1-MINE_T)/T1;carrying=true}else{u=0;if(tt<2*T1+MINE_T+.8)w._dump=simTime}
     rv.g.visible=true;
     const ea=.05,e=(u<ea?u*u/(2*ea):u>1-ea?1-ea-(1-u)*(1-u)/(2*ea):u-ea/2)/(1-ea)*(rv.stop||1),outbound=tt<T1+MINE_T;
-    routePoint(rv.route,e,_b);const along=e*rv.route.total*R;rv.g.position.copy(_b).multiplyScalar(R+(w._padLift||0)*(w._floatHaul?sstep(1.2*s,.5*s,along):sstep(.85*s,.45*s,along)));
+    routePoint(rv.route,e,_b);const along=e*rv.route.total*R;rv.g.position.copy(_b).multiplyScalar(R+((w._padLift||0)+gasRise(w))*(w._floatHaul?sstep(1.2*s,.5*s,along):sstep(.85*s,.45*s,along)));
     routePoint(rv.route,Math.min(1,Math.max(0,e+(outbound?.01:-.01))),_a);if(mining)routePoint(rv.route,Math.min(1,e+.01),_a);_a.sub(_b);
     if(_a.lengthSq()>1e-12)orient(rv.g,_b,_a);
     rv.load.visible=carrying;
@@ -4300,7 +4334,7 @@ function shipPos(w,P,t,res,i){const real=w.pos;_wpRel.copy(real).sub(STP);w.pos=
 // flights that would pass close to the sun bend smoothly around it (no corner where the bend starts)
 const SUN_CLEAR=SUN_R*1.6;
 function sunAvoid(v){const d=v.length();if(d>=SUN_CLEAR)return v;if(d<1e-4)return v.set(0,SUN_CLEAR*.8,0);const nd=d+.8*(SUN_CLEAR-d)*(SUN_CLEAR-d)/SUN_CLEAR;return v.multiplyScalar(nd/d)}
-function shipPosRel(w,P,t,res,i){const L=P.lay,R0=P.size*2,land=P.size+(w.padH||0)+.38*.22,bump=.6+P.r*.04;
+function shipPosRel(w,P,t,res,i){const L=P.lay,R0=P.size*2,land=P.size+(w.padH||0)+gasRise(w)+.38*.22,bump=.6+P.r*.04; // (gasRise: a gas pad easing to a new height)
   _ds.copy(w.pos).negate().normalize();_side.set(-_ds.z,0,_ds.x).normalize();
   _ai.copy(_ds).addScaledVector(_side,.55).normalize();_ao.copy(_ds).addScaledVector(_side,-.55).normalize();
   _bp.copy(PORT_DIR).applyQuaternion(w.siteQ).applyQuaternion(w.mesh.quaternion);
@@ -5814,7 +5848,7 @@ const GUIDE=[
 <ul><li><b>Rocky worlds:</b> laser rovers working crystal deposits beside a terraced open pit and headframe; a concrete pad with a control tower; a crusher, ball mill and smelt stack. Settlement domes are banked with rubble and joined by covered tubes.</li>
 <li><b>Molten worlds:</b> heat-shielded crawlers ladling from lava pools along a glowing magma channel; a stilted pad with a blast deflector; a foundry pouring glowing ingots. Charcoal domes stand on stilts above the hot ground. Out on the plains, volcanoes erupt and lava pools bubble.</li>
 <li><b>Icy worlds:</b> snowcats cutting ice with spinning cutters beside steaming melt-drill derricks; an insulated pad with de-icing vents; heated tanks and filter beds. Domes are frosted ice-glass, ringed by crystal clusters.</li>
-<li><b>Gas giants:</b> there's no ground, so everything floats above the clouds. Scoop drones dive into cloud vortexes under a floating harvester ring; the pad is a hovering deck with a tractor beam, and the refinery hangs below its platform. Every settlement building hovers on its own platform, joined by light-bridges, and a City adds airships moored above it.</li>
+<li><b>Gas giants:</b> there's no ground, so everything floats above the clouds. Scoop drones dive into cloud vortexes under a floating harvester ring; the pad is a hovering deck with a tractor beam, and the refinery hangs below its platform. Every settlement building hovers on its own platform, joined by light-bridges, and a City adds airships moored above it. The whole base skims the cloud tops on its thrusters until every part of it is fully built (three crews, 24 Speed and Cargo points, all five programs and a City); then it all rises higher on pulsing lift rings.</li>
 <li><b>Ocean worlds:</b> the base floats on the sea. Submersibles dive at bobbing buoys around a dredge rig; the pad is a helideck with a breakwater and lighthouse; brine pans and a desalination tower refine the ore. Settlement buildings sit on pontoons, joined by floating walkways that ride the swell.</li>
 <li><b>Terrestrial worlds:</b> six-legged walkers harvest mossy mounds by a glowing bioleach pond; the pad is a timber deck with a treetop tower; green bioleaching vats refine the ore. Domes have living moss roofs and are joined by raised timber walks; a City adds a canopy walkway ring at treetop height.</li></ul>
 <p>Each world's surface features, like volcanoes, cloud storms, frozen lakes, waves and forests, only show up close, and they never cover the base.</p>`],
