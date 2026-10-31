@@ -239,6 +239,8 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
 .pm .pmm small{font-size:10px;white-space:nowrap}
 .row.trow .bn{margin-left:5px;letter-spacing:.05em;padding:1px 4px;font-size:9px}
 .sub{border-top:1px solid var(--line);padding-top:10px;display:flex;flex-direction:column;gap:7px}
+/* Warp tab cards: sub-sections are set apart by their headers and spacing, without a line */
+.sub.nl{border-top:0;padding-top:12px}
 .crewby{display:flex;align-items:center;gap:6px;min-width:0}
 .crewby b{font:600 13px var(--f-body);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .crewq{font:500 12px/1.35 var(--f-body);color:var(--muted);margin-top:-4px}
@@ -5254,19 +5256,29 @@ function viewStats(){const now=Date.now(),L=S.life,A=S.lifeAt||newLife(),run=k=>
     sumDel=o=>Object.values(o||{}).reduce((a,v)=>a+v,0),delRun=Math.max(0,sumDel(L.del)-sumDel(A.del));
   const top=Object.entries(L.del||{}).sort((a,b)=>b[1]-a[1])[0],wins=Object.values((S.ev&&S.ev.wins)||{}).reduce((a,v)=>a+v,0);
   const part=S.lifeFrom&&S.lifeFrom>(S.born||0)?`<p style="font-size:12px">Deliveries, bars and the other counts marked * started counting on ${new Date(S.lifeFrom).toLocaleDateString(undefined,{month:'short',day:'numeric'})}, when these statistics were added.</p>`:'';
+  const V=galaxyValue();
   let h=`<div class="card"><h3>This galaxy</h3>
     ${statRow('Time in this galaxy',evTime(age))}
     ${statRow('Earned',fmt(S.runEarned)+' cr')}
     ${statRow('Average per hour',fmt(S.runEarned/(age/36e5))+' cr')}
     ${statRow('Income now, per hour',fmt(inc*3600)+' cr')}
-    <div class="sub"><h4>Built</h4>
+    <div class="sub nl"><h4>Galaxy value</h4><div class="big num">${fmt(V.total)}</div>
+    <p style="font-size:12px">What this galaxy is worth in credits: what you hold at today's prices, and everything you've bought here at what it would cost to buy again.</p>
+    ${statRow('Credits',fmt(V.cash))}
+    ${statRow('Ore and bars in stock',fmt(V.stock))}
+    ${statRow('Claims and crews',fmt(V.crews))}
+    ${statRow('Upgrade points',fmt(V.pts))}
+    ${statRow('Training',fmt(V.train))}
+    ${statRow('Settlements',fmt(V.settle))}
+    ${statRow('Research',fmt(V.research))}</div>
+    <div class="sub nl"><h4>Built</h4>
     ${statRow('Planets claimed',`${U.length} / ${PLANETS.length}`)}
     ${statRow('Mining crews',crews)}
     ${statRow('Upgrade points',fmt(pts))}
     ${statRow('Training programs',trains)}
     ${statRow('Settlement levels',sets)}
     ${statRow('Research',`${resN} / ${RESEARCH.length}`)}</div>
-    <div class="sub"><h4>Activity</h4>
+    <div class="sub nl"><h4>Activity</h4>
     ${statRow('Ore delivered'+(part?' *':''),fmt(delRun))}
     ${statRow('Deliveries'+(part?' *':''),fmt(run('deliv')))}
     ${statRow('Bars smelted'+(part?' *':''),fmt(run('bars')))}
@@ -5290,44 +5302,36 @@ function viewStats(){const now=Date.now(),L=S.life,A=S.lifeAt||newLife(),run=k=>
     ${statRow('Probes returned',`${fmt(S.probeLife.returned||0)} · ${fmt(S.probeLife.value||0)} cr`)}
     ${statRow('Missions won',fmt(wins))}
     ${statRow('Mission streak',`${(S.ev&&S.ev.streak)||0} week${((S.ev&&S.ev.streak)||0)===1?'':'s'}`)}
-    ${S.warpLog.length?`<div class="sub"><h4>Recent warps</h4>${S.warpLog.slice(0,5).map(x=>statRow(new Date(x.at).toLocaleDateString(undefined,{month:'short',day:'numeric'}),`${evTime(x.dur)} · ${x.planets} planets · +${fmt(x.dust)} dust`)).join('')}</div>`:''}</div>`;
+    ${S.warpLog.length?`<div class="sub nl"><h4>Recent warps</h4>${S.warpLog.slice(0,5).map(x=>statRow(new Date(x.at).toLocaleDateString(undefined,{month:'short',day:'numeric'}),`${evTime(x.dur)} · ${x.planets} planets · +${fmt(x.dust)} dust`)).join('')}</div>`:''}</div>`;
   return h}
-function viewGalaxyValue(){const V=galaxyValue(),pd=pendingDM(),dm=S.dm||0,now=100+dm,after=100+dm+pd,need=earnedForDM(pd+1),inc=incomeEstimate(),
+// what a warp now would bring, with the warp button (in the Star dust card)
+function viewWarpNow(){const ok=S.planets[WARP_AT].u,pd=pendingDM(),dm=S.dm||0,now=100+dm,after=100+dm+pd,need=earnedForDM(pd+1),inc=incomeEstimate(),
     eta=inc>0?Math.max(0,need-S.runEarned)/inc:Infinity;
-  return `<div class="card"><h3>Galaxy value</h3><div class="big num">${fmt(V.total)}</div>
-    <p style="font-size:12px">What this galaxy is worth in credits: what you hold at today's prices, and everything you've bought here at what it would cost to buy again.</p>
-    ${statRow('Credits',fmt(V.cash))}
-    ${statRow('Ore and bars in stock',fmt(V.stock))}
-    ${statRow('Claims and crews',fmt(V.crews))}
-    ${statRow('Upgrade points',fmt(V.pts))}
-    ${statRow('Training',fmt(V.train))}
-    ${statRow('Settlements',fmt(V.settle))}
-    ${statRow('Research',fmt(V.research))}
-    <div class="sub"><h4>If you warp now</h4>
+  return `<div class="sub nl"><h4>If you warp now</h4>
     ${statRow('Star dust',`+${fmt(pd)}`)}
     ${statRow('Sale prices',`+${fmt(dm)}% → +${fmt(dm+pd)}%`)}
     ${statRow('Every sale worth',`×${(after/now).toFixed(3)}`)}
     ${statRow('Next star dust at',`${fmt(need)} earned`)}
-    ${statRow('At your current income',isFinite(eta)?(eta>0?'in about '+evTime(eta*1000):'now'):'no income yet')}</div></div>`}
+    ${statRow('At your current income',isFinite(eta)?(eta>0?'in about '+evTime(eta*1000):'now'):'no income yet')}
+    <p>Warping resets planets, mining crews, credits, cargo and research, and starts a fresh galaxy. Star dust earned this run: <b class="num" style="color:var(--ink)">+${fmt(pd)}</b>.</p>
+    ${!ok?`<button class="btn wide" disabled type="button">Claim ${PLANETS[WARP_AT].n} to unlock warp</button>`
+      :`<button class="btn wide${armed('warp')?' warn':''}" data-act="warp" ${pd>0?'':'disabled'} type="button">${armed('warp')?'Tap again to warp':'Warp for '+fmt(pd)+' star dust'}</button>`}</div>`}
 function viewWarp(){
-  const ok=S.planets[WARP_AT].u,pd=pendingDM();
   let h=`<div class="head"><h2>Galaxy Warp</h2></div>
-   <div class="card"><h3>Star dust</h3><div class="big num">${fmt(S.dm)}</div><p>Each unit makes everything sell for 1% more, forever. You have +${fmt(S.dm)}%.</p></div>
-   ${viewGalaxyValue()}
-   <p>Warping resets planets, mining crews, credits, cargo and research, and starts a fresh galaxy. Star dust earned this run: <b class="num" style="color:var(--ink)">+${fmt(pd)}</b>.</p>`;
-  if(!ok)h+=`<button class="btn wide" disabled type="button">Claim ${PLANETS[WARP_AT].n} to unlock warp</button>`;
-  else h+=`<button class="btn wide${armed('warp')?' warn':''}" data-act="warp" ${pd>0?'':'disabled'} type="button">${armed('warp')?'Tap again to warp':'Warp for '+fmt(pd)+' star dust'}</button>`;
+   <div class="card"><h3>Star dust</h3><div class="big num">${fmt(S.dm)}</div><p>Each unit makes everything sell for 1% more, forever. You have +${fmt(S.dm)}%.</p>
+   ${viewWarpNow()}</div>`;
   const st=S.st||{name:'',hist:[]},dd=t=>new Date(t).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
   const prev=st.hist.slice(0,-1).reverse();
-  h+=viewStats();
-  h+=`<div class="card"><h3>Captain's log</h3>
+  h+=`<div class="head"><h2>Captain's Log</h2></div>
+   <div class="card"><h3>Station</h3>
    <div class="stat"><span>Station</span><span>${esc(st.name||'Unnamed')}</span></div>
    <div class="stat"><span>New galaxy created</span><span>${dd(S.born||Date.now())}</span></div>
    ${prev.length?`<p style="font-size:12px">Earlier names: ${prev.map(x=>`${esc(x.n)} (${dd(x.at)})`).join(', ')}</p>`:''}
    ${parkLogHtml(dd)}
    <button class="btn ghost wide" data-act="rename" type="button">${st.name?'Rename station':'Name your station'}</button>
-   <div class="stat"><span>Offline limit</span><span>${offlineCapSec()/3600}h</span></div></div>
-   <div class="card"><h3>Sound</h3><div class="vol"><label for="vol" style="color:var(--muted)">Music volume</label><input type="range" id="vol" min="0" max="100" step="1" value="${Math.round(S.music.vol*100)}"><span class="num" style="min-width:3ch;text-align:right">${Math.round(S.music.vol*100)}</span></div>
+   <div class="stat"><span>Offline limit</span><span>${offlineCapSec()/3600}h</span></div></div>`;
+  h+=viewStats();
+  h+=`<div class="card"><h3>Sound</h3><div class="vol"><label for="vol" style="color:var(--muted)">Music volume</label><input type="range" id="vol" min="0" max="100" step="1" value="${Math.round(S.music.vol*100)}"><span class="num" style="min-width:3ch;text-align:right">${Math.round(S.music.vol*100)}</span></div>
    <p style="font-size:12px">Original music made by the game as it plays. Free to use, no licence needed.</p></div>
    <p>Star Quarry has no ads, no purchases and no premium currency. Every boost, including Market Surge, is free and earned by playing.</p>
 `;
@@ -5867,13 +5871,15 @@ const GUIDE=[
 <li>Warping starts a new galaxy. Planets, teams, credits, ore, research and settlements reset.</li>
 <li>You earn star dust based on the credits earned this run. Each unit makes everything sell for 1% more, for good.</li>
 <li>Star dust, permanent event boosts, lifetime stats and the Captain's log stay with you.</li>
-<li><b>Galaxy value</b> on the Warp tab adds up what this galaxy is worth in credits: credits and stock at today's prices, plus claims and crews, upgrade points, training, settlements and research at what they'd cost to buy again. That's what a warp gives up. Under it, <b>If you warp now</b> shows the star dust you'd get, how much more every sale would be worth, and when the next unit of star dust comes at your current income.</li>
-<li><b>Statistics:</b> the This galaxy card shows time played, earnings, your average and current income per hour, what you've built and what your fleet has done. All time adds up every galaxy, and lists your recent warps with how long each galaxy took.</li></ul>`],
+<li>The <b>Star dust</b> card at the top of the Warp tab holds the warp button. Above it, <b>If you warp now</b> shows the star dust you'd get, how much more every sale would be worth, and when the next unit of star dust comes at your current income.</li>
+<li>Below it, the <b>Captain's Log</b> holds your Station, This galaxy and All time.</li>
+<li><b>Galaxy value</b>, in the This galaxy card, adds up what this galaxy is worth in credits: credits and stock at today's prices, plus claims and crews, upgrade points, training, settlements and research at what they'd cost to buy again. That's what a warp gives up.</li>
+<li><b>Statistics:</b> the This galaxy card also shows time played, earnings, your average and current income per hour, what you've built and what your fleet has done. All time adds up every galaxy, and lists your recent warps with how long each galaxy took.</li></ul>`],
 ['Time away',`<ul>
 <li>Your fleet keeps working while the game is closed, for up to 8 hours, or 24 hours with Night Shift.</li>
 <li>Ore is hauled, overflow is sold, furnaces keep smelting and probes keep flying. A welcome-back message shows what you earned.</li></ul>`],
 ['Your station and updates',`<ul>
-<li>Name your station when a new galaxy starts, or rename it any time from the Captain's log. Past names are kept in its history.</li>
+<li>Name your station when a new galaxy starts, or rename it any time from the Station card in the Captain's Log on the Warp tab. Past names are kept in its history.</li>
 <li>The Version panel checks for updates, and What's changed lists every change by date.</li>
 <li><b>Your save</b> on the Warp tab exports your game as a sealed save code to keep somewhere safe or move to another device, and imports one back. If anything in a code is changed, it won't load. Before an import replaces your game, the game you were playing is kept as a backup, and Restore a backup brings it back. A save that couldn't be loaded is kept as a backup too.</li>
 <li>There are no ads, purchases or premium currency. Everything is earned by playing.</li></ul>`],
