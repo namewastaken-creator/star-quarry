@@ -631,7 +631,7 @@ const SETTLE=[
  ['Stormbreak Harbor',[['Wave Rigs','m'],['Brine Refinery','ore'],['Salt Forges','smelt']]],
  ['Zenith Throne',[['Crown Scoops','m'],['Halo Docks','c'],['Zenith Accord','gm']]]];
 const newestOre=i=>Math.max(...PLANETS[i].mix.map(([o])=>o));
-function settleDesc(i,k){const P=PLANETS[i];return{m:`Mining ×1.5 on ${P.n}`,s:`Ship speed ×1.5 on ${P.n}`,c:`Cargo ×1.5 on ${P.n}`,
+function settleDesc(i,k){const P=PLANETS[i];return{m:`Mining ×1.5 on ${P.n}`,s:`Ship velocity ×1.5 on ${P.n}`,c:`Cargo ×1.5 on ${P.n}`,
   ore:`${ORES[newestOre(i)].n} and its bars sell for ×1.5`,gm:'All planets mine 10% faster',gs:'All ships fly 10% faster',gc:'All ships carry 10% more',
   gv:'Everything sells for 5% more',smelt:'Smelting runs 25% faster',probe:'Probes bring back 25% more'}[k]}
 // Market Surge (saved as S.od): for OD_LEN seconds everything sold earns double, up to a bonus pool worth OD_LEN
@@ -774,14 +774,14 @@ const CREW_KIND=[{n:'Crew Chief',s:'Allocates every point on the planet'},{n:'Sh
 // VEIN_EVERY seconds that ships VEIN_SEC seconds of the planet's mining straight to the Market
 const YIELD_STEP=.02,VEIN_EVERY=3600,VEIN_SEC=120;
 const CREW_QUIRKS={
-  m10:{d:'+ 10% mine rate here',fx:{m:1.1}},s10:{d:'+ 10% ship speed here',fx:{s:1.1}},c10:{d:'+ 10% cargo here',fx:{c:1.1}},
+  m10:{d:'+ 10% mine rate here',fx:{m:1.1}},s10:{d:'+ 10% ship velocity here',fx:{s:1.1}},c10:{d:'+ 10% cargo here',fx:{c:1.1}},
   thrifty:{d:'Points cost 10% less here',fx:{cost:.9}},eager:{d:'Joins with 2 free points',fx:{}},
   fastrefit:{d:'Perk changes take half the time',fx:{refit:.5}},silo1:{d:'+ 1 silo load here',fx:{silo:1}},
   fasttrain:{d:'Training programs 25% faster',fx:{train:.75}},cheaptrain:{d:'Training programs 25% cheaper',fx:{tcost:.75}}};
 const QUIRK_POOL=[[],['m10','s10','c10','thrifty','eager','fastrefit'],['fasttrain','cheaptrain','thrifty','eager','silo1']];
 // the Shift Crew's perks; need: a training program the planet must have finished first
 const PERKS={
-  mine12:{d:'+ 12% mine rate',fx:{m:1.12}},speed12:{d:'+ 12% ship speed',fx:{s:1.12}},cargo12:{d:'+ 12% cargo',fx:{c:1.12}},
+  mine12:{d:'+ 12% mine rate',fx:{m:1.12}},speed12:{d:'+ 12% ship velocity',fx:{s:1.12}},cargo12:{d:'+ 12% cargo',fx:{c:1.12}},
   silo2:{d:'+ 2 silo loads',fx:{silo:2}},over50:{d:'Overflow sells at 50%, not 25%',fx:{over:2}},
   light:{d:'Lighter hulls: cargo points weigh half as much',fx:{mass:.5}},
   yield8:{d:'+ 8% ore yield',fx:{v:1.08},need:'pros'},veins2:{d:'Rich veins twice as often',fx:{vein:2},need:'pros'},
@@ -793,7 +793,7 @@ const PROGRAMS={
   logi:{n:'Logistics',d:'+ 2 silo loads, and overflow sells at 40%, not 25%.',cost:30,mins:30},
   shifts:{n:'Advanced shifts',d:'The Shift Crew gets a third perk slot.',cost:50,mins:60},
   mentor:{n:'Mentoring',d:'+ 5 points of room on this planet.',cost:80,mins:120}};
-const TRAITS=[['m','Mine rate'],['s','Speed'],['c','Cargo'],['v','Ore yield']];
+const TRAITS=[['m','Mine rate'],['s','Velocity'],['c','Cargo'],['v','Ore yield']];
 const MINER_NAMES=['Flint Crew','Rustline Gang','Deepcut Company','Ironjaw Team','Ember Diggers','Shale Brigade','Hollow Point Crew','Quarry Wolves','Lodestar Team','Bedrock Union','Vein Hunters','Pickaxe Collective','Graviton Crew','Starfall Diggers','Core Breakers','Dustwalkers','Night Shift Crew','Crystal Guild','Void Sappers','Pulsar Company','Zero-G Crew','Last Light Team'];
 const PREFIX=['Flint','Rustline','Deepcut','Ironjaw','Ember','Shale','Hollow Point','Quarry','Lodestar','Bedrock','Vein','Pickaxe','Graviton','Starfall','Core','Dust','Night Shift','Crystal','Void','Pulsar','Zero-G','Last Light'];
 const SUFFIX=['Crew','Gang','Company','Team','Diggers','Brigade','Union','Guild','Collective','Sappers','Hunters','Walkers'];
@@ -1111,7 +1111,7 @@ const EV_TITLES={keep:['Steady Flow','No Spills','Clean Lanes','Smooth Running']
  warp:['Rebirth','Fold the Stars','New Dawn','Second Sky'],claim:['Frontier Claims','Stake the Flag','Uncharted','Outer Worlds'],research:['Archive Keys','Lost Formulas','Lab Nights','Blueprints']};
 const EV_DAYS_H={3:18,4:24,5:30};
 const EV_FIXED={probes:{3:30,4:40,5:50},ups:{3:20,4:28,5:36},teams:{3:2,4:3,5:4},settle:{3:1,4:2,5:2},bars:{3:150,4:200,5:260},od:{3:6,4:8,5:10},warp:{3:1,4:1,5:1},claim:{3:1,4:2,5:2},research:{3:2,4:3,5:4}};
-const EV_BOOSTS=['mine','ship','cargo','value','probe','smelt'],EV_BOOST_NAME={mine:'mining',ship:'ship speed',cargo:'cargo',value:'sale prices',probe:'probe hauls',smelt:'smelting speed'};
+const EV_BOOSTS=['mine','ship','cargo','value','probe','smelt'],EV_BOOST_NAME={mine:'mining',ship:'ship velocity',cargo:'cargo',value:'sale prices',probe:'probe hauls',smelt:'smelting rate'};
 function newLife(){return{del:{},deliv:0,bars:0,ups:0,teams:0,claims:0,settle:0,res:0,od:0}}
 function newPerm(){return{mine:1,ship:1,cargo:1,value:1,probe:1,smelt:1}}
 function perm(k){return(S.perm&&S.perm[k])||1}
@@ -3466,7 +3466,7 @@ function buildSettleLevel(w,i,k){const P=PLANETS[i],s=w.facS,R=w.facR,g=new THRE
      rock  (the rest): the original look.
    On gas planets the mining rovers become hover-skimmers too: wheels gone, lifted, a glowing ring underneath. */
 const PT_ICE=new Set([4,12,13,17]),PT_LAVA=new Set([0,10]);
-const PTYPE_NAME={rock:'Rocky world',lava:'Molten world',ice:'Icy world',gas:'Gas giant',water:'Ocean world',veg:'Terrestrial world'};
+const PTYPE_NAME={rock:'Rocky world',lava:'Molten world',ice:'Icy world',gas:'Gas giant',water:'Ocean world',veg:'Terran world'};
 const PTYPE=i=>PLANETS[i].gas?'gas':PLANETS[i].kind||(PT_ICE.has(i)?'ice':PT_LAVA.has(i)?'lava':'rock');
 // the footprint of a placed building in its own units, from its parts' bounding spheres
 function footprint(grp){let r=0;grp.children.forEach(c=>{if(!c.geometry||c.isSprite)return;c.geometry.computeBoundingSphere();const b=c.geometry.boundingSphere;
@@ -4829,7 +4829,7 @@ function rf(v){return v<10?(Math.round(v*100)/100).toFixed(2):fmt(v)}
    (withPlan) to draw the dashed "after" chart and work out the cost: removals are free, placements use free points
    first, then buy points at the planet's rising price. Plans come from dragging the chart's handles or from Balance,
    and the trait rows' + and − fine-tune a plan while one is showing. Nothing changes until Apply. */
-const TN={m:'Mine rate',s:'Speed',c:'Cargo',v:'Ore yield'};
+const TN={m:'Mine rate',s:'Velocity',c:'Cargo',v:'Ore yield'};
 const tune={};
 const tuneOf=i=>tune[i]||(tune[i]={plan:{}});
 const planEmpty=pl=>!Object.values(pl).some(d=>d);
@@ -4967,7 +4967,7 @@ function tuneSummary(i){const t=tuneOf(i),pl=t.plan,has=!planEmpty(pl),vm=valueM
   return h}
 function tuneUI(i){const t=tuneOf(i);if(!planOK(i,t.plan))t.plan={};const g=tuneSvg(i);
   return `<div class="tune"><div class="flowh"><span>Mined <b class="num">${rf(mineRate(i))}/s</b></span><span>Hauled avg <b class="num">${rf(haul(i))}/s</b></span></div><div class="thead"><span><i class="lg lm"></i>Mining <i class="lg lh"></i>Hauling avg</span><span class="tctl"><button class="tog" data-act="tbal" data-p="${i}" type="button">Balance</button></span></div>
-    <div class="tchart" data-p="${i}">${g.svg}<span class="th thm" style="top:${g.hm.toFixed(1)}%" title="Drag to change mining"><b>▲</b><b>▼</b></span><span class="th thh" style="top:${g.hh.toFixed(1)}%" title="Drag to change hauling (Speed and Cargo)"><b>▲</b><b>▼</b></span></div>
+    <div class="tchart" data-p="${i}">${g.svg}<span class="th thm" style="top:${g.hm.toFixed(1)}%" title="Drag to change mining"><b>▲</b><b>▼</b></span><span class="th thh" style="top:${g.hh.toFixed(1)}%" title="Drag to change hauling (Velocity and Cargo)"><b>▲</b><b>▼</b></span></div>
     <div class="tinfo">${tuneSummary(i)}</div></div>`}
 // dragging a handle: the panel stops redrawing, and only the chart and the summary update
 let tdrag=null;
@@ -4993,7 +4993,7 @@ function viewTeams(i,shipsBN,rate,hl){
     <div class="note fix1">${free>0?`<b style="color:var(--ship)">${free} free point${free>1?'s':''} to place.</b><span>Tap + to place.</span>`:room?`<span>Next point: <b class="num" style="color:var(--ink)">${fmt(uc)}</b> credits.</span>`:`<span>${n<TEAM_MAX?'All points owned: hire the next crew for more.':'All points owned.'}</span>`}</div>
     ${tuneUI(i)}<div class="rows">`;
   const TR=tripRange(i),BN='<span class="bn">Bottleneck</span>',y0=yieldF(i);
-  const rows={m:{name:'Mine rate',val:`${rf(rate)} ore/s`},s:{name:'Speed',val:`${shipSpeed(i).toFixed(1)} AU/s · trip ${Math.round(TR[0])}–${Math.round(TR[1])}s`},
+  const rows={m:{name:'Mine rate',val:`${rf(rate)} ore/s`},s:{name:'Velocity',val:`${shipSpeed(i).toFixed(1)} AU/s · trip ${Math.round(TR[0])}–${Math.round(TR[1])}s`},
     c:{name:'Cargo',val:`${fmt(cargo(i))} ore/trip · − ${Math.round(CARGO_MASS*crewMod(i).mass*100)}% flight/pt`},
     v:{name:'Ore yield',val:`× ${y0.toFixed(2)} per load · vein every ${Math.round(veinEvery(i)/60)} min`}};
   // red marks the best upgrade: whichever trait adds the most income for one point
@@ -5072,7 +5072,7 @@ function viewSmelter(){
   /* every furnace card has the same fixed layout whatever its state, so picking an ore never moves the page: the rate
      (bars a minute) at the top right, the progress bar, then one status line, "State · detail", always one line:
        Off · pick an ore below to start smelting
-       Full speed · 100% busy
+       Full power · 100% busy
        Slowed · 63% busy, not enough Rustcore arriving
        Paused · Duskquartz held for research (139 K / 140 K)
        Paused · no Duskquartz arriving yet                                                                    */
@@ -5081,7 +5081,7 @@ function viewSmelter(){
       rate=`${fmt(u*60/BAR_IN)} bars/min`;
       if(e&&e.held){state='Paused';tone='ore';detail=`${on} held for research (${fmt(S.inv[sl.r]||0)} / ${fmt(researchReserve(sl.r))})`}
       else if(!e||busy<=0){state='Paused';tone='ore';detail=`no ${on} arriving yet`}
-      else if(busy>=95){state='Full speed';tone='good';detail='100% busy'}
+      else if(busy>=95){state='Full power';tone='good';detail='100% busy'}
       else{state='Slowed';tone='ore';detail=`${busy}% busy, not enough ${on} arriving`}}
     h+=`<div class="card fcard"><div class="head"><span class="fh"><h3>Furnace ${k+1}</h3><button class="tog${sl.r===null?' on':''}" data-act="slot" data-i="${k}" data-r="-1" type="button" aria-pressed="${sl.r===null}">Off</button></span><span class="num" style="font-size:12px;color:var(--muted)">${rate}</span></div>
       <div class="bar"><i data-smelt="${k}" style="width:${(sl.r===null?0:sl.p*100).toFixed(1)}%"></i></div>
@@ -5457,7 +5457,7 @@ function hud(){
   document.querySelector('[data-tab="smelter"]').hidden=!has('smelt');
   chipNav();
 }
-const EFFECT_NAMES={mine:'All mining',ship:'All ship speed',cargo:'All cargo',value:'All sale prices',smelt:'Smelting speed'};
+const EFFECT_NAMES={mine:'All mining',ship:'All ship velocity',cargo:'All cargo',value:'All sale prices',smelt:'Smelting rate'};
 function showResearch(id){const r=RESEARCH.find(x=>x.id===id);if(!r)return;
   $('mtitle').textContent=r.n;$('mdesc').textContent=r.d;
   let eff='';for(const k in EFFECT_NAMES){if(r[k]){eff+=`<div class="eff"><span>${EFFECT_NAMES[k]} from research</span><span>×${rmult(k).toFixed(2)}</span></div>`}}
@@ -5781,7 +5781,7 @@ const GUIDE=[
 <li><b>Number names:</b> tap the credit total to cycle through three styles. Named uses K, M, B, T, then Qa, Qi, Sx… Letters uses K, M, B, T, then aa, ab, ac… Full words shows the credit total as 1.2 Million. Below a quadrillion Named and Letters look the same, so a tap skips straight past the one that wouldn't change anything.</li>
 <li><b>Status icons:</b> under the credits, ▲ is Market Surge and ◈ is the probe, in the same order as their tabs. They're grey, ▲ turns orange when a surge is ready (teal while one runs), and ◈ turns teal while the probe is out. Tap one to open its tab; the ◈ also zooms to the probe while it's out.</li></ul>`],
 ['Planets and mining crews',`<p>Each planet can have up to 3 mining crews. Every crew adds room for 20 upgrade points, and all of a planet's points go into one pool.</p>
-<ul><li><b>Crew Chief</b> (crew 1): claims the planet and decides where every point goes: Mine rate, Speed and Cargo (+ 0.25 × each). Ore yield joins the list once the planet has learned Prospecting.</li>
+<ul><li><b>Crew Chief</b> (crew 1): claims the planet and decides where every point goes: Mine rate, Velocity and Cargo (+ 0.25 × each). Ore yield joins the list once the planet has learned Prospecting.</li>
 <li><b>Buying points:</b> + buys a point on that trait. Each point bought costs a little more than the last. − takes a point back for free, so you can move it any time. Free points from mission rewards wait to be placed.</li>
 <li><b>Shift Crew</b> (crew 2): hired once the planet owns its first 20 points. It adds 20 more points and perk slots: one when hired, a second at 40 points, a third with Advanced shifts. Changing a perk takes a 5 minute refit; filling an empty slot is instant.</li>
 <li><b>Instructors</b> (crew 3): hired once the planet owns 40 points. They add 20 more points and run training programs, one at a time. Each costs credits, takes time and lasts for the rest of the galaxy:
@@ -5794,13 +5794,13 @@ const GUIDE=[
 <li><b>Candidates:</b> the Shift Crew and the Instructors are picked from three named crews, each with a quirk that fits its job, like cheaper points, faster refits or faster training.</li>
 <li><b>Crew stars</b> under a planet's name show its crews. A hired crew's star is <b style="color:var(--ore)">☆ outlined orange</b> while any of the 20 points it adds are still unbought or unplaced, and turns <b style="color:var(--ore)">★ solid</b> once they're all placed. Taking points back outlines it again. Grey outlines are crews not hired yet.</li></ul>
 <p><b>Tuning chart</b> (in the Specialists card on the Planet tab): the orange line is mining and the teal curve is what the ships can carry through the next cycle; red shading is ore piling up, teal is spare room.</p>
-<ul><li><b>Drag the handles:</b> drag the orange handle on the left to set mining, or the teal handle on the right to set average hauling. The game picks the cheapest points to get there: free points first, and the best mix of Speed and Cargo.</li>
+<ul><li><b>Drag the handles:</b> drag the orange handle on the left to set mining, or the teal handle on the right to set average hauling. The game picks the cheapest points to get there: free points first, and the best mix of Velocity and Cargo.</li>
 <li><b>Preview:</b> a drag shows its result as dashed lines, with the changes, the cost and the income change. While it's showing, + and − fine-tune it. <b>Apply</b> buys it all, <b>Cancel</b> drops it.</li>
 <li><b>Balance:</b> opens a window for the planet. First it places free points and moves points between traits so the ships keep up all cycle, with the most income it can find, at no cost. Then it offers to buy upgrades on top: a slider sets how much to spend, and the window shows the cost, the points it would buy, income now and after, whether the ships keep up and how long the purchase takes to pay for itself. Slide to the left end for the free rearrangement only.</li></ul>`],
 ['Hauling and bottlenecks',`<p>A planet earns the lower of what it mines and what its ships can carry. The tuning chart in the Specialists card shows which one is holding it back.</p>
-<ul><li>A trip is the flight there and back plus 28 seconds of docking, orbiting, landing and loading. Speed only shortens the flight.</li>
-<li>Each Cargo point makes the ship a little heavier (− 6% flight speed), so mixing Speed and Cargo works best.</li>
-<li>A planet's name turns <b style="color:var(--bad)">red</b> on the map and in the planet list when its ships can't keep up somewhere in its orbit (ore would overflow, as the tuning chart shows), and <b style="color:var(--good)">green</b> when it has hauling to spare: a Speed or Cargo point could move to Mine rate and the ships would still keep up all cycle. Move it yourself, or tap Balance.</li>
+<ul><li>A trip is the flight there and back plus 28 seconds of docking, orbiting, landing and loading. Velocity only shortens the flight.</li>
+<li>Each Cargo point makes the ship a little heavier (− 6% flight velocity), so mixing Velocity and Cargo works best.</li>
+<li>A planet's name turns <b style="color:var(--bad)">red</b> on the map and in the planet list when its ships can't keep up somewhere in its orbit (ore would overflow, as the tuning chart shows), and <b style="color:var(--good)">green</b> when it has hauling to spare: a Velocity or Cargo point could move to Mine rate and the ships would still keep up all cycle. Move it yourself, or tap Balance.</li>
 <li>When ships are behind, the best fix on the selected team gets a <b>Bottleneck</b> tag and a red button.</li>
 <li>If a team is maxed and still bottlenecked, its red button fades. Use another team, or move points with − 0.25.</li></ul>`],
 ['Orbits, silos and overflow',`<p>Planets really orbit the sun. Inner ones go round faster, so each planet's distance from the station grows and shrinks over a cycle.</p>
@@ -5819,8 +5819,8 @@ const GUIDE=[
 <li><b>Market Surge:</b> for 10 minutes everything you sell earns double, up to a bonus worth 10 minutes of income. Call it from the Market Surge card at the top of the Market tab, which shows the time and bonus left while it runs. If the bonus runs out, the surge ends early. It then recharges for 60 minutes.</li></ul>`],
 ['Smelter',`<ul>
 <li>Unlocked by the Smelter research. Each furnace turns 8 ore into 1 bar worth 12 ore.</li>
-<li>Scroll the ore row to pick what each furnace smelts. It opens centred on the ore being smelted. The Off button next to the furnace's name stops it. More research adds furnaces and speeds up smelting.</li>
-<li>Furnaces work steadily: each draws ore as it arrives, up to its top speed, and shows bars a minute and how busy it is. Each furnace's status line reads <b>Full speed</b>, <b>Slowed</b> (not enough of its ore arriving, so it runs slower), <b>Paused</b> (its ore is held for research, or none is arriving yet) or <b>Off</b>. Auto-sell keeps about 90 seconds of the furnaces' ore on top of what research needs, to cover the gaps between deliveries.</li>
+<li>Scroll the ore row to pick what each furnace smelts. It opens centred on the ore being smelted. The Off button next to the furnace's name stops it. More research adds furnaces and makes smelting faster.</li>
+<li>Furnaces work steadily: each draws ore as it arrives, up to its top rate, and shows bars a minute and how busy it is. Each furnace's status line reads <b>Full power</b>, <b>Slowed</b> (not enough of its ore arriving, so it runs slower), <b>Paused</b> (its ore is held for research, or none is arriving yet) or <b>Off</b>. Auto-sell keeps about 90 seconds of the furnaces' ore on top of what research needs, to cover the gaps between deliveries.</li>
 <li>Furnaces leave alone the ore open research is waiting for, so a project's ore count holds steady (the furnace shows <b>Paused · … held for research</b>), unless research is also waiting for bars of that ore: those bars come first.</li>
 <li><b>Balance</b> (next to the Smelter title) proposes the best ore for each furnace from how fast each ore arrives and what its bars add. With <b>Research bars first</b> ticked, ores that research needs bars of get a furnace first, and it shows when those bars will be ready. It shows smelting income now and after; Apply switches the furnaces.</li>
 <li>Research needs lists the bars that open research still needs.</li></ul>`],
@@ -5839,18 +5839,18 @@ const GUIDE=[
 <li>Levels 1 and 2 boost that planet. Level 3 adds a perk for the whole galaxy.</li>
 <li>Each type of world builds its settlement its own way. See Colonies up close.</li>
 <li>Settlements reset when you warp.</li></ul>`],
-['Colonies up close',`<p>Zoom in on a claimed planet to watch its colony at work. Miners drive out to ore deposits far across the planet and tip their loads at the unloading station in the middle of the mine works pad. A covered conveyor carries the ore to the garage on the mine head, and another takes it on to the landing pad. On terrestrial worlds the walkers keep to land, and on ocean worlds the skimmers keep to water. Each part of the base grows with a different part of your progress:</p>
+['Colonies up close',`<p>Zoom in on a claimed planet to watch its colony at work. Miners drive out to ore deposits far across the planet and tip their loads at the unloading station in the middle of the mine works pad. A covered conveyor carries the ore to the garage on the mine head, and another takes it on to the landing pad. On terran worlds the walkers keep to land, and on ocean worlds the skimmers keep to water. Each part of the base grows with a different part of your progress:</p>
 <ul><li><b>Mine and miners:</b> the mine and its works pad grow with each crew you hire (a weighbridge and a second floodlight with the second crew, a control booth with the third), and every crew brings 2 miners and 2 more deposits, each pair further out than the last.</li>
-<li><b>Landing pad:</b> grows when the planet has 12 Speed + Cargo points, and again at 24.</li>
+<li><b>Landing pad:</b> grows when the planet has 12 Velocity + Cargo points, and again at 24.</li>
 <li><b>Refinery:</b> built when you hire the Shift Crew, extended when the planet learns Prospecting, and finished when all five training programs are done. It's for show and doesn't change income.</li>
 <li><b>Settlement:</b> grows with each level: Outpost, Town, City.</li></ul>
 <p>Each type of world has its own buildings, miners and landscape:</p>
 <ul><li><b>Rocky worlds:</b> laser rovers working crystal deposits beside a terraced open pit and headframe; a concrete pad with a control tower; a crusher, ball mill and smelt stack. Settlement domes are banked with rubble and joined by covered tubes.</li>
 <li><b>Molten worlds:</b> heat-shielded crawlers ladling from lava pools along a glowing magma channel; a stilted pad with a blast deflector; a foundry pouring glowing ingots. Charcoal domes stand on stilts above the hot ground. Out on the plains, volcanoes erupt and lava pools bubble.</li>
 <li><b>Icy worlds:</b> snowcats cutting ice with spinning cutters beside steaming melt-drill derricks; an insulated pad with de-icing vents; heated tanks and filter beds. Domes are frosted ice-glass, ringed by crystal clusters.</li>
-<li><b>Gas giants:</b> there's no ground, so everything floats above the clouds. Scoop drones dive into cloud vortexes under a floating harvester ring; the pad is a hovering deck with a tractor beam, and the refinery hangs below its platform. Every settlement building hovers on its own platform, joined by light-bridges, and a City adds airships moored above it. The whole base skims the cloud tops on its thrusters until every part of it is fully built (three crews, 24 Speed and Cargo points, all five programs and a City); then it all rises higher on pulsing lift rings.</li>
+<li><b>Gas giants:</b> there's no ground, so everything floats above the clouds. Scoop drones dive into cloud vortexes under a floating harvester ring; the pad is a hovering deck with a tractor beam, and the refinery hangs below its platform. Every settlement building hovers on its own platform, joined by light-bridges, and a City adds airships moored above it. The whole base skims the cloud tops on its thrusters until every part of it is fully built (three crews, 24 Velocity and Cargo points, all five programs and a City); then it all rises higher on pulsing lift rings.</li>
 <li><b>Ocean worlds:</b> the base floats on the sea. Submersibles dive at bobbing buoys around a dredge rig; the pad is a helideck with a breakwater and lighthouse; brine pans and a desalination tower refine the ore. Settlement buildings sit on pontoons, joined by floating walkways that ride the swell.</li>
-<li><b>Terrestrial worlds:</b> six-legged walkers harvest mossy mounds by a glowing bioleach pond; the pad is a timber deck with a treetop tower; green bioleaching vats refine the ore. Domes have living moss roofs and are joined by raised timber walks; a City adds a canopy walkway ring at treetop height.</li></ul>
+<li><b>Terran worlds:</b> six-legged walkers harvest mossy mounds by a glowing bioleach pond; the pad is a timber deck with a treetop tower; green bioleaching vats refine the ore. Domes have living moss roofs and are joined by raised timber walks; a City adds a canopy walkway ring at treetop height.</li></ul>
 <p>Each world's surface features, like volcanoes, cloud storms, frozen lakes, waves and forests, only show up close, and they never cover the base.</p>`],
 ['Events',`<ul>
 <li>The Events tab has two sections, <b>Daily events</b> and <b>Weekly events</b>. Next to each label, an orange countdown shows when the next ones arrive.</li>
@@ -5879,13 +5879,13 @@ const GUIDE=[
 <li>There are no ads, purchases or premium currency. Everything is earned by playing.</li></ul>`],
 ['Tips and tricks',`<ul>
 <li><b>Follow the red button.</b> On the Planet tab the red upgrade button is the one that adds the most income for its price.</li>
-<li><b>Ships first, then mining.</b> If a planet's ships can't keep up, more Mining adds little until hauling catches up. Fix Speed or Cargo first.</li>
+<li><b>Ships first, then mining.</b> If a planet's ships can't keep up, more Mining adds little until hauling catches up. Fix Velocity or Cargo first.</li>
 <li><b>Train for the planet's problem.</b> Short of silo? Logistics. Ships keeping up? Deep drilling or Prospecting. Want more perks? Advanced shifts.</li>
 <li><b>Read the quirks.</b> A cheaper-points or 2-free-points crew is often worth more than a small boost. Candidates don't change, so take your time.</li>
-<li><b>Near planets want Cargo, far planets want Speed.</b> Every trip has 28 seconds of docking and landing that nothing shortens. Short trips gain more from bigger holds, and long flights gain more from faster ships.</li>
+<li><b>Near planets want Cargo, far planets want Velocity.</b> Every trip has 28 seconds of docking and landing that nothing shortens. Short trips gain more from bigger holds, and long flights gain more from faster ships.</li>
 <li><b>Re-balance for free.</b> Tap Balance on the tuning chart after parking the station or finishing a training program. Its free rearrangement keeps the ships ahead of mining at no cost, and its slider shows what spending more would earn and how fast it pays back.</li>
 <li><b>Drag, don't guess.</b> Drag the teal handle on the right until the curve sits just above the mining line and the status turns green, then Apply.</li>
-<li><b>Fill every perk slot.</b> An empty slot costs nothing to fill. Swap perks when the planet's needs change: + 12% ship speed for a far planet, + 2 silo loads for a long cycle.</li>
+<li><b>Fill every perk slot.</b> An empty slot costs nothing to fill. Swap perks when the planet's needs change: + 12% ship velocity for a far planet, + 2 silo loads for a long cycle.</li>
 <li><b>Fix overflow early.</b> Overflow sells at only 25%. If a planet says the silo is too small, research Ore Silos and later Deep Silos.</li>
 <li><b>Call Market Surge whenever it's ready</b>, while you're going to play for the next 10 minutes. The bonus is capped at 10 minutes of income, so stockpiling first gains nothing. Just keep selling as normal.</li>
 <li><b>Extra mining isn't wasted.</b> Probe hauls are based on mine rate, not on hauling, so mining beyond what ships can carry still pays off through probes.</li>
