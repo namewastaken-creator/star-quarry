@@ -2,6 +2,7 @@
 """Star Quarry version bump: Major.Minor.Patch.Build. Run before every publish, then run build.py.
 
   python3 -I src/bump.py "what changed"              patch +1 (fixes and tweaks, including visual polish)
+  python3 -I src/bump.py "one change" --and "another"  one version that lists several changes (any number of --and)
   python3 -I src/bump.py --minor "what changed"      minor +1, patch 0 (a new feature or block of content)
   python3 -I src/bump.py --major "what changed"      major +1, minor and patch 0 (an overhaul, or leaving beta)
   python3 -I src/bump.py --important "fix"           also marks the change important: open games ask players to
@@ -10,6 +11,9 @@
 
 The build number (APP_VER.n) rises by one on every bump, whatever else changes, and is what update checks compare.
 Major 0 is shown as "Beta"; from major 1 the name is just the number.
+Each change-log entry is {d: date, v: version, t: what changed, imp: important}. A version with several changes also
+has l, the list of them, and t is those sentences joined with spaces, so anything that reads only t (older games
+reading version.json, preflight) still gets the whole note. The What's changed window lists l under the version.
 The change log's source of truth is src/changelog.json (newest first). This script writes it into src/game.html as
 CHANGES (shown from the Warp tab); build.py writes the last 40 entries into version.json.
 Paths are relative to the repository root, so it runs from any clone and any folder.
@@ -24,8 +28,18 @@ LOG = os.path.join(HERE, 'changelog.json')
 
 def main():
     args = sys.argv[1:]
-    flags = {a for a in args if a.startswith('--')}
-    note = ' '.join(a for a in args if not a.startswith('--')).strip()
+    flags = {a for a in args if a.startswith('--')} - {'--and'}
+    # the change text, split into separate changes at each --and (unquoted words within one change still join)
+    notes, cur_words = [], []
+    for a in args + ['--and']:
+        if a == '--and':
+            notes.append(' '.join(cur_words).strip()); cur_words = []
+        elif not a.startswith('--'):
+            cur_words.append(a)
+    if len(notes) > 1 and not all(notes):
+        sys.exit('bump: each --and needs a change on both sides, e.g.  "one change" --and "another"')
+    notes = [x for x in notes if x]
+    note = ' '.join(notes)
     unknown = flags - {'--minor', '--major', '--important', '--sync'}
     if unknown:
         sys.exit(f'bump: unknown option {", ".join(sorted(unknown))}')
@@ -55,7 +69,7 @@ def main():
         name = f'Beta {ma}.{mi}.{pa}.{n}' if ma == 0 else f'{ma}.{mi}.{pa}.{n}'
         s = s.replace(m.group(0), f"const APP_VER={{name:'{name}',n:{n}}};")
         today = datetime.datetime.now(ZoneInfo('America/Chicago')).date().isoformat()
-        e = {'d': today, 'v': name, 't': note}
+        e = {'d': today, 'v': name, 't': note, **({'l': notes} if len(notes) > 1 else {})}
         if '--important' in flags:
             e['imp'] = True
         log.insert(0, e)

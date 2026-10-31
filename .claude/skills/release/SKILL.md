@@ -29,15 +29,17 @@ into the next one.
   `git diff origin/main..dev -- src/game.html`.
 - If nothing players would notice has changed since `main`, say so: there's nothing to publish. Tooling-only commits
   go out with the next real release.
-- Draft **one short, player-facing change-log sentence**: what the player will notice, not how the code changed (see
-  the recent entries in `src/changelog.json` for the voice). Pick the bump size from CLAUDE.md:
+- Draft **one short, player-facing change-log sentence per change players will notice**: what the player will
+  notice, not how the code changed (see the recent entries in `src/changelog.json` for the voice). One change gets
+  one sentence; when the release bundles several, write one sentence for each (usually no more than four; fold small
+  related ones together) and they're listed under the version in What's changed. Pick the bump size from CLAUDE.md:
   no flag = patch (fixes, tweaks, visual polish), `--minor` = a major new feature or block of content,
   `--major` = an overhaul or leaving beta. Suggest `--important` only for a fix that matters to players.
-- **STOP: show the user the sentence and the bump size, and wait for them to approve or change it.**
+- **STOP: show the user the sentence(s) and the bump size, and wait for them to approve or change them.**
 
 ## 3. Bump and build
 
-- `python -I src/bump.py "<approved sentence>" [--minor|--major] [--important]`
+- `python -I src/bump.py "<approved sentence>" [--and "<next sentence>" ...] [--minor|--major] [--important]`
 - `python -I src/build.py`
 - If the build prints a **guide check WARNING**, gameplay changed but the user guide didn't. Read `GUIDE` in
   `src/game.html`. If a section is affected, update it (in the same plain style) and build again. If nothing in the

@@ -384,6 +384,9 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
 .clist ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:11px}
 .clist li{font:500 13px/1.4 var(--f-body);color:var(--ink)}
 .clist li b{font:600 11px var(--f-data);color:var(--ship);margin-right:6px;white-space:nowrap}
+.clist li ul{gap:5px;margin-top:5px;padding-left:13px}
+.clist li li{position:relative}
+.clist li li::before{content:'';position:absolute;left:-10px;top:.6em;width:4px;height:4px;border-radius:50%;background:var(--muted)}
 #udesc .cnote{display:block;margin-top:6px;color:var(--muted);font-size:13px}
 #modal .eff{display:flex;justify-content:space-between;gap:10px;font:500 13px var(--f-body);color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
 #modal .eff span:last-child{color:var(--ink);font-family:var(--f-data)}
@@ -5764,10 +5767,11 @@ function updShow(manual){const v=UPD.remote;if(!v)return;UPD.asked=true;
   else{$('unote').textContent='Your progress is saved first, then the game reloads with the new version. It only takes a moment.';$('uyes').hidden=false;$('uno').textContent='Not now'}
   $('upd').hidden=false;$('uyes').hidden?$('uno').focus():$('uyes').focus()}
 function updClose(){$('upd').hidden=true}
-/* change log: grouped by day, newest first; version shown where there was one */
+/* change log: grouped by day, newest first; version shown where there was one; a version with several changes lists
+   them (l) under it, otherwise its one sentence (t) follows the version */
 function showChanges(){const fmtD=d=>new Date(d+'T12:00:00').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric',year:'numeric'});
   const days=[];for(const c of CHANGES){let g=days[days.length-1];if(!g||g.d!==c.d){g={d:c.d,items:[]};days.push(g)}g.items.push(c)}
-  $('clist').innerHTML=days.map(g=>`<section><h4>${fmtD(g.d)}</h4><ul>${g.items.map(c=>`<li>${c.v?`<b>${c.v}</b>`:''}${esc(c.t)}</li>`).join('')}</ul></section>`).join('');
+  $('clist').innerHTML=days.map(g=>`<section><h4>${fmtD(g.d)}</h4><ul>${g.items.map(c=>`<li>${c.v?`<b>${c.v}</b>`:''}${c.l?`<ul>${c.l.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:esc(c.t)}</li>`).join('')}</ul></section>`).join('');
   $('chg').hidden=false;$('clist').scrollTop=0;$('cclose').focus()}
 $('cclose').addEventListener('click',()=>{$('chg').hidden=true});
 // the user guide (Warp tab → User guide): [title, html]; every section starts collapsed, Tips and tricks last

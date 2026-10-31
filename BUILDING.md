@@ -36,7 +36,7 @@ repository root (the scripts work out their own paths, so any clone in any folde
 ## Publish routine
 
 1. **Edit** `src/game.html`.
-2. **Bump** the version and log the change in one short, player-facing sentence:
+2. **Bump** the version and log the change in one short, player-facing sentence (or one per change, see below):
    ```
    python3 -I src/bump.py "Lava lakes are larger, with fewer cracks."
    ```
@@ -45,6 +45,9 @@ repository root (the scripts work out their own paths, so any clone in any folde
    - `--major`: an overhaul, or leaving beta
    - `--important`: open games ask players to update (only for fixes that matter)
    - `--sync`: no new version; just rewrite the game's `CHANGES` from `src/changelog.json`
+   - several changes in one version: one sentence each, joined with `--and`, for example
+     `python3 -I src/bump.py "Lava lakes are larger." --and "Ocean lighthouses moved east."`. What's changed
+     lists them under the version; older games and `version.json` get them as one paragraph.
 
    The build number rises by one on every bump; update checks compare only that, so it never goes backwards.
 3. **Build:**

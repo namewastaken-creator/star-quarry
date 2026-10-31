@@ -26,13 +26,13 @@ Major.Minor.Patch.Build, shown as "Beta 0.x.y.n" while major is 0.
 - **Build n:** +1 on every publish. Update checks compare only this, so it never goes backwards.
 - `--important` asks players to update; use it only for fixes that matter.
 
-Change-log entries are short, player-facing sentences: say what the player will notice, not how the code changed.
+Change-log entries are short, player-facing sentences: say what the player will notice, not how the code changed. A release that bundles several changes gets one sentence each (`--and`); What's changed lists them under the version.
 
 ## Commands
 
 Run from the repository root.
 
-- **Bump:** `python3 -I src/bump.py "what changed"` (`--minor`, `--major`, `--important`; `--sync` rewrites `CHANGES` from `src/changelog.json` without a new version)
+- **Bump:** `python3 -I src/bump.py "what changed"` (several changes: `"one" --and "another"`; `--minor`, `--major`, `--important`; `--sync` rewrites `CHANGES` from `src/changelog.json` without a new version)
 - **Build:** `python3 -I src/build.py` (runs `src/guidecheck.py`; if it warns that gameplay changed but the user guide didn't, update `GUIDE` in `src/game.html`, or rebuild with `--guide-ok` when the guide isn't affected)
 - **Release gate:** `python3 -I tools/preflight.py` (run on `dev` after the release is committed and pushed; checks the branch, the version bump, a reproducible build and all the checks, and ends with `READY TO PUBLISH` or `NOT READY` plus a fix)
 - **Check:** `python3 -I tools/check.py` (the headless browser tests in `tools/tests/`, including `pwsw`, which checks the offline copy can only ever be replaced by the real game, and `pwframe`, the late-game frame-time test that loads `tools/tests/lategame.json` (remake it with `tools/tests/mklategame.py`), plus the overlap check `tools/occcheck.py`; all must pass; needs `pip install playwright pillow` and `python3 -m playwright install chromium`). Tests run side by side on free ports (`-j N` sets how many; `pwframe` always runs last and alone), so two sessions can run checks at once. While working, name just the relevant tests, for example `python3 -I tools/check.py pwtab occcheck`; the full run (about 5–6 minutes) is for before a release, and `preflight.py` runs it anyway. Keep a heavy Star Quarry tab hidden during a run: it competes with `pwframe`.
