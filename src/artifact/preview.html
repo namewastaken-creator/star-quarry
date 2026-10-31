@@ -26,6 +26,7 @@ body{margin:0;background:var(--bg);color:var(--ink);overflow:hidden}
   padding-block:8px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .name{font:700 15px var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:var(--ore);margin-right:4px}
 .group{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.group[hidden]{display:none}
 .lbl{font:600 10px var(--f-display);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
 .chip{font:600 12px var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:none;border:1px solid var(--line);
   border-radius:5px;padding:5px 9px;cursor:pointer;display:flex;gap:6px;align-items:baseline}
@@ -64,6 +65,11 @@ body{margin:0;background:var(--bg);color:var(--ink);overflow:hidden}
       <button class="chip" id="d-ipp" data-w="1032" data-h="1376" type="button">iPad Pro 13″<small>1032×1376</small></button>
       <button class="chip" id="d-full" data-w="0" data-h="0" type="button">Full window</button>
     </div>
+    <div class="group" id="builds" hidden>
+      <span class="lbl">Build</span>
+      <button class="chip" id="b-local" type="button" aria-pressed="false">Local</button>
+      <button class="chip" id="b-live" type="button" aria-pressed="false">Live</button>
+    </div>
     <div class="group">
       <button class="chip" id="rot" type="button" aria-pressed="false">Rotate</button>
       <button class="chip" id="reload" type="button">Reload game</button>
@@ -79,9 +85,20 @@ body{margin:0;background:var(--bg);color:var(--ink);overflow:hidden}
 // remembered per viewer: which screen and whether it's turned sideways
 const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 const stage=document.getElementById('stage'),phone=document.getElementById('phone'),frame=document.getElementById('game');
-// ?src= picks the game page, for the local server: /src/artifact/preview.html?src=/index.html (the artifact loads game.html)
-const GAME=(()=>{try{const s=new URLSearchParams(location.search).get('src');return s&&s.startsWith('/')&&!s.startsWith('//')?s:'game.html'}catch(e){return'game.html'}})();
+// ?src= picks the game page, for the local server: /src/artifact/preview.html?src=/index.html (the artifact loads game.html).
+// ?src=live loads the published game instead; only that one outside address is allowed.
+const LIVE='https://namewastaken-creator.github.io/star-quarry/';
+const SRC=(()=>{try{return new URLSearchParams(location.search).get('src')}catch(e){return null}})();
+const LOCAL=SRC&&SRC.startsWith('/')&&!SRC.startsWith('//')?SRC:'/index.html';
+let GAME=SRC==='live'?LIVE:SRC===LOCAL?LOCAL:'game.html';
 if(GAME!=='game.html')frame.src=GAME;
+// on the local server, Local / Live switch between your build and the published one (the artifact has no switch)
+const builds=document.getElementById('builds'),bLocal=document.getElementById('b-local'),bLive=document.getElementById('b-live');
+function markBuild(){bLocal.setAttribute('aria-pressed',String(GAME===LOCAL));bLive.setAttribute('aria-pressed',String(GAME===LIVE))}
+function useBuild(g){if(g===GAME)return;GAME=g;frame.src=g;markBuild();
+  try{const u=new URL(location.href);u.searchParams.set('src',g===LIVE?'live':g);history.replaceState(null,'',u)}catch(e){}}
+if(GAME!=='game.html'){builds.hidden=false;markBuild();
+  bLocal.addEventListener('click',()=>useBuild(LOCAL));bLive.addEventListener('click',()=>useBuild(LIVE))}
 const devs=[...document.querySelectorAll('#devs .chip')],rot=document.getElementById('rot'),note=document.getElementById('scale');
 let dev=store.get('sq_prev_dev')||'d-ip',turned=store.get('sq_prev_rot')==='1';
 function layout(){

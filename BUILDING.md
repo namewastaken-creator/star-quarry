@@ -66,7 +66,8 @@ repository root (the scripts work out their own paths, so any clone in any folde
    must pass. It takes several minutes (software WebGL). Also look at the change yourself: serve the root
    (`python3 -m http.server 8000`, then http://localhost:8000) and check at phone width (about 390 px).
    http://localhost:8000/src/artifact/preview.html?src=/index.html shows the game in phone- and iPad-sized frames
-   with buttons for each screen size and Rotate.
+   with buttons for each screen size and Rotate. Build: Local / Live (or `?src=live`) switches to the published
+   game, so you can compare the two side by side; the live game keeps its own save there.
 5. **Commit and push to `dev`.** Commit `src/`, the build outputs at the root, `android/app/build.gradle.kts` and
    `docs/design-notes.md` if it changed.
 6. **Gate:**
