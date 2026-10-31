@@ -1,8 +1,8 @@
 """Bad saves: a save the game can't use must never be lost, and the game must still start.
 
 For each case the save (and sometimes an older backup) goes into localStorage before the game loads, the game runs
-past its first autosave and the page is left (which saves again). Then every case must still have the original save,
-byte for byte, somewhere in storage (the save itself or a backup); an older backup must survive too; the game must
+past its first autosave (waited for, not timed, so a busy machine can't fail it) and the page is left (which saves
+again). Then every case must still have the original save, byte for byte, somewhere in storage (the save itself or a backup); an older backup must survive too; the game must
 be running; and the player must be told. Cases: unreadable JSON, readable but the wrong shape (no planets, planets
 not a list, a missing planet, research not an object), a save from a newer format, a bad save while an older backup
 is already kept, a save that passes those checks but fails while the game starts (it must reload once and start a
@@ -33,18 +33,32 @@ CASES=[  # name, save, older backup already kept, backups can't be written
   ('bad save, storage full for the backup','{not json either',None,True),
   ('good late-game save',LATE,None,False)]
 errs=[]
+RUN="typeof S==='object'&&!!S&&Array.isArray(S.planets)&&S.planets.length>0"
+def until(pg,js,secs):
+  # poll rather than wait_for_function: one case reloads the page by itself, which would break a single wait
+  end=time.time()+secs
+  while time.time()<end:
+    try:
+      if pg.evaluate(js):return True
+    except Exception:pass
+    pg.wait_for_timeout(250)
+  return False
 with sync_playwright() as p:
   b=p.chromium.launch(args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
   u=f'http://localhost:{sys.argv[1]}/'
   for name,raw,old,full in CASES:
     ctx=b.new_context(viewport={'width':390,'height':844},service_workers='block');pg=ctx.new_page();E=lambda js:pg.evaluate(js)
+    ctx.set_default_navigation_timeout(120000)  # side by side with other tests, the page can load slowly
     perr=[];pg.on('pageerror',lambda e:perr.append(str(e).splitlines()[0]))
     if full:  # anything but the save itself throws, as when storage is nearly full
       ctx.add_init_script("{const o=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k!=='starquarry_save_v1'&&k.startsWith('starquarry_save_v1'))throw new DOMException('full','QuotaExceededError');return o.call(this,k,v)}}")
     pg.goto(u+'manifest.webmanifest')
     E(f"localStorage.clear();localStorage.setItem('starquarry_save_v1',{json.dumps(raw)});"+(f"localStorage.setItem('starquarry_save_v1_bak',{json.dumps(old)});" if old else '')+"0")
-    pg.goto(u+'index.html');pg.wait_for_timeout(7000)
-    running=E("typeof S==='object'&&!!S&&Array.isArray(S.planets)&&S.planets.length>0")
+    t0=int(time.time()*1000);pg.goto(u+'index.html')
+    # run past the first autosave after loading (every 5 s of play), however slow the machine; a save the game
+    # refuses to touch blocks saving, so that wait ends too
+    until(pg,RUN,90);until(pg,f"(typeof SAVE_BLOCK!=='undefined'&&SAVE_BLOCK)||({RUN}&&S.last>={t0})",60)
+    running=until(pg,RUN,30)  # the case that fails while starting may still be reloading
     note=E("typeof LOAD_NOTE==='string'?LOAD_NOTE:''") if running else ''
     pg.goto(u+'manifest.webmanifest');pg.wait_for_timeout(300)
     store=E("Object.fromEntries(Object.keys(localStorage).map(k=>[k,localStorage.getItem(k)]))")
