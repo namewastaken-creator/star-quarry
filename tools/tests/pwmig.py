@@ -34,6 +34,11 @@ with sync_playwright() as p:
   got,stored,perr=run(None,"{mig:S.mig,n:MIGRATIONS.length,base:newRun()}")
   N=got['n'];BASE=got['base'];del BASE['mig']
   BASE['planets'][0].update(load=0,t=0)  # Cinder's first hauler starts empty, so no ore is delivered while a case runs
+  # the first probe is due 60 s after BASE was made, and later cases run after that: keep it away so it brings no ore
+  BASE['probe']['nextAt']=4102444800000
+  # the furnace cases use Rustcore (ore 1): Cinder mines only Emberite (ore 0), which its hauler can still deliver
+  # during the wait, so the Rustcore the game holds is exactly what the migration returned
+  R=1
   print(f'new game: mig {got["mig"]} of {N}')
   if got['mig']!=N:errs.append(f'new game: mig {got["mig"]}, expected {N}')
   if perr:errs.append(f'new game: errors {perr}')
@@ -42,10 +47,10 @@ with sync_playwright() as p:
     s['econ']=1;s['planets'][0]['teams']=[];s['planets'][0]['mn']={'n':5,'t':{'m':2,'s':1,'c':0}};s['planets'][0]['m']=4
     s['planets'][1]['u']=True;s['planets'][1]['mn']={'n':3,'t':{'m':1}}
   def dust(s):s['dm']=50;s['dust1']=True
-  def furnace(s):s['slots'][0]={'r':0,'p':.25,'a':True};s['inv']={}
+  def furnace(s):s['slots'][0]={'r':R,'p':.25,'a':True};s['inv']={}
   def handling(s):pl=s['planets'][0];pl['al']={'d':3,'m':1};pl['done']={'dock':1};pl['perks']=[{'id':'hand2'}]
   def all_done(s):dust(s);s['mig']=N
-  def part_done(s):dust(s);s['slots'][0]={'r':0,'p':0,'a':True};s['inv']={};s['mig']=2
+  def part_done(s):dust(s);s['slots'][0]={'r':R,'p':0,'a':True};s['inv']={};s['mig']=2
   def newer(s):s['mig']=N+4
   P0="S.planets[0]"
   CASES=[  # name, save, what to read, check(got) -> problem or ''
@@ -55,13 +60,13 @@ with sync_playwright() as p:
        and not g['mn0'] and not g['m0'] and g['pts1']==3 and g['t1']==1 else f'not converted: {g}'),
     ('10x star dust',old(dust),"{dm:S.dm,flag:'dust1' in S}",
      lambda g:'' if g=={'dm':5,'flag':False} else f'dust not undone: {g}'),
-    ('furnace mid-bar from before the smelting flow',old(furnace),"{ore:S.inv[0]||0,a:S.slots[0].a,p:S.slots[0].p}",
+    ('furnace mid-bar from before the smelting flow',old(furnace),f"{{ore:S.inv[{R}]||0,a:S.slots[0].a,p:S.slots[0].p}}",
      lambda g:'' if g['ore']==6 and g['a'] is False and g['p']==.25 else f'ore not returned: {g}'),
     ('Handling points and perk',old(handling),f"{{d:'d' in {P0}.al,dock:'dock' in {P0}.done,perk:{P0}.perks[0],swap:!!{P0}.swapFree}}",
      lambda g:'' if g=={'d':False,'dock':False,'perk':None,'swap':True} else f'Handling not removed: {g}'),
     ('every step done already',old(all_done),"{dm:S.dm,flag:'dust1' in S}",
      lambda g:'' if g=={'dm':50,'flag':True} else f'a step ran again: {g}'),
-    ('two steps done already',old(part_done),"{dm:S.dm,ore:S.inv[0]||0}",
+    ('two steps done already',old(part_done),f"{{dm:S.dm,ore:S.inv[{R}]||0}}",
      lambda g:'' if g=={'dm':50,'ore':8} else f'wrong steps ran: {g}'),
     ('a save from a newer build',old(newer),"{}",lambda g:''),
     ('late-game save with no S.mig',LATE,"{pts:S.planets.map(p=>p.pts),teams:S.planets.map(p=>p.teams.length),dm:S.dm}",
