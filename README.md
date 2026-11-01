@@ -10,4 +10,4 @@ On your phone, open the link and add it to your home screen (Chrome: ⋮ > Add t
 
 This repository holds only the published game. What's changed in each version is in `CHANGELOG.md`.
 
-© 2026 namewastaken-creator. All rights reserved; see `LICENSE`.
+© 2026 Fair Tap Studios. All rights reserved; see `LICENSE`.
