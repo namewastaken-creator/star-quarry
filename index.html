@@ -291,6 +291,8 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
 .cand b{font:700 13px var(--f-body);color:var(--ink)}
 .cand span{font:500 12px/1.35 var(--f-body);color:var(--ore)}
 .cand .btn{flex:0 0 92px}
+.setpop{margin:4px 0;font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:8px}
+.setpop+.bar{margin-bottom:8px}
 .rb{display:inline-block;margin-left:6px;font:600 9px var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--ship);border:1px solid var(--ship);border-radius:3px;padding:1px 4px;vertical-align:2px}
 .crewl{display:flex;flex-direction:column;gap:2px;font:500 12px/1.35 var(--f-body);color:var(--muted)}
 .crewl span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -339,11 +341,12 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
 /* a zoomable item's chip (planet list, Station and Probe tabs) with the level dashes centred under it; the wrapper isn't
    positioned, so the list's scroll glide still measures the chip itself */
 .chipz{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:7px;padding-bottom:6px}
-/* the Station and Probe tabs' chip takes the tab's status colour: grey, orange when there's something to do (research
-   ready), teal while the probe is out */
-.nm-mut{color:var(--muted)!important}
+/* the Station and Probe tabs' chip takes the tab's status colour: orange when there's something to do (research ready),
+   teal while the probe is out, otherwise the selected chip's white */
 .nm-out{color:var(--ship)!important}
 .chip:disabled{opacity:.55;cursor:default}
+/* the probe's chip is disabled while it's home (nothing to zoom to), but its name stays white; the dimmed dashes show it */
+.chipz .chip:disabled{opacity:1}
 .chip:disabled+.zd{opacity:.4}
 /* a heading only screen readers find (the Planet, Station and Probe tabs' name, which shows on screen as the chip) */
 .sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
@@ -671,11 +674,11 @@ const synodic=(i,G=econG())=>{const w=Math.abs(PLANETS[i].speed-G.W);return w<1e
    Each planet's base output is scaled to its claim price so every new planet is worth claiming. */
 // game version, Major.Minor.Patch.Build: bumped by tools/bump.py on every publish. Major stays 0 through beta,
 // minor is a new feature or block of content, patch a fix or tweak; n is the build number, used for update checks
-const APP_VER={name:'Beta 0.44.2.203',n:203};
+const APP_VER={name:'Beta 0.45.0.204',n:204};
 // update checks read version.json straight from the GitHub repository
 // change log, newest first: d = date, v = version (build 0 = before build numbers), t = what changed,
 // imp = important. Written by tools/bump.py.
-const CHANGES=[{"d":"2026-11-04","v":"Beta 0.44.2.203","g":[["Planets and bases",["Bases fade in and out as you zoom instead of popping, and a newly claimed planet's base appears as soon as you hire its first miners."]],["Screens and controls",["Pinching zooms in towards your fingers anywhere on the map and locks on to a planet, the station, the probe or the sun as you pinch in over it; lifting a finger mid-pinch no longer jolts the view, and the Station and Probe tab buttons now line up with the planet list."]]]},{"d":"2026-11-03","v":"Beta 0.44.1.202","g":[["Screens and controls",["After a pinch, tapping the selected button (or double-tapping) glides to the nearest zoom level instead of jumping all the way out, picking another planet keeps your zoom, and the ◈ probe icon zooms in to the probe again."]],["Fixes",["The game runs smoother on phones and uses less battery: bases close up take about half the work to draw, the game draws less often while nothing is moving, and phones that can't keep up lower the resolution a little instead of stuttering."]]]},{"d":"2026-11-02","v":"Beta 0.44.0.201","g":[["Space and the station",["Moving between planets is a slower, smoother glide, pinching zooms right in to the closest view from anywhere, and the middle zoom levels run faster."]],["Screens and controls",["The selected chip at the top of the Planet, Station and Probe tabs is now the zoom control: tap it again to step closer, with dashes under it showing the level. The Station and Probe chips sit where the planet list does, in their tab colours.","The Market keeps your ores and bars in one card, with Sell everything at the top.","Missions and events you don't finish now say Unsuccessful instead of Failed."]]]},{"d":"2026-11-02","v":"Beta 0.43.2.200","g":[["Screens and controls",["Tap any ore tag to see which planets mine it, and tap Credits for quick tips on earning more.","Mission and event goals now show their ore and credits as tags, and furnaces pick their ore from colour-coded tags, with the chosen one outlined in orange."]],["Fixes",["On short phones, a new tutorial step no longer shrinks to one line while the panel is opening."]]]},{"d":"2026-11-01","v":"Beta 0.43.1.199","g":[["Fixes",["Tutorial steps now start in full, and an orange arrow shrinks or expands them when the panel is open."]]]},{"d":"2026-11-01","v":"Beta 0.43.0.198","g":[["New",["A guided tour walks new players through their first three planets, pointing at what to tap, and ends with a badge in the Captain's Log once one planet is fully built. Existing players are asked once whether they'd like to take it."]],["Screens and controls",["One-time tips explain things the first time they happen, and Settings has new Tutorial and Tips switches."]]]},{"d":"2026-11-01","v":"Beta 0.42.2.197","g":[["New",["The installed web game now opens with the Fair Tap Studios logo before the title screen."]]]},{"d":"2026-11-01","v":"Beta 0.42.1.196","g":[["New",["The game opens on a STAR QUARRY title screen over the nebula, and the Android app starts with the Fair Tap Studios logo."]],["Screens and controls",["The Warp tab is tidier: the User Guide has its own section, About and the version share one card, your save and erasing it share another, and the warp explanation sits under the Warp button."]],["Fixes",["The User Guide's last section is no longer cut off, and Tips and tricks no longer has a stray outline."]]]},{"d":"2026-11-01","v":"Beta 0.42.0.195","g":[["New",["Each mining crew has its own World Works out in the mining field in place of the ore deposits, with machinery that comes alive at every tier."]],["Planets and bases",["Gas giant bases skim the cloud tops until fully built, then rise on glowing lift rings, and solar panels on every world are now round."]],["Ships, miners and probes",["Miners are more detailed, with textured skins, heavier tools and smoother driving, and ocean and gas giant miners splash as they dive."]],["Screens and controls",["Planets, the sun, the station and the probe have five zoom levels; double-tap to step through them, and the view glides smoothly between them.","The Warp tab is regrouped under Star dust, Captain's Log and Settings, Terrestrial worlds are now called Terran, and the Speed stat is now Velocity."]]]},{"d":"2026-10-30","v":"Beta 0.41.0.194","g":[["New",["Your save, on the Warp tab: export your game as a save code, move it to another device, and restore backups."]]]},{"d":"2026-10-30","v":"Beta 0.40.11.193","g":[["Planets and bases",["Terrestrial worlds: seas and lakes use the ocean worlds' water, the uplands are sandy desert with painted dunes, polar snow lies still, and small stands of trees grow around the base.","Molten worlds: the plateaus are gone and the lava pools are now broad, crusted lava lakes, drawn sharp at any zoom, that bubble and throw fountains of molten droplets.","Ocean worlds: the breakwater's three openings are the same width, and the lighthouse stands on its own rocky islet east of the mine works pad.","Solar arrays on every world are detailed sun-tracking panels on metal poles that lie flat at night."]],["Saves and updates",["A damaged save is always backed up and never overwritten, and playing offline is more reliable."]],["Fixes",["Opening the Park window no longer freezes the game on big saves, and the Best parking spot card stays up to date."]]],"imp":true},{"d":"2026-10-29","v":"Beta 0.39.2.181","g":[["Planets and bases",["Molten worlds: mountain ranges in basalt and ash, each with a volcano peak holding a lava pool, and all lava drifts, bubbles and spurts."]],["Ships, miners and probes",["The icy world hauler's nose is a framed bow plate with two lamps instead of a block-shaped wedge."]],["Screens and controls",["Sideways lists (tabs, planets, furnace ores) centre the item you pick, and stay where you leave them once you scroll."]]]},{"d":"2026-10-29","v":"Beta 0.38.0.178","g":[["New",["Derelict freighters reworked: each wreck is a named ship with a story, modelled with flickering lights, venting gas and drifting cargo. Tap it to send a salvage tug, and some wrecks hold an ore crate or a navigation core worth star dust."]]]},{"d":"2026-10-29","v":"Beta 0.37.5.177","g":[["Gameplay and balance",["Events: the week's third mission turns Elite once you've accepted two, with no need to complete them first."]],["Planets and bases",["Terrestrial worlds have smaller polar caps, with a narrower band of tundra and patchy snow."]],["Ships, miners and probes",["Each kind of world has its own hauler (ore hauler, heat barge, ice cutter, scoop tanker, sea skimmer and ag freighter), built in fine detail with nav lights and engine flames. Their glow fades as they land, so the detail shows up close."]],["Screens and controls",["Events tab: Daily and Weekly events labels with their countdowns, finished events keep their objective and show Completed or Failed, and reward lines turn teal or red."]]]},{"d":"2026-10-28","v":"Beta 0.36.0.171","g":[["New",["An About page on the Warp tab, with the Fair Tap Studios logo, the version and the game's fair-play promise."]]]},{"d":"2026-10-28","v":"Beta 0.35.0.170","g":[["Planets and bases",["The flat tops of mesas and buttes on rocky worlds wear the planet's own skin, so they match the land around them."]]]},{"d":"2026-10-28","v":"Beta 0.34.3.169","g":[["Planets and bases",["Each world builds its habitat, solar panels, radar and comms spire in its own style, from bio-domes and a tree-house radar on terrestrial worlds to hover pods and a sensor balloon on gas giants.","Bases come alive: ore pulses run down the refinery pipe, radars turn, the rocky refinery's stack puffs exhaust, and bases on the night side light up.","Volcanoes: one erupts at a time on each world, for 10 to 15 seconds, and the ash drifts off downwind."]],["Fixes",["A mission whose reward you've just claimed shows Completed and drops its progress bar."]]]},{"d":"2026-10-28","v":"Beta 0.33.14.165","g":[["Planets and bases",["The mine is simplified: miners tip their ore at an unloading station on a new mine works pad built in each world's materials, one conveyor runs on to the landing pad, and the refinery is back in its old place.","Every structure meets the ground properly, with footings and supports in its world's style (trestles, floats on ocean worlds, hover nodes and lift thrusters on gas giants), and nothing overlaps.","Terrestrial worlds: the whole base stands on dry land, seas and lakes have a gentle swell with sun-glints and shore foam, and the poles grade from tundra into snow.","The ground round every base blends into the land, ocean swells and gas-giant bands run right under floating bases, and gas-giant bands are smooth again.","Icy worlds' mountains are crisp alpine ranges with deep snow, dark rock faces and glacier ice, and ocean launch pads get a continuous rubble breakwater."]],["Ships, miners and probes",["Haulers plan their routes over the real terrain (walkers keep to land, skimmers to water), drive up a ramp onto the works pad, and floating haulers climb early so they never clip it."]],["Space and the station",["A few stars slowly swell and shrink, each at its own pace."]],["Screens and controls",["Claiming a planet keeps the view where it is, and the station is parked from the Station tab only."]]]},{"d":"2026-10-28","v":"Beta 0.32.0.150","g":[["Planets and bases",["The mine is rebuilt around the mine works: ore deposits lie far out so miners make long drives on their own roads, and the works yard grows with each crew."]]]},{"d":"2026-10-28","v":"Beta 0.31.3.149","g":[["Planets and bases",["Landmarks are spread evenly round each planet, every base sits on the equator, and the ore deposits are further out so miners have a real drive.","Snow keeps to true summits and smaller polar caps, molten worlds have none, and icy worlds no longer sparkle.","The planet you zoom in on is drawn at twice the resolution, and gas-giant bands no longer smear over time.","Molten worlds: lava pools have lumpy outlines, and the mine's deposits hold the same molten lava."]],["Screens and controls",["Vegetation worlds are now called Terrestrial worlds."]]]},{"d":"2026-10-27","v":"Beta 0.30.2.145","g":[["Planets and bases",["Molten worlds reworked again: plain cooled basalt, volcano mountain ranges well away from the base, and 3D lava pools on the plains with a drifting crust, bubbles and spurts.","Volcanoes vary (tall cones, broad shields, craggy ranges) and erupt much bigger, with lava fountains, glowing bombs and billowing ash; quiet ones let off steam."]],["Screens and controls",["The Planet tab shows each planet's world type under its name."]]]},{"d":"2026-10-27","v":"Beta 0.29.1.142","g":[["Planets and bases",["Molten worlds are mostly dark cooled basalt with a few active lava zones, lava flows that crust over as they run down the volcanoes, and a mining field further from the base."]]]},{"d":"2026-10-27","v":"Beta 0.28.0.140","g":[["Planets and bases",["Better-looking worlds up close: the cleared ground fades into the land with a natural edge, and volcanoes, mountains, rocks and trees are detailed models that sit flush on the ground."]]]},{"d":"2026-10-27","v":"Beta 0.27.1.139","g":[["Planets and bases",["Every world type styles its own settlement: bermed rock domes, moss-roofed domes with a treetop walkway, floating ocean walkways that bob with the swell, and aerostats over gas-giant Cities."]],["Screens and controls",["User guide: a new Colonies up close section explains how each base grows on each world type."]]]},{"d":"2026-10-27","v":"Beta 0.26.0.137","g":[["Planets and bases",["Every world has its own landing pad and refinery, each growing in three tiers, from stilted lava decks to ocean helidecks with a lighthouse."]]]},{"d":"2026-10-27","v":"Beta 0.25.0.136","g":[["Ships, miners and probes",["Every world has its own miners and mine: laser miners, lava crawlers, snowcats, cloud-scoop drones, submersible skimmers and six-legged walkers."]]]},{"d":"2026-10-27","v":"Beta 0.24.0.135","g":[["Planets and bases",["Every colony sits on one compact plot around its landing pad, on suitable ground for its world, with landmarks kept clear."]]]},{"d":"2026-10-27","v":"Beta 0.23.1.134","g":[["New",["Five gas giants became new worlds: three ocean worlds with rolling waves and a few small islands (Pearlsea, Nerida, Undine) and two living worlds with forests and flowers (Verdance, Sylvan)."]],["Planets and bases",["Every planet type has its own close-up features: erupting volcanoes, banded storms on gas giants, frozen lakes and snowy peaks on ice worlds, and boulder fields on rocky worlds."]]]},{"d":"2026-10-27","v":"Beta 0.22.0.132","g":[["Planets and bases",["Settlements match their planet: sky-cities on gas giants, ice-glass domes on icy worlds and heat-shielded domes on molten worlds, and gas-giant miners hover."]]]},{"d":"2026-10-27","v":"Beta 0.21.1.131","g":[["Space and the station",["A glowing nebula fills the sky behind the stars, and planet rings are far more detailed, with ringlets, gaps, shadows and glinting rocks up close."]]]},{"d":"2026-10-26","v":"Beta 0.20.5.129","g":[["New",["Warp tab: Galaxy value shows what this galaxy is worth and what a warp would bring, with This galaxy and All time statistics."]],["Screens and controls",["Messages appear in the middle of the view and queue instead of covering each other, pinch-zoom is allowed, and numbers like 9,999 read 9.99 K."]],["Saves and updates",["Updates download faster, saves that can't be read are backed up instead of overwritten, and the offline copy can't be replaced by an error page."]],["Fixes",["No more late-game freezes from the Best parking spot ranking, long absences count every probe, time away works like live play, and a new galaxy forgets the old one's plans."]]]},{"d":"2026-10-26","v":"Beta 0.19.12.123","g":[["New",["Events overhaul: mission goals sized to your pace, up to three missions a week (the third an Elite one), a weekly streak bonus, and galaxy events every 12 hours: ore rushes, solar storms, comet passes and derelict freighters."]],["Gameplay and balance",["Prospecting makes probe hauls 1% bigger for each planet that has it, with no cap."]],["Screens and controls",["Three zoom levels: stepping out goes to the galaxy centred on the planet, and Recenter glides smoothly back to the whole galaxy.","Tabs that need you turn their name orange instead of showing a dot, the station has its own blue, and the Market and Probe tabs light up while a surge or the probe is active.","Planet list buttons look like the Smelter's ore buttons and keep their status colours, and after Balance each furnace's ore list glides to its pick."]],["Fixes",["The week's third mission becomes Elite correctly when a mission from before the events update counts as a win."]]],"imp":true},{"d":"2026-10-25","v":"Beta 0.18.12.110","g":[["New",["Smelting is a steady flow with bars/min and busy % per furnace, and a Balance window picks the best ore for each furnace.","Station parking in credits: the move window shows income now and after the move, plus fuel payback, and a Best parking spot card ranks where to park."]],["Screens and controls",["The Research tab is now the Station tab, and tapping a planet's, the station's or the probe's name zooms to it (the zoom buttons are gone).","Furnace cards keep one layout with a clear status line (Full speed, Slowed, Paused or Off), and cards and buttons keep one size as their text changes.","Probe and Market Surge status move into their tabs, with small icons under the credits; Recenter lights up when the view isn't the whole galaxy."]]]},{"d":"2026-10-25","v":"Beta 0.17.5.97","g":[["New",["The station and the probe zoom like planets (Close-up, Closer, Galaxy), with drag to turn."]],["Gameplay and balance",["Balance opens a window: a free rearrangement first, then a slider to buy upgrades, with cost, income and payback shown.","Furnaces no longer use ore that open research needs, so research ore counts hold steady."]],["Screens and controls",["Every tab shows an orange dot when something on it has changed, and tapping a planet's name flies to its close-up."]]]},{"d":"2026-10-25","v":"Beta 0.16.15.91","g":[["New",["Mining crews reworked: a planet's points go into one pool that the Crew Chief allocates, the Shift Crew adds points and swappable perks, and the Instructors run training programs. Existing saves carry over."]],["Gameplay and balance",["Docking, landing and loading always take 28 seconds; upgrades speed up only the flight, and Handling points come back as free points."]],["Ships, miners and probes",["New futuristic ore miners with glowing light strips, a glass ore capsule and laser drills, and crew badges painted as graffiti tags."]],["Space and the station",["Background stars shine in front of the galaxy and twinkle slowly, and the galaxy is a little brighter."]],["Screens and controls",["Planet names turn green when they have hauling to spare and red when ore would overflow anywhere in the orbit, and crew stars fill in once every point is placed.","Close-ups keep the planet centred with drag to turn, double-tap steps through the zoom levels, and the view glides when the panel opens or closes."]],["Fixes",["Fixed a crash when hiring an Instructors crew."]]]},{"d":"2026-10-24","v":"Beta 0.15.16.75","g":[["New",["Tuning chart: see mining against hauling through the whole cycle, drag its handles to plan the cheapest points, and preview every change before you apply it."]],["Gameplay and balance",["Balance keeps ships ahead: it works over a whole cycle with each planet's real silo and only picks layouts where the ships keep up."]],["Screens and controls",["Mining teams are now called mining crews, and the Planet tab is tidier, with shorter trait panes and the selected planet kept in view.","Tapping an item partly off the edge of a list scrolls it into view, and swiping over the chart scrolls the panel."]],["Saves and updates",["Quieter updates: new versions install themselves the next time you open the game, and only important ones ask."]],["Fixes",["Balance no longer leaves planets with big silos short of ships."]]],"imp":true},{"d":"2026-10-24","v":"Beta 0.14.10.58","g":[["New",["Specialist crews: a planet's second and third teams pick a role from named candidates with quirks, unlock veteran perks, and can retrain."]],["Gameplay and balance",["A planet's next team can be hired once its newest team is fully upgraded."]],["Screens and controls",["Tap the credits to cycle number names past a trillion: named (Qa, Qi…), letters (aa, ab…) or full words.","Every usable panel button is orange, the main screen is more compact, and every user guide section starts collapsed."]],["Fixes",["Exact powers of a thousand no longer show as 999 of the size below."]]]},{"d":"2026-10-23","v":"Beta 0.13.2.47","g":[["New",["Market Surge replaces Overdrive: for 10 minutes everything you sell earns double, then it recharges for an hour.","A user guide on the Warp tab explains every part of the game, with Tips and tricks."]],["Screens and controls",["The planet list stays pinned at the top of the Planet tab, and switching planets keeps your place."]]]},{"d":"2026-10-23","v":"Beta 0.12.18.44","g":[["New",["Station Thrusters research: park the station above any claimed planet for short, steady trips, with a forecast of how every other planet's hauling changes."]],["Planets and bases",["Planet structures in finer detail: plated and panelled buildings, geodesic glass domes, real solar cells and concrete footings."]],["Space and the station",["A new sun with dark filaments, glowing loops, drifting sunspots and solar flares, and orbits respaced with room for rings and fainter orbit lines."]],["Screens and controls",["Research tab: tap an ore to see which planets mine it, undiscovered ores read Not discovered, and the Smelter's Research needs counts bars against what's still needed.","Planet names take their status colour, furnace ore choices scroll sideways, and buttons you can't use fade."]],["Fixes",["About 3x faster 3D drawing late in the game."]]]},{"d":"2026-10-23","v":"Beta 0.11.0.25","g":[["New",["Real orbits: inner planets circle the sun faster, so trip times rise and fall with the distance; colony stockpiles become silos (with Ore Silos and Deep Silos research), and the Planet tab charts a whole cycle."]]]},{"d":"2026-10-23","v":"Beta 0.10.5.24","g":[["New",["A sun shines at the centre of the galaxy and lights every planet, and the space station orbits it, with haulers and the probe flying to wherever it is.","Name your space station: asked at the start of a game, renamable from the Warp tab, and kept in the Captain's log."]],["Space and the station",["Station lights redone: a pulsing red beacon on top, a breathing teal light below, and wing lights with white strobes."]],["Screens and controls",["Double-tap a planet's name in the Planet tab to zoom into its close-up, and again to zoom out."]]]},{"d":"2026-10-23","v":"Beta 0.9.17.18","g":[["New",["What's changed on the Warp tab lists every change, and the game checks for updates and tells you what's new."]],["Screens and controls",["Mining team points: + and − buttons for each trait with a point count, replacing Reassign points.","Tap the credits to switch between short and full number names, and tap star dust to open the Warp tab.","Double-tap zooms out centred, the probe opens its tab when tapped, and switching planets keeps the zoom.","Planet Kesh is renamed Kallyur'Dadh."]],["Saves and updates",["Erase save has its own panel at the bottom of the Warp tab."]]]},{"d":"2026-10-23","v":"Beta 0.8.21.0","g":[["Gameplay and balance",["Ship speed and cargo: crew speed shortens only the flight and cargo makes ships heavier, and docking, landing and loading are slower and steadier.","Spare ship capacity carries overflow off at full price, and Overdrive runs for 10 minutes and recharges for 60."]],["Ships, miners and probes",["Ships fly smooth curves into and out of orbit, fire reverse thrusters, kick up pad dust and land on four folding struts."]],["Screens and controls",["Events and Research show completed items as Completed cards, and unavailable missions say why.","Planet tab: a mined-vs-hauled strip, cards that keep their size, and a taller console you close by tapping the selected tab or planet."]]]},{"d":"2026-10-22","v":"Beta 0.7.4.0","g":[["New",["Unhauled ore is shown, and overflow sells every 10 minutes at 25% of the price."]],["Screens and controls",["Tabs, planets and teams share one sideways scroller (swipe, drag or wheel), and dragging the tab row no longer switches tabs."]]]},{"d":"2026-10-22","v":"Beta 0.6.5.0","g":[["New",["Weekly events: three missions every Friday, with stories, 3 to 5 day goals and rewards of permanent boosts, star dust or free unlocks."]],["Ships, miners and probes",["A detailed space probe with a gold-foil body, a slowly turning dish and solar wings, and steady upright launches and landings.","Detailed six-wheel mining rovers, each team with its own emblem."]]]},{"d":"2026-10-22","v":"Beta 0.5.11.0","g":[["New",["Settlements: three levels per planet with unique upgrades, growing into 3D dome towns linked to the launch pad by transit tubes."]],["Space and the station",["The station has a glowing halo and a reflective panelled hull with portholes, and lights glow the same everywhere."]],["Screens and controls",["Planet labels show settlement marks and team stars, with a red name when ships are the bottleneck."]]]},{"d":"2026-10-21","v":"Beta 0.4.25.0","g":[["New",["Space probes launch from the station's iris door every 5 minutes; tap the probe status to follow one."]],["Gameplay and balance",["Research costs credits and ore, and research of 100M or more also needs bars from the smelter.","Star dust gives +1% per unit."]],["Planets and bases",["Detailed planet textures with bump maps, storms and atmosphere glow, and each ore is named after the planet it's first mined on."]],["Space and the station",["The station's iris door, loading docks and lights are rebuilt: clamps open and close, dock lights glow green while docked, and the blue ring flashes on each delivery."]],["Screens and controls",["Close-ups for unclaimed planets, a see-through bottom panel and smooth smelter progress bars."]],["Saves and updates",["Updates show as soon as they're out."]]]},{"d":"2026-10-21","v":"Beta 0.3.8.0","g":[["Ships, miners and probes",["Haulers fly slower, with an orbit, a controlled landing and a loading pause, then dock nose-first at the station's habitat ring."]],["Space and the station",["A smaller, more detailed station with an iris door and a docking port for each planet; double-tap it to zoom in and open Research.","Planet orbits are spaced so planets never overlap."]],["Screens and controls",["Picking a planet in the Planet tab flies the camera to it."]]]},{"d":"2026-10-21","v":"Beta 0.2.12.0","g":[["New",["Up to three mining teams per planet: the first claims the planet, and each adds three rovers, new ore deposits and a base upgrade."]],["Planets and bases",["Bases grow with each team, with solar rows, faint tire tracks and a conveyor to the launch pad."]],["Screens and controls",["Bottleneck team buttons fill red, and hired-team stars in planet labels are orange."]]]},{"d":"2026-10-20","v":"Beta 0.1.2.0","g":[["New",["First release of Star Quarry on the web."]],["Screens and controls",["Mining team trait buttons buy upgrades directly and show their price, and Dark Matter is now called Star Dust."]]]}];
+const CHANGES=[{"d":"2026-11-05","v":"Beta 0.45.0.204","g":[["Gameplay and balance",["Settlements now grow over time: each level (Outpost, Town, City) fills up over 10, 30 and 90 minutes, even while you're away. Its bonus grows as it fills, and each level lets you pick one of two upgrades."]],["Screens and controls",["The Station and Probe chips show their names in white when nothing is waiting, instead of grey."]],["Saves and updates",["Once you've made some progress, the game asks your browser to keep your save safe. It also reminds you to export your save if you haven't for a week, and the Your save card now says where your game is kept and when you last exported it."]],["Fixes",["Planet surfaces paint much faster in big games, and zooming in sharpens a planet's surface in under a second instead of taking up to 45 seconds."]]]},{"d":"2026-11-04","v":"Beta 0.44.2.203","g":[["Planets and bases",["Bases fade in and out as you zoom instead of popping, and a newly claimed planet's base appears as soon as you hire its first miners."]],["Screens and controls",["Pinching zooms in towards your fingers anywhere on the map and locks on to a planet, the station, the probe or the sun as you pinch in over it; lifting a finger mid-pinch no longer jolts the view, and the Station and Probe tab buttons now line up with the planet list."]]]},{"d":"2026-11-03","v":"Beta 0.44.1.202","g":[["Screens and controls",["After a pinch, tapping the selected button (or double-tapping) glides to the nearest zoom level instead of jumping all the way out, picking another planet keeps your zoom, and the ◈ probe icon zooms in to the probe again."]],["Fixes",["The game runs smoother on phones and uses less battery: bases close up take about half the work to draw, the game draws less often while nothing is moving, and phones that can't keep up lower the resolution a little instead of stuttering."]]]},{"d":"2026-11-02","v":"Beta 0.44.0.201","g":[["Space and the station",["Moving between planets is a slower, smoother glide, pinching zooms right in to the closest view from anywhere, and the middle zoom levels run faster."]],["Screens and controls",["The selected chip at the top of the Planet, Station and Probe tabs is now the zoom control: tap it again to step closer, with dashes under it showing the level. The Station and Probe chips sit where the planet list does, in their tab colours.","The Market keeps your ores and bars in one card, with Sell everything at the top.","Missions and events you don't finish now say Unsuccessful instead of Failed."]]]},{"d":"2026-11-02","v":"Beta 0.43.2.200","g":[["Screens and controls",["Tap any ore tag to see which planets mine it, and tap Credits for quick tips on earning more.","Mission and event goals now show their ore and credits as tags, and furnaces pick their ore from colour-coded tags, with the chosen one outlined in orange."]],["Fixes",["On short phones, a new tutorial step no longer shrinks to one line while the panel is opening."]]]},{"d":"2026-11-01","v":"Beta 0.43.1.199","g":[["Fixes",["Tutorial steps now start in full, and an orange arrow shrinks or expands them when the panel is open."]]]},{"d":"2026-11-01","v":"Beta 0.43.0.198","g":[["New",["A guided tour walks new players through their first three planets, pointing at what to tap, and ends with a badge in the Captain's Log once one planet is fully built. Existing players are asked once whether they'd like to take it."]],["Screens and controls",["One-time tips explain things the first time they happen, and Settings has new Tutorial and Tips switches."]]]},{"d":"2026-11-01","v":"Beta 0.42.2.197","g":[["New",["The installed web game now opens with the Fair Tap Studios logo before the title screen."]]]},{"d":"2026-11-01","v":"Beta 0.42.1.196","g":[["New",["The game opens on a STAR QUARRY title screen over the nebula, and the Android app starts with the Fair Tap Studios logo."]],["Screens and controls",["The Warp tab is tidier: the User Guide has its own section, About and the version share one card, your save and erasing it share another, and the warp explanation sits under the Warp button."]],["Fixes",["The User Guide's last section is no longer cut off, and Tips and tricks no longer has a stray outline."]]]},{"d":"2026-11-01","v":"Beta 0.42.0.195","g":[["New",["Each mining crew has its own World Works out in the mining field in place of the ore deposits, with machinery that comes alive at every tier."]],["Planets and bases",["Gas giant bases skim the cloud tops until fully built, then rise on glowing lift rings, and solar panels on every world are now round."]],["Ships, miners and probes",["Miners are more detailed, with textured skins, heavier tools and smoother driving, and ocean and gas giant miners splash as they dive."]],["Screens and controls",["Planets, the sun, the station and the probe have five zoom levels; double-tap to step through them, and the view glides smoothly between them.","The Warp tab is regrouped under Star dust, Captain's Log and Settings, Terrestrial worlds are now called Terran, and the Speed stat is now Velocity."]]]},{"d":"2026-10-30","v":"Beta 0.41.0.194","g":[["New",["Your save, on the Warp tab: export your game as a save code, move it to another device, and restore backups."]]]},{"d":"2026-10-30","v":"Beta 0.40.11.193","g":[["Planets and bases",["Terrestrial worlds: seas and lakes use the ocean worlds' water, the uplands are sandy desert with painted dunes, polar snow lies still, and small stands of trees grow around the base.","Molten worlds: the plateaus are gone and the lava pools are now broad, crusted lava lakes, drawn sharp at any zoom, that bubble and throw fountains of molten droplets.","Ocean worlds: the breakwater's three openings are the same width, and the lighthouse stands on its own rocky islet east of the mine works pad.","Solar arrays on every world are detailed sun-tracking panels on metal poles that lie flat at night."]],["Saves and updates",["A damaged save is always backed up and never overwritten, and playing offline is more reliable."]],["Fixes",["Opening the Park window no longer freezes the game on big saves, and the Best parking spot card stays up to date."]]],"imp":true},{"d":"2026-10-29","v":"Beta 0.39.2.181","g":[["Planets and bases",["Molten worlds: mountain ranges in basalt and ash, each with a volcano peak holding a lava pool, and all lava drifts, bubbles and spurts."]],["Ships, miners and probes",["The icy world hauler's nose is a framed bow plate with two lamps instead of a block-shaped wedge."]],["Screens and controls",["Sideways lists (tabs, planets, furnace ores) centre the item you pick, and stay where you leave them once you scroll."]]]},{"d":"2026-10-29","v":"Beta 0.38.0.178","g":[["New",["Derelict freighters reworked: each wreck is a named ship with a story, modelled with flickering lights, venting gas and drifting cargo. Tap it to send a salvage tug, and some wrecks hold an ore crate or a navigation core worth star dust."]]]},{"d":"2026-10-29","v":"Beta 0.37.5.177","g":[["Gameplay and balance",["Events: the week's third mission turns Elite once you've accepted two, with no need to complete them first."]],["Planets and bases",["Terrestrial worlds have smaller polar caps, with a narrower band of tundra and patchy snow."]],["Ships, miners and probes",["Each kind of world has its own hauler (ore hauler, heat barge, ice cutter, scoop tanker, sea skimmer and ag freighter), built in fine detail with nav lights and engine flames. Their glow fades as they land, so the detail shows up close."]],["Screens and controls",["Events tab: Daily and Weekly events labels with their countdowns, finished events keep their objective and show Completed or Failed, and reward lines turn teal or red."]]]},{"d":"2026-10-28","v":"Beta 0.36.0.171","g":[["New",["An About page on the Warp tab, with the Fair Tap Studios logo, the version and the game's fair-play promise."]]]},{"d":"2026-10-28","v":"Beta 0.35.0.170","g":[["Planets and bases",["The flat tops of mesas and buttes on rocky worlds wear the planet's own skin, so they match the land around them."]]]},{"d":"2026-10-28","v":"Beta 0.34.3.169","g":[["Planets and bases",["Each world builds its habitat, solar panels, radar and comms spire in its own style, from bio-domes and a tree-house radar on terrestrial worlds to hover pods and a sensor balloon on gas giants.","Bases come alive: ore pulses run down the refinery pipe, radars turn, the rocky refinery's stack puffs exhaust, and bases on the night side light up.","Volcanoes: one erupts at a time on each world, for 10 to 15 seconds, and the ash drifts off downwind."]],["Fixes",["A mission whose reward you've just claimed shows Completed and drops its progress bar."]]]},{"d":"2026-10-28","v":"Beta 0.33.14.165","g":[["Planets and bases",["The mine is simplified: miners tip their ore at an unloading station on a new mine works pad built in each world's materials, one conveyor runs on to the landing pad, and the refinery is back in its old place.","Every structure meets the ground properly, with footings and supports in its world's style (trestles, floats on ocean worlds, hover nodes and lift thrusters on gas giants), and nothing overlaps.","Terrestrial worlds: the whole base stands on dry land, seas and lakes have a gentle swell with sun-glints and shore foam, and the poles grade from tundra into snow.","The ground round every base blends into the land, ocean swells and gas-giant bands run right under floating bases, and gas-giant bands are smooth again.","Icy worlds' mountains are crisp alpine ranges with deep snow, dark rock faces and glacier ice, and ocean launch pads get a continuous rubble breakwater."]],["Ships, miners and probes",["Haulers plan their routes over the real terrain (walkers keep to land, skimmers to water), drive up a ramp onto the works pad, and floating haulers climb early so they never clip it."]],["Space and the station",["A few stars slowly swell and shrink, each at its own pace."]],["Screens and controls",["Claiming a planet keeps the view where it is, and the station is parked from the Station tab only."]]]},{"d":"2026-10-28","v":"Beta 0.32.0.150","g":[["Planets and bases",["The mine is rebuilt around the mine works: ore deposits lie far out so miners make long drives on their own roads, and the works yard grows with each crew."]]]},{"d":"2026-10-28","v":"Beta 0.31.3.149","g":[["Planets and bases",["Landmarks are spread evenly round each planet, every base sits on the equator, and the ore deposits are further out so miners have a real drive.","Snow keeps to true summits and smaller polar caps, molten worlds have none, and icy worlds no longer sparkle.","The planet you zoom in on is drawn at twice the resolution, and gas-giant bands no longer smear over time.","Molten worlds: lava pools have lumpy outlines, and the mine's deposits hold the same molten lava."]],["Screens and controls",["Vegetation worlds are now called Terrestrial worlds."]]]},{"d":"2026-10-27","v":"Beta 0.30.2.145","g":[["Planets and bases",["Molten worlds reworked again: plain cooled basalt, volcano mountain ranges well away from the base, and 3D lava pools on the plains with a drifting crust, bubbles and spurts.","Volcanoes vary (tall cones, broad shields, craggy ranges) and erupt much bigger, with lava fountains, glowing bombs and billowing ash; quiet ones let off steam."]],["Screens and controls",["The Planet tab shows each planet's world type under its name."]]]},{"d":"2026-10-27","v":"Beta 0.29.1.142","g":[["Planets and bases",["Molten worlds are mostly dark cooled basalt with a few active lava zones, lava flows that crust over as they run down the volcanoes, and a mining field further from the base."]]]},{"d":"2026-10-27","v":"Beta 0.28.0.140","g":[["Planets and bases",["Better-looking worlds up close: the cleared ground fades into the land with a natural edge, and volcanoes, mountains, rocks and trees are detailed models that sit flush on the ground."]]]},{"d":"2026-10-27","v":"Beta 0.27.1.139","g":[["Planets and bases",["Every world type styles its own settlement: bermed rock domes, moss-roofed domes with a treetop walkway, floating ocean walkways that bob with the swell, and aerostats over gas-giant Cities."]],["Screens and controls",["User guide: a new Colonies up close section explains how each base grows on each world type."]]]},{"d":"2026-10-27","v":"Beta 0.26.0.137","g":[["Planets and bases",["Every world has its own landing pad and refinery, each growing in three tiers, from stilted lava decks to ocean helidecks with a lighthouse."]]]},{"d":"2026-10-27","v":"Beta 0.25.0.136","g":[["Ships, miners and probes",["Every world has its own miners and mine: laser miners, lava crawlers, snowcats, cloud-scoop drones, submersible skimmers and six-legged walkers."]]]},{"d":"2026-10-27","v":"Beta 0.24.0.135","g":[["Planets and bases",["Every colony sits on one compact plot around its landing pad, on suitable ground for its world, with landmarks kept clear."]]]},{"d":"2026-10-27","v":"Beta 0.23.1.134","g":[["New",["Five gas giants became new worlds: three ocean worlds with rolling waves and a few small islands (Pearlsea, Nerida, Undine) and two living worlds with forests and flowers (Verdance, Sylvan)."]],["Planets and bases",["Every planet type has its own close-up features: erupting volcanoes, banded storms on gas giants, frozen lakes and snowy peaks on ice worlds, and boulder fields on rocky worlds."]]]},{"d":"2026-10-27","v":"Beta 0.22.0.132","g":[["Planets and bases",["Settlements match their planet: sky-cities on gas giants, ice-glass domes on icy worlds and heat-shielded domes on molten worlds, and gas-giant miners hover."]]]},{"d":"2026-10-27","v":"Beta 0.21.1.131","g":[["Space and the station",["A glowing nebula fills the sky behind the stars, and planet rings are far more detailed, with ringlets, gaps, shadows and glinting rocks up close."]]]},{"d":"2026-10-26","v":"Beta 0.20.5.129","g":[["New",["Warp tab: Galaxy value shows what this galaxy is worth and what a warp would bring, with This galaxy and All time statistics."]],["Screens and controls",["Messages appear in the middle of the view and queue instead of covering each other, pinch-zoom is allowed, and numbers like 9,999 read 9.99 K."]],["Saves and updates",["Updates download faster, saves that can't be read are backed up instead of overwritten, and the offline copy can't be replaced by an error page."]],["Fixes",["No more late-game freezes from the Best parking spot ranking, long absences count every probe, time away works like live play, and a new galaxy forgets the old one's plans."]]]},{"d":"2026-10-26","v":"Beta 0.19.12.123","g":[["New",["Events overhaul: mission goals sized to your pace, up to three missions a week (the third an Elite one), a weekly streak bonus, and galaxy events every 12 hours: ore rushes, solar storms, comet passes and derelict freighters."]],["Gameplay and balance",["Prospecting makes probe hauls 1% bigger for each planet that has it, with no cap."]],["Screens and controls",["Three zoom levels: stepping out goes to the galaxy centred on the planet, and Recenter glides smoothly back to the whole galaxy.","Tabs that need you turn their name orange instead of showing a dot, the station has its own blue, and the Market and Probe tabs light up while a surge or the probe is active.","Planet list buttons look like the Smelter's ore buttons and keep their status colours, and after Balance each furnace's ore list glides to its pick."]],["Fixes",["The week's third mission becomes Elite correctly when a mission from before the events update counts as a win."]]],"imp":true},{"d":"2026-10-25","v":"Beta 0.18.12.110","g":[["New",["Smelting is a steady flow with bars/min and busy % per furnace, and a Balance window picks the best ore for each furnace.","Station parking in credits: the move window shows income now and after the move, plus fuel payback, and a Best parking spot card ranks where to park."]],["Screens and controls",["The Research tab is now the Station tab, and tapping a planet's, the station's or the probe's name zooms to it (the zoom buttons are gone).","Furnace cards keep one layout with a clear status line (Full speed, Slowed, Paused or Off), and cards and buttons keep one size as their text changes.","Probe and Market Surge status move into their tabs, with small icons under the credits; Recenter lights up when the view isn't the whole galaxy."]]]},{"d":"2026-10-25","v":"Beta 0.17.5.97","g":[["New",["The station and the probe zoom like planets (Close-up, Closer, Galaxy), with drag to turn."]],["Gameplay and balance",["Balance opens a window: a free rearrangement first, then a slider to buy upgrades, with cost, income and payback shown.","Furnaces no longer use ore that open research needs, so research ore counts hold steady."]],["Screens and controls",["Every tab shows an orange dot when something on it has changed, and tapping a planet's name flies to its close-up."]]]},{"d":"2026-10-25","v":"Beta 0.16.15.91","g":[["New",["Mining crews reworked: a planet's points go into one pool that the Crew Chief allocates, the Shift Crew adds points and swappable perks, and the Instructors run training programs. Existing saves carry over."]],["Gameplay and balance",["Docking, landing and loading always take 28 seconds; upgrades speed up only the flight, and Handling points come back as free points."]],["Ships, miners and probes",["New futuristic ore miners with glowing light strips, a glass ore capsule and laser drills, and crew badges painted as graffiti tags."]],["Space and the station",["Background stars shine in front of the galaxy and twinkle slowly, and the galaxy is a little brighter."]],["Screens and controls",["Planet names turn green when they have hauling to spare and red when ore would overflow anywhere in the orbit, and crew stars fill in once every point is placed.","Close-ups keep the planet centred with drag to turn, double-tap steps through the zoom levels, and the view glides when the panel opens or closes."]],["Fixes",["Fixed a crash when hiring an Instructors crew."]]]},{"d":"2026-10-24","v":"Beta 0.15.16.75","g":[["New",["Tuning chart: see mining against hauling through the whole cycle, drag its handles to plan the cheapest points, and preview every change before you apply it."]],["Gameplay and balance",["Balance keeps ships ahead: it works over a whole cycle with each planet's real silo and only picks layouts where the ships keep up."]],["Screens and controls",["Mining teams are now called mining crews, and the Planet tab is tidier, with shorter trait panes and the selected planet kept in view.","Tapping an item partly off the edge of a list scrolls it into view, and swiping over the chart scrolls the panel."]],["Saves and updates",["Quieter updates: new versions install themselves the next time you open the game, and only important ones ask."]],["Fixes",["Balance no longer leaves planets with big silos short of ships."]]],"imp":true},{"d":"2026-10-24","v":"Beta 0.14.10.58","g":[["New",["Specialist crews: a planet's second and third teams pick a role from named candidates with quirks, unlock veteran perks, and can retrain."]],["Gameplay and balance",["A planet's next team can be hired once its newest team is fully upgraded."]],["Screens and controls",["Tap the credits to cycle number names past a trillion: named (Qa, Qi…), letters (aa, ab…) or full words.","Every usable panel button is orange, the main screen is more compact, and every user guide section starts collapsed."]],["Fixes",["Exact powers of a thousand no longer show as 999 of the size below."]]]},{"d":"2026-10-23","v":"Beta 0.13.2.47","g":[["New",["Market Surge replaces Overdrive: for 10 minutes everything you sell earns double, then it recharges for an hour.","A user guide on the Warp tab explains every part of the game, with Tips and tricks."]],["Screens and controls",["The planet list stays pinned at the top of the Planet tab, and switching planets keeps your place."]]]},{"d":"2026-10-23","v":"Beta 0.12.18.44","g":[["New",["Station Thrusters research: park the station above any claimed planet for short, steady trips, with a forecast of how every other planet's hauling changes."]],["Planets and bases",["Planet structures in finer detail: plated and panelled buildings, geodesic glass domes, real solar cells and concrete footings."]],["Space and the station",["A new sun with dark filaments, glowing loops, drifting sunspots and solar flares, and orbits respaced with room for rings and fainter orbit lines."]],["Screens and controls",["Research tab: tap an ore to see which planets mine it, undiscovered ores read Not discovered, and the Smelter's Research needs counts bars against what's still needed.","Planet names take their status colour, furnace ore choices scroll sideways, and buttons you can't use fade."]],["Fixes",["About 3x faster 3D drawing late in the game."]]]},{"d":"2026-10-23","v":"Beta 0.11.0.25","g":[["New",["Real orbits: inner planets circle the sun faster, so trip times rise and fall with the distance; colony stockpiles become silos (with Ore Silos and Deep Silos research), and the Planet tab charts a whole cycle."]]]},{"d":"2026-10-23","v":"Beta 0.10.5.24","g":[["New",["A sun shines at the centre of the galaxy and lights every planet, and the space station orbits it, with haulers and the probe flying to wherever it is.","Name your space station: asked at the start of a game, renamable from the Warp tab, and kept in the Captain's log."]],["Space and the station",["Station lights redone: a pulsing red beacon on top, a breathing teal light below, and wing lights with white strobes."]],["Screens and controls",["Double-tap a planet's name in the Planet tab to zoom into its close-up, and again to zoom out."]]]},{"d":"2026-10-23","v":"Beta 0.9.17.18","g":[["New",["What's changed on the Warp tab lists every change, and the game checks for updates and tells you what's new."]],["Screens and controls",["Mining team points: + and − buttons for each trait with a point count, replacing Reassign points.","Tap the credits to switch between short and full number names, and tap star dust to open the Warp tab.","Double-tap zooms out centred, the probe opens its tab when tapped, and switching planets keeps the zoom.","Planet Kesh is renamed Kallyur'Dadh."]],["Saves and updates",["Erase save has its own panel at the bottom of the Warp tab."]]]},{"d":"2026-10-23","v":"Beta 0.8.21.0","g":[["Gameplay and balance",["Ship speed and cargo: crew speed shortens only the flight and cargo makes ships heavier, and docking, landing and loading are slower and steadier.","Spare ship capacity carries overflow off at full price, and Overdrive runs for 10 minutes and recharges for 60."]],["Ships, miners and probes",["Ships fly smooth curves into and out of orbit, fire reverse thrusters, kick up pad dust and land on four folding struts."]],["Screens and controls",["Events and Research show completed items as Completed cards, and unavailable missions say why.","Planet tab: a mined-vs-hauled strip, cards that keep their size, and a taller console you close by tapping the selected tab or planet."]]]},{"d":"2026-10-22","v":"Beta 0.7.4.0","g":[["New",["Unhauled ore is shown, and overflow sells every 10 minutes at 25% of the price."]],["Screens and controls",["Tabs, planets and teams share one sideways scroller (swipe, drag or wheel), and dragging the tab row no longer switches tabs."]]]},{"d":"2026-10-22","v":"Beta 0.6.5.0","g":[["New",["Weekly events: three missions every Friday, with stories, 3 to 5 day goals and rewards of permanent boosts, star dust or free unlocks."]],["Ships, miners and probes",["A detailed space probe with a gold-foil body, a slowly turning dish and solar wings, and steady upright launches and landings.","Detailed six-wheel mining rovers, each team with its own emblem."]]]},{"d":"2026-10-22","v":"Beta 0.5.11.0","g":[["New",["Settlements: three levels per planet with unique upgrades, growing into 3D dome towns linked to the launch pad by transit tubes."]],["Space and the station",["The station has a glowing halo and a reflective panelled hull with portholes, and lights glow the same everywhere."]],["Screens and controls",["Planet labels show settlement marks and team stars, with a red name when ships are the bottleneck."]]]},{"d":"2026-10-21","v":"Beta 0.4.25.0","g":[["New",["Space probes launch from the station's iris door every 5 minutes; tap the probe status to follow one."]],["Gameplay and balance",["Research costs credits and ore, and research of 100M or more also needs bars from the smelter.","Star dust gives +1% per unit."]],["Planets and bases",["Detailed planet textures with bump maps, storms and atmosphere glow, and each ore is named after the planet it's first mined on."]],["Space and the station",["The station's iris door, loading docks and lights are rebuilt: clamps open and close, dock lights glow green while docked, and the blue ring flashes on each delivery."]],["Screens and controls",["Close-ups for unclaimed planets, a see-through bottom panel and smooth smelter progress bars."]],["Saves and updates",["Updates show as soon as they're out."]]]},{"d":"2026-10-21","v":"Beta 0.3.8.0","g":[["Ships, miners and probes",["Haulers fly slower, with an orbit, a controlled landing and a loading pause, then dock nose-first at the station's habitat ring."]],["Space and the station",["A smaller, more detailed station with an iris door and a docking port for each planet; double-tap it to zoom in and open Research.","Planet orbits are spaced so planets never overlap."]],["Screens and controls",["Picking a planet in the Planet tab flies the camera to it."]]]},{"d":"2026-10-21","v":"Beta 0.2.12.0","g":[["New",["Up to three mining teams per planet: the first claims the planet, and each adds three rovers, new ore deposits and a base upgrade."]],["Planets and bases",["Bases grow with each team, with solar rows, faint tire tracks and a conveyor to the launch pad."]],["Screens and controls",["Bottleneck team buttons fill red, and hired-team stars in planet labels are orange."]]]},{"d":"2026-10-20","v":"Beta 0.1.2.0","g":[["New",["First release of Star Quarry on the web."]],["Screens and controls",["Mining team trait buttons buy upgrades directly and show their price, and Dark Matter is now called Star Dust."]]]}];
 const UPD_URL='https://raw.githubusercontent.com/namewastaken-creator/star-quarry/main/version.json';
 const ECON={DUST_A:2,DUST_K:.2,EXP:.7,PAY:3.5,SCALE_MIN:100,HIRE:[1,8,30],UP_BASE:.12,PT_GROW:1.18,SHIP_BASE:.8,SHIP_OVH:28,DOCK_T:5,PROBE_EVERY:300,PROBE_FLY:180,PROBE_FIRST:60,PROBE_SEC:90,CARGO_FIT:.9};
 // overflow: surplus ore is sold every OVER_EVERY seconds at OVER_PRICE of the normal price
@@ -727,8 +730,11 @@ const RESEARCH=[
    (Outpost, Town, City). Each planet has its own settlement and upgrades:
    level 1 and 2 boost that planet (or the sale value of its newest ore), level 3 gives a small galaxy-wide perk.
    Kinds: m/s/c = this planet's mining / ship speed / cargo x1.5, ore = its newest ore sells for x1.5,
-   gm/gs/gc = all mining / ship speed / cargo x1.1, gv = all sale prices x1.05, smelt = smelting x1.25, probe = probe hauls x1.25. */
-const SETTLE_COST=[600,3000,15000],SETTLE_LV=['Outpost','Town','City'];
+   gm/gs/gc = all mining / ship speed / cargo x1.1, gv = all sale prices x1.05, smelt = smelting x1.25, probe = probe hauls x1.25.
+   (Beta 0.45) Each level offers a choice of two upgrades: SETTLE's and SETTLE_ALT's (the save's p.sc[level] is 1 for the
+   second). A level grows in over SETTLE_GROW minutes (also while the game is closed): its population fills up to
+   SETTLE_POP, its upgrade gets stronger as it fills, and the next level can be built only once it's full. */
+const SETTLE_COST=[600,3000,15000],SETTLE_LV=['Outpost','Town','City'],SETTLE_GROW=[10,30,90],SETTLE_POP=[400,2500,12000];
 const SETTLE_VAL={m:1.5,s:1.5,c:1.5,ore:1.5,gm:1.1,gs:1.1,gc:1.1,gv:1.05,smelt:1.25,probe:1.25};
 const SETTLE=[
  ['Ashfall',[['Lava Vents','m'],['Magma Foundry','ore'],['Forge Heart','smelt']]],
@@ -753,6 +759,30 @@ const SETTLE=[
  ['Obelisk Gate',[['Magenta Quarries','m'],['Ring Elevators','c'],['Gate Relay','gs']]],
  ['Stormbreak Harbor',[['Wave Rigs','m'],['Brine Refinery','ore'],['Salt Forges','smelt']]],
  ['Zenith Throne',[['Crown Scoops','m'],['Halo Docks','c'],['Zenith Accord','gm']]]];
+// the other upgrade each level can pick instead, by planet (same order as SETTLE)
+const SETTLE_ALT=[
+ [['Cinder Rails','s'],['Slag Barges','c'],['Ember Exchange','gv']],
+ [['Rust Diggers','m'],['Scrap Smelters','ore'],['Rail Guild','gs']],
+ [['Tide Skiffs','s'],['Salt Pans','ore'],['Harbor Exchange','gv']],
+ [['Sand Sleds','c'],['Dune Drills','m'],['Mirage Lenses','probe']],
+ [['Sled Haulers','c'],['Frost Mint','ore'],['Cold Forges','smelt']],
+ [['Dusk Gliders','s'],['Twilight Holds','c'],['Star Charts','gs']],
+ [['Pearl Nets','c'],['Pearl Polishers','ore'],['Sun Kilns','smelt']],
+ [['Vine Lifts','s'],['Root Presses','ore'],['Seed Couriers','gc']],
+ [['Shade Holds','c'],['Umbral Cutters','ore'],['Night Market','gv']],
+ [['Solar Sails','s'],['Flux Holds','c'],['Corona Scouts','probe']],
+ [['Ember Wagons','c'],['Ruby Cutters','ore'],['Keep Foundries','smelt']],
+ [['Vault Gliders','s'],['Eon Refinery','ore'],['Ancient Engines','gm']],
+ [['Fog Runners','s'],['Gloom Assayers','ore'],['Lantern Network','gs']],
+ [['Ivory Sledges','c'],['Citadel Lifts','s'],['White Furnaces','smelt']],
+ [['Harbor Barges','c'],['Bog Pumps','m'],['Moss Exchange','gv']],
+ [['Lagoon Skiffs','s'],['Reef Holds','c'],['Pearl Scouts','probe']],
+ [['Crown Holds','c'],['Prism Cutters','ore'],['Violet Forges','smelt']],
+ [['Abyss Rails','s'],['Deep Assay','ore'],['Abyss Sonar','probe']],
+ [['Coral Barges','c'],['Coral Carvers','ore'],['Current Network','gs']],
+ [['Gate Sleds','s'],['Obelisk Cutters','ore'],['Gate Exchange','gv']],
+ [['Storm Skiffs','s'],['Breakwater Holds','c'],['Tide Network','gc']],
+ [['Halo Sails','s'],['Throne Mint','ore'],['Zenith Couriers','gc']]];
 const newestOre=i=>Math.max(...PLANETS[i].mix.map(([o])=>o));
 function settleDesc(i,k){const P=PLANETS[i];return{m:`Mining ×1.5 on ${P.n}`,s:`Ship velocity ×1.5 on ${P.n}`,c:`Cargo ×1.5 on ${P.n}`,
   ore:`${ORES[newestOre(i)].n} and its bars sell for ×1.5`,gm:'All planets mine 10% faster',gs:'All ships fly 10% faster',gc:'All ships carry 10% more',
@@ -809,7 +839,10 @@ const MIGRATIONS=[
     p.pts=pts;p.bought=pts;p.al=al;if(p.teams.length>1)p.swapFree=true;delete p.rtFree;delete p.rtPrio}),
   // Beta 0.43.0 added the guided tour (S.tour): a save from before it starts with the tour off and is asked once
   // whether to take it
-  ()=>{if(!S.tour)S.tour={on:0,seen:0,ask:1,step:0}}];
+  ()=>{if(!S.tour)S.tour={on:0,seen:0,ask:1,step:0}},
+  // Beta 0.45 made settlements grow over time (p.sg, when the newest level was bought) and gave each level a choice of
+  // two upgrades (p.sc): a settlement from before is fully grown, with the upgrades it always had
+  ()=>S.planets.forEach(p=>{if(!(p.set>0))return;if(typeof p.sg!=='number')p.sg=0;if(!Array.isArray(p.sc))p.sc=[0,0,0].slice(0,p.set)})];
 // run the steps this save hasn't had; a save from a newer build (a higher S.mig) keeps its number
 function migrate(){const from=Number.isInteger(S.mig)&&S.mig>0?S.mig:0;
   for(let k=from;k<MIGRATIONS.length;k++)MIGRATIONS[k]();if(from<MIGRATIONS.length)S.mig=MIGRATIONS.length}
@@ -817,7 +850,7 @@ function newRun(keep){keep=keep||{};return{v:1,econ:2,mig:MIGRATIONS.length,life
  // Cinder's hauler starts already loaded and on its way home, so the first delivery comes quickly
  planets:PLANETS.map((p,i)=>({u:i===0,teams:i===0?[{}]:[],pts:0,bought:0,al:{},perks:[],done:{},stock:0,t:i===0?.66:Math.random()*.4,load:i===0?8:0})),
  inv:{},bars:{},research:{},auto:{},slots:[{r:null,p:0,a:false},{r:null,p:0,a:false},{r:null,p:0,a:false}],
- od:{until:0,ready:0},last:Date.now(),tut:0,sel:0,tour:keep.tour||{on:1,seen:0,ask:0,step:0}}}
+ od:{until:0,ready:0},last:Date.now(),tut:0,sel:0,tour:keep.tour||{on:1,seen:0,ask:0,step:0},bk:keep.bk||{exp:0,nag:0}}}
 let S;
 /* Loading never loses a save (Beta 0.20.1, Beta 0.40.11):
    - a save that can't be used is copied to a backup before a new game starts: one that isn't JSON, isn't format 1,
@@ -842,7 +875,7 @@ function saveShape(s){if(!isObj(s)||!Array.isArray(s.planets)||!s.planets.length
   const fresh={research:{},inv:{},bars:{},auto:{},od:{until:0,ready:0}};
   for(const k in fresh){if(s[k]===undefined)s[k]=fresh[k];else if(!isObj(s[k]))return false}
   if(s.slots===undefined)s.slots=newRun().slots;else if(!Array.isArray(s.slots)||!s.slots.every(isObj))return false;
-  for(const k of ['perm','life','lifeAt','ev','probe','probeLife','music','st','park','tour'])if(s[k]!=null&&!isObj(s[k]))return false;
+  for(const k of ['perm','life','lifeAt','ev','probe','probeLife','music','st','park','tour','bk'])if(s[k]!=null&&!isObj(s[k]))return false;
   for(const k of ['cash','dm','lifetime','runEarned'])if(s[k]!=null&&typeof s[k]!=='number')return false;
   return true}
 {let raw=null;try{raw=localStorage.getItem(KEY)}catch(e){}LOAD_RAW=raw;
@@ -874,6 +907,8 @@ if(!S.life)S.life=newLife();if(!S.perm)S.perm=newPerm();if(!S.ev)S.ev={taken:{}}
 // Warp tab statistics (Beta 0.20): lifetime counters at the start of this galaxy (older saves start counting now) and past warps
 if(!S.lifeAt){S.lifeAt=JSON.parse(JSON.stringify(S.life));S.lifeFrom=Date.now()}if(!S.warpLog)S.warpLog=[];
 if(!S.tour)S.tour={on:0,seen:0,ask:1,step:0};
+// when the game was last exported and the export reminder last shown (KEEPING THE SAVE SAFE, in SAVE TRANSFER)
+if(!S.bk)S.bk={exp:0,nag:0};
 // a failed save (storage full or blocked) is reported once, so progress never stops saving without the player knowing
 function save(){if(SAVE_BLOCK)return;S.last=Date.now();S.build=APP_VER.n;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){
   if(!saveWarned){saveWarned=true;setTimeout(()=>toast("Couldn't save your progress: this browser's storage is full or blocked. Free some space or allow storage for this site.",6000),0)}}}
@@ -999,18 +1034,43 @@ function swapOffers(dest){let n=0;S.planets.forEach((p,i)=>{p.swapFree=false;if(
   if(i===dest||capAvg(i)<mineRate(i)*PRIO_BELOW){p.swapFree=true;n++}});return n}
 const settleLv=i=>(S.planets[i]&&S.planets[i].set)||0;
 const settleCost=i=>PLANETS[i].scale*SETTLE_COST[settleLv(i)];
-// settlement bonuses, cached until a settlement is bought or the game state is replaced
-let settleVer=0,SM=null;
-function settleMults(){if(SM&&SM.S===S&&SM.v===settleVer)return SM;
-  const m={S,v:settleVer,g:{gm:1,gs:1,gc:1,gv:1,smelt:1,probe:1},loc:{},ore:{}};
-  S.planets.forEach((p,i)=>{const lv=p.set||0;for(let k=0;k<lv;k++){const kind=SETTLE[i][1][k][1],val=SETTLE_VAL[kind];
+/* Settlement growth (Beta 0.45): the newest level grows in over SETTLE_GROW minutes from when it was bought (p.sg, a
+   timestamp; none or 0 means fully grown, as for settlements from before growth). settleF is how full it is (0-1, easing
+   out: quick at first, slower near the end); its upgrade's bonus is 1 + (value - 1) x settleF. Earlier levels are always
+   full, since a level can only be bought once the one before it is. */
+function settleF(i,now){const lv=settleLv(i),p=S.planets[i];if(!lv)return 0;if(!p.sg)return 1;
+  const x=((now==null?Date.now():now)-p.sg)/(SETTLE_GROW[lv-1]*60000);return x>=1?1:x<=0?0:1-(1-x)*(1-x)}
+const settleGrown=i=>!settleLv(i)||settleF(i)>=1;
+const settleLeft=i=>{const lv=settleLv(i),p=S.planets[i];return lv&&p.sg?Math.max(0,(p.sg+SETTLE_GROW[lv-1]*60000-Date.now())/1000):0};
+const settleCap=i=>{const lv=settleLv(i);return lv?SETTLE_POP[lv-1]:0};
+const settlePop=i=>{const lv=settleLv(i);if(!lv)return 0;const a=lv>1?SETTLE_POP[lv-2]:0;return Math.round(a+(SETTLE_POP[lv-1]-a)*settleF(i))};
+// the upgrade level k has (the one picked), and the two a level offers
+const settleOpts=(i,k)=>[SETTLE[i][1][k],SETTLE_ALT[i][k]];
+const settleKind=(i,k)=>{const sc=S.planets[i].sc;return settleOpts(i,k)[sc&&sc[k]?1:0]};
+// an upgrade's bonus when its level is f full
+const settleNow=(kind,f)=>1+(SETTLE_VAL[kind]-1)*f;
+// settlement bonuses, cached until a settlement is bought or the game state is replaced, and while one is growing for
+// SET_STEP ms at a time. SET_T (null: now) is the moment they're worked out for: time away uses the middle of the absence.
+let settleVer=0,SM=null,SET_T=null;const SET_STEP=2000;
+function settleMults(){const now=SET_T==null?Date.now():SET_T;if(SM&&SM.S===S&&SM.v===settleVer&&SM.T===SET_T&&now<SM.until)return SM;
+  const m={S,v:settleVer,T:SET_T,until:Infinity,g:{gm:1,gs:1,gc:1,gv:1,smelt:1,probe:1},loc:{},ore:{}};
+  S.planets.forEach((p,i)=>{const lv=p.set||0;for(let k=0;k<lv;k++){const kind=settleKind(i,k)[1];let val=SETTLE_VAL[kind];
+    if(k===lv-1){const f=settleF(i,now);if(f<1){val=settleNow(kind,f);m.until=Math.min(m.until,now+SET_STEP)}}
     if(kind==='m'||kind==='s'||kind==='c'){(m.loc[i]=m.loc[i]||{m:1,s:1,c:1})[kind]*=val}
     else if(kind==='ore'){const o=newestOre(i);m.ore[o]=(m.ore[o]||1)*val}else m.g[kind]*=val}});
   return SM=m}
 const setLoc=(i,k)=>{const l=settleMults().loc[i];return l?l[k]:1};
 const setG=k=>settleMults().g[k];
-function buySettle(i){const p=S.planets[i];if(p.teams.length<TEAM_MAX||settleLv(i)>=3)return false;const c=settleCost(i);if(S.cash<c)return false;
-  S.cash-=c;p.set=settleLv(i)+1;settleVer++;S.life.settle++;return true}
+// found or grow planet i's settlement with upgrade c (0 or 1) of the next level; the level before must be full
+function buySettle(i,c){const p=S.planets[i],lv=settleLv(i);if(p.teams.length<TEAM_MAX||lv>=3||!settleGrown(i))return false;const cost=settleCost(i);if(S.cash<cost)return false;
+  S.cash-=cost;if(!Array.isArray(p.sc))p.sc=[];p.sc[lv]=c?1:0;p.set=lv+1;p.sg=Date.now();settleVer++;S.life.settle++;return true}
+// a settlement level that has just filled up says so (one that filled while the game was closed doesn't: the welcome
+// back covers it); SET_SEEN holds, by planet, the p.sg of a level seen growing this session
+const SET_SEEN={};
+function settleTick(now){S.planets.forEach((p,i)=>{const lv=p.set||0;if(!lv||!p.sg)return;
+  if(settleF(i,now)<1){SET_SEEN[i]=p.sg;return}
+  if(SET_SEEN[i]!==p.sg)return;SET_SEEN[i]=0;settleVer++;const nm=SETTLE[i][0],[un,kind]=settleKind(i,lv-1);
+  toast(lv<3?`${nm} is a full ${SETTLE_LV[lv-1]}: ${un} is at full strength. It can grow into a ${SETTLE_LV[lv]}.`:`${nm} is a full City: ${un} is at full strength. ${settleDesc(i,kind)}.`,4500)})}
 function mineRate(i){return PLANETS[i].rate*rmult('mine')*perm('mine')*minerT(i,'m')*setLoc(i,'m')*setG('gm')}
 /* Ship speed vs cargo:
    - every speed boost (team Ship speed points, research, event boosts, settlement upgrades and perks) only speeds up
@@ -1192,6 +1252,8 @@ function offline(sec,announce){
      Galaxy events count only for the part of the absence they ran: a solar storm slows ships for its share of the time,
      and ore sold on return isn't priced by an Ore rush that happens to be running now (GAL_FORCE) */
   const t1=Date.now(),sf=sec>0?galOverlap('storm',t1-sec*1000,t1)/(sec*1000):0;
+  // (Beta 0.45) a settlement growing while away counts at how full it was halfway through the absence
+  SET_T=t1-sec*500;try{
   withGal(null,()=>{
   S.planets.forEach((p,i)=>{if(!p.u)return;const fq=planetFlow(i),fs=sf>0?withGal({type:'storm'},()=>planetFlow(i)):fq,mix=k=>fq[k]*(1-sf)+fs[k]*sf;
     // spare ship capacity also carries off overflow while away
@@ -1199,7 +1261,7 @@ function offline(sec,announce){
   overflowSale(true);
   const n=smeltSlots();
   for(let k=0;k<n;k++){const sl=S.slots[k];if(sl.r===null)continue;bnStale();const take=Math.min(sec*smeltCap(sl.r),smeltAvail(sl.r));S.inv[sl.r]-=take;sl.p+=take/BAR_IN;const b=Math.floor(sl.p);sl.p-=b;S.bars[sl.r]=(S.bars[sl.r]||0)+b;S.life.bars+=b;S.life.barv=(S.life.barv||0)+b*itemValue('b'+sl.r)}
-  autoSell()});
+  autoSell()})}finally{SET_T=null}
   if(announce&&sec>30){const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60);if(sec>600)tourFlag('away');
     toast(`Welcome back. In ${h?h+'h ':''}${m}m your fleet hauled ${fmt(units)} ore`+(probes?` and ${probes} probe${probes>1?'s':''} came home`:'')+(veins?`, with ${veins} rich vein${veins>1?'s':''}`:'')+(S.cash>before?`, earning ${fmt(S.cash-before)} credits.`:'. Sell it in the Market.'),6000)}
 }
@@ -1442,6 +1504,8 @@ function fmt(n){if(!isFinite(n))return '∞';if(n<0)return '−'+fmt(-n);if(n<10
   const let_=typeof S!=='undefined'&&S&&S.nfmt==='letters',i=Math.min(grp(n),let_?3+26*26:SUF.length-1);n/=Math.pow(10,3*(i+1));
   return dig(n)+'\u202F'+(let_&&i>3?sufLetters(i-4):SUF[i])}
 function fmtTime(s){s=Math.ceil(s);return s>=60?Math.floor(s/60)+'m '+String(s%60).padStart(2,'0')+'s':s+'s'}
+// a longer wait: 45s, 9m 30s, 25m, 1h 30m
+function fmtWait(s){s=Math.ceil(s);if(s<600)return fmtTime(s);if(s<3600)return Math.ceil(s/60)+'m';const m=Math.ceil(s/60);return Math.floor(m/60)+'h'+(m%60?' '+m%60+'m':'')}
 
 /* ===================== 3D WORLD ===================== */
 const canvas=document.getElementById('scene');
@@ -1980,8 +2044,9 @@ const irisGlow=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex('rgba(120,
 
 /* Planet surfaces. Seamless: 3D noise is sampled over the sphere itself, so there are no seams or pinched poles.
    Rocky worlds get warped terrain with lowlands, highlands, craters (and ice caps on icy worlds) plus a bump map;
-   gas giants get turbulent bands and a storm. Each texture is built a few rows per frame, visible planets first,
-   and swapped in for the quick placeholder when done, so loading isn't held up. */
+   gas giants get turbulent bands and a storm. Each texture is painted in a Web Worker (surfWorkers; a few rows a frame
+   here only where workers can't run), visible planets first, and swapped in for the quick placeholder when done, so
+   loading isn't held up. */
 function makeNoise(seed){const R=rng(seed||1),P=new Uint8Array(512),V=new Float32Array(256);
   for(let i=0;i<256;i++){P[i]=i;V[i]=R()}for(let i=255;i>0;i--){const j=Math.floor(R()*(i+1)),t=P[i];P[i]=P[j];P[j]=t}for(let i=0;i<256;i++)P[i+256]=P[i];
   const n=(x,y,z)=>{const X=Math.floor(x),Y=Math.floor(y),Z=Math.floor(z),xi=X&255,yi=Y&255,zi=Z&255;
@@ -1995,20 +2060,21 @@ const mixRGB=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t]
 const sstep=(a,b,x)=>{const t=Math.min(1,Math.max(0,(x-a)/(b-a)));return t*t*(3-2*t)};
 /* (Beta 0.31) every planet is painted at 512 x 256 first; the planet you zoom in on is repainted at 1024 x 512 (twice the
    detail), which it keeps. The bump map is half the map's size. */
-function surfaceJob(P,i,mat,TW){TW=TW||512;const TH=TW>>1,BW=TW>>1,BH=TH>>1,f=makeNoise(i*7919+3),R=rng(i*131+7);
-  const c=document.createElement('canvas');c.width=TW;c.height=TH;const g=c.getContext('2d'),img=g.createImageData(TW,TH),d=img.data;
-  let bc=null,bimg=null;if(!P.gas){bc=document.createElement('canvas');bc.width=BW;bc.height=BH;bimg=bc.getContext('2d').createImageData(BW,BH)}
+// (Beta 0.44.2) the painter itself: a pure function of its inputs (o, from surfaceOpts), so the same code paints in a Web
+// Worker (surfWorkers) and, where workers can't run, here a few rows a frame (surfaceJob). row(y) paints one row of the
+// map, and of the bump and roughness maps at half size
+function surfacePainter(o){const P={gas:o.gas,kind:o.kind,c1:o.c1,c2:o.c2},i=o.i,TW=o.TW,PTYPE=()=>o.ptype;
+  const TH=TW>>1,BW=TW>>1,BH=TH>>1,f=makeNoise(i*7919+3),R=rng(i*131+7);
+  const d=new Uint8ClampedArray(TW*TH*4),bimg=P.gas?null:{data:new Uint8ClampedArray(BW*BH*4)};
   // (Beta 0.40) terrestrial worlds: a roughness map, so their water is as glossy as an ocean world's (0.45) and the land stays matte
-  let rc=null,rimg=null;if(P.kind==='veg'){rc=document.createElement('canvas');rc.width=BW;rc.height=BH;rimg=rc.getContext('2d').createImageData(BW,BH)}
+  const rimg=P.kind==='veg'?{data:new Uint8ClampedArray(BW*BH*4)}:null;
   const c1=hexRGB(P.c1),c2=hexRGB(P.c2),dark=mixRGB(c1,[8,8,16],.55),peak=mixRGB(c2,[255,255,255],.3);
   const lum=x=>.3*x[0]+.59*x[1]+.11*x[2],icy=lum(c2)>200&&PTYPE(i)!=='lava'&&P.kind!=='veg'; // (Beta 0.37.3) terrestrial worlds draw their own, smaller poles
   const randDir=()=>{const z=R()*2-1,a=R()*Math.PI*2,r=Math.sqrt(1-z*z);return[r*Math.cos(a),z,r*Math.sin(a)]};
   const craters=[];if(!P.gas&&!P.kind){const n=6+Math.floor(R()*16);for(let k=0;k<n;k++){const r=.04+Math.pow(R(),2)*.2;craters.push({d:randDir(),r,cr:Math.cos(r*1.4),dep:.08+R()*.1})}}
   const freq=5+R()*7,turb=1.6+R()*1.6,sd=randDir();sd[1]*=.6;const sl=Math.asin(Math.max(-1,Math.min(1,sd[1]/Math.hypot(...sd)))),slo=Math.atan2(sd[2],sd[0]),sr=.17+R()*.1;
   const sc=mixRGB(mixRGB(c1,c2,.3),[190,80,55],.45),band3=mixRGB(c1,c2,.5);
-  let y=0;
-  return function step(budgetEnd){
-    for(;y<TH;y++){if(performance.now()>budgetEnd)return false;
+  return{TW,TH,BW,BH,d,bd:bimg&&bimg.data,rd:rimg&&rimg.data,row(y){
       const lat=(.5-(y+.5)/TH)*Math.PI,cl=Math.cos(lat),py=Math.sin(lat);
       for(let x=0;x<TW;x++){const lo=-(x+.5)/TW*Math.PI*2,px=cl*Math.cos(lo),pz=cl*Math.sin(lo);let col,h=0,snowK=0;
         if(P.gas){const w=f(px*1.3+3,py*1.3,pz*1.3,3)-.5,t=py*freq+w*turb*.75+(f(px*3,py*3,pz*3,2)-.5)*.2;
@@ -2047,17 +2113,47 @@ function surfaceJob(P,i,mat,TW){TW=TW||512;const TH=TW>>1,BW=TW>>1,BH=TH>>1,f=ma
           if(icy){const pc=PTYPE(i)==='ice'?.86:.91,cap=sstep(pc,pc+.04,Math.abs(py)+(f(px*4,py*4,pz*4,3)-.5)*.18);col=mixRGB(col,[236,242,250],cap)}
           if(rimg&&!(x&1)&&!(y&1)){const ri=((y>>1)*BW+(x>>1))*4,rv=s<.36?Math.round(115+127*Math.min(1,snowK*1.4)):242/* snow lying on the sea is matte, and doesn't ripple (Beta 0.40.1) */;rimg.data[ri]=rimg.data[ri+1]=rimg.data[ri+2]=rv;rimg.data[ri+3]=255}
           if(!(x&1)&&!(y&1)){const bi=((y>>1)*BW+(x>>1))*4,bv=Math.max(0,Math.min(255,(P.kind==='water'?Math.max(s,.86):P.kind==='veg'?Math.max(s,.36):s)*255));bimg.data[bi]=bimg.data[bi+1]=bimg.data[bi+2]=bv;bimg.data[bi+3]=255}}
-        const o=(y*TW+x)*4;d[o]=col[0];d[o+1]=col[1];d[o+2]=col[2];d[o+3]=255}}
-    if((mat.userData.texW||0)>TW)return true; // a finer map is already on
-    mat.userData.texW=TW;g.putImageData(img,0,0);const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;t.anisotropy=4;
-    const old=mat.map;mat.map=t;if(bc){bc.getContext('2d').putImageData(bimg,0,0);mat.bumpMap=new THREE.CanvasTexture(bc);mat.bumpScale=.035}
-    if(rc){rc.getContext('2d').putImageData(rimg,0,0);const om=mat.roughnessMap;mat.roughnessMap=new THREE.CanvasTexture(rc);mat.roughness=1;if(om)om.dispose()}
-    mat.needsUpdate=true;mat.userData.px={d,TW,TH};if(old)old.dispose();return true}}
-const surfJobs=[];
-function surfaceTick(){if(!surfJobs.length)return;const end=performance.now()+6;
-  // visible planets first
+        const o=(y*TW+x)*4;d[o]=col[0];d[o+1]=col[1];d[o+2]=col[2];d[o+3]=255}}}}
+// what the painter needs to know about planet i, read when its turn comes (VEG_SITE is set after the planets are made)
+function surfaceOpts(P,i,TW){return{i,TW:TW||512,gas:!!P.gas,kind:P.kind||'',c1:P.c1,c2:P.c2,ptype:PTYPE(i),vegSite:VEG_SITE[i]||null}}
+// painting here instead, a few rows a frame until the frame's budget is spent; true when done
+function surfaceJob(P,i,mat,TW){let p=null,y=0;
+  return function step(budgetEnd){if(!p)p=surfacePainter(surfaceOpts(P,i,TW));
+    for(;y<p.TH;y++){if(performance.now()>budgetEnd)return false;p.row(y)}surfaceDone(mat,p);return true}}
+// a painted map (p: TW, TH, BW, BH and the pixels d, bd, rd) swapped in for the planet's current one
+function surfaceDone(mat,p){const TW=p.TW,TH=p.TH,d=p.d;
+  if((mat.userData.texW||0)>TW)return; // a finer map is already on
+  const cv=(w,h,px)=>{const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').putImageData(new ImageData(px,w,h),0,0);return c};
+  mat.userData.texW=TW;const t=new THREE.CanvasTexture(cv(TW,TH,d));t.encoding=THREE.sRGBEncoding;t.anisotropy=4;
+  const old=mat.map;mat.map=t;if(p.bd){mat.bumpMap=new THREE.CanvasTexture(cv(p.BW,p.BH,p.bd));mat.bumpScale=.035}
+  if(p.rd){const om=mat.roughnessMap;mat.roughnessMap=new THREE.CanvasTexture(cv(p.BW,p.BH,p.rd));mat.roughness=1;if(om)om.dispose()}
+  mat.needsUpdate=true;mat.userData.px={d,TW,TH};if(old)old.dispose()}
+/* (Beta 0.44.2) Painting in Web Workers. Painting a map is heavy (a late-game save's 22 planets took about a minute at 6 ms
+   a frame, four times that on a slow phone, and the sharper repaint on zooming in another 10-45 s), so it runs on up to
+   four workers instead (one fewer than the processor's cores), each built from this page's own painter functions, one
+   job at a time each so a new sharper repaint (put first in surfJobs) never waits behind a queue. Frames carry none of
+   the work; only swapping a finished map in (surfaceDone) is done here. If workers can't start, or one fails, painting
+   carries on here at 6 ms a frame (surfPool empty), starting again any map that was in a worker. The pixels are the
+   same either way (pwpaint). */
+const surfJobs=[],surfOut=new Map();let surfPool=null,surfId=0;
+function surfWorkers(){if(surfPool)return surfPool;surfPool=[];
+  try{const src=['"use strict";',rng,makeNoise,'const hexRGB='+hexRGB,'const mixRGB='+mixRGB,'const sstep='+sstep,'const VEG_SITE=[];',vegLift,surfacePainter,
+      `onmessage=e=>{const o=e.data;VEG_SITE[o.i]=o.vegSite;const p=surfacePainter(o);for(let y=0;y<p.TH;y++)p.row(y);
+        const b=[p.d.buffer];if(p.bd)b.push(p.bd.buffer);if(p.rd)b.push(p.rd.buffer);postMessage({id:o.id,TW:p.TW,TH:p.TH,BW:p.BW,BH:p.BH,d:p.d,bd:p.bd,rd:p.rd},b)}`].join(String.fromCharCode(10));
+    const url=URL.createObjectURL(new Blob([src],{type:'text/javascript'})),n=Math.max(1,Math.min(4,(navigator.hardwareConcurrency||2)-1));
+    for(let k=0;k<n;k++){const wk=new Worker(url);wk.job=0;wk.onmessage=e=>surfBack(wk,e.data);wk.onerror=surfFail;surfPool.push(wk)}}
+  catch(e){surfFail()}
+  return surfPool}
+function surfBack(wk,m){wk.job=0;const j=surfOut.get(m.id);if(!j)return;surfOut.delete(m.id);surfaceDone(j.mat,m)}
+function surfFail(){if(surfPool)surfPool.forEach(w=>w.terminate());surfPool=[];surfJobs.unshift(...surfOut.values());surfOut.clear()}
+function surfaceTick(){if(!surfJobs.length)return;
+  // visible planets first (a sharper repaint is put at the front when it's queued)
   surfJobs.sort((a,b)=>(W[b.i].mesh.visible?1:0)-(W[a.i].mesh.visible?1:0));
-  while(surfJobs.length&&performance.now()<end){if(surfJobs[0].step(end))surfJobs.shift();else break}}
+  const pool=surfWorkers();
+  if(pool.length){for(const wk of pool)if(!wk.job&&surfJobs.length){const j=surfJobs.shift();j.id=++surfId;wk.job=j.id;surfOut.set(j.id,j);
+      const o=surfaceOpts(j.P,j.i,j.TW);o.id=j.id;wk.postMessage(o)}return}
+  const end=performance.now()+6;
+  while(surfJobs.length&&performance.now()<end){const j=surfJobs[0];if(!j.step)j.step=surfaceJob(j.P,j.i,j.mat,j.TW);if(j.step(end))surfJobs.shift();else break}}
 // soft atmosphere glow at the planet's edge
 /* soft atmosphere glow at the planet's edge, plus (Beta 0.23) a close-up detail layer worked out per pixel, which fades in
    only while the camera is zoomed in on this planet (det 0 → 1). It's drawn over the planet's painted map, from 3D
@@ -3949,6 +4045,8 @@ function buildSettleLevel(w,i,k){const P=PLANETS[i],s=w.facS,R=w.facR,g=new THRE
     [162,234,306,18].forEach(a=>setLamp(g,R,s,SET_AT(.78,a)));
     // twin transit tubes from the pad terminal to the hub, on supports, with light rings along them
     // transit terminal on the launch pad's south edge: glass front facing the pad, the two tubes enter its back wall
+    // (all of it is there from the start while the Outpost grows: setNow)
+    const nT=g.children.length;
     {const ax=new THREE.Vector3().crossVectors(PORT_DIR,SET_DIR).normalize(),TD=PORT_DIR.clone().applyAxisAngle(ax,1.45*.16);
      const term=new THREE.Group();term.position.copy(TD).multiplyScalar(R-.02*s);orient(term,TD,PORT_DIR.clone().addScaledVector(TD,-PORT_DIR.dot(TD)).normalize());term.scale.setScalar(SET_SC);g.add(term);
      const tb=new THREE.Mesh(new THREE.BoxGeometry(.64*s,.06*s,.5*s),DM.pad);tb.position.y=.03*s;term.add(tb);
@@ -3973,6 +4071,7 @@ function buildSettleLevel(w,i,k){const P=PLANETS[i],s=w.facS,R=w.facR,g=new THRE
        for(const sd of[-1,1]){const leg=new THREE.Mesh(new THREE.CylinderGeometry(.014*s,.018*s,H*.6,6),DM.hull);leg.position.set(sd*.11*s*SET_SC,H*.3,0);sup.add(leg)}
        sup.lookAt(sup.position.clone().add(t));sup.quaternion.copy(new THREE.Quaternion().setFromUnitVectors(UP,dirs[q]));
        {const fw=t.clone().addScaledVector(dirs[q],-t.dot(dirs[q])).normalize();orient(sup,dirs[q],fw);sup.rotateY(Math.PI/2)}g.add(sup)}}
+    for(let q=nT;q<g.children.length;q++)g.children[q].userData.setNow=1;
     w.setHub=hub}
   else if(k===1){
     if(!DM.plant)DM.plant=new THREE.MeshStandardMaterial({color:0x3fae5a,roughness:.8,emissive:0x0c3a18});
@@ -4182,8 +4281,40 @@ const L=.12*s*SET_SC,f=(R+L)/R;
 const SETTLE_KIT={rock:settleRock,lava:settleLava,ice:settleIce,gas:settleGas,water:settleWater,veg:settleVeg};
 function kitSettle(w,i,k){if(!w.setAnim)w.setAnim=[];if(!w.setSpots)w.setSpots={};kitOf(i).settle(w,i,k)}
 function syncSettlement(w,i){const lv=settleLv(i);if(!w.settle)w.settle=[];if(!w.setGlows)w.setGlows=[];
-  for(let k=0;k<3;k++){if(lv>k&&!w.settle[k]){buildSettleLevel(w,i,k);kitSettle(w,i,k);groundAndSupports(w,i,w.settle[k],w.setAnim);glowify(w.settle[k],w.setGlows);w.mergeDirty=w.glowDirty=1}if(w.settle[k])w.settle[k].visible=lv>k}}
-function animateSettlement(w,dt){if(!w.settle)return;if(w.setAnim&&w.settle[0]&&w.settle[0].visible)w.setAnim.forEach(f=>f(dt));
+  for(let k=0;k<3;k++){if(lv>k&&!w.settle[k]){buildSettleLevel(w,i,k);kitSettle(w,i,k);groundAndSupports(w,i,w.settle[k],w.setAnim);glowify(w.settle[k],w.setGlows);w.mergeDirty=w.glowDirty=1}if(w.settle[k])w.settle[k].visible=lv>k}
+  settleReveal(w,i)}
+/* (Beta 0.45) A growing settlement level fills in as its population grows (settleF): each piece of the level (a
+   building, walkway, lamp or the kit's extras: the level group's children) shows once the level is that full, nearest
+   the hub first, so the town spreads outward; a walkway comes right after the building at its far end, and a support
+   right after its walkway. The Outpost's link to the pad (terminal, transit tubes: userData.setNow), anything far out
+   and the hub's own new tier come at once. The order is worked out once per level (userData.rv, a share 0-1 per
+   child); hidden pieces stay out of the merge as their own parts (mergeSteps), so showing them later needs no re-merge,
+   and the glow batch skips them while they're hidden. Earlier levels are always full. */
+const _rvB=new THREE.Box3(),_rvV=new THREE.Vector3();
+const isTube=c=>c.isMesh&&c.geometry&&c.geometry.type==='TubeGeometry'&&c.geometry.parameters&&c.geometry.parameters.path;
+function settleReveal(w,i){const lv=settleLv(i);if(!lv||!w.settle)return;
+  const f=settleF(i);for(let k=0;k<lv-1;k++)if(w.settle[k])settleShow(w.settle[k],1);
+  const g=w.settle[lv-1];if(!g)return;
+  if(!g.userData.rv){g.updateMatrixWorld(true);const hub=setDir(0,0).multiplyScalar(w.facR),U=w.facR*.16*SET_SC,dist=v=>v.distanceTo(hub)/U;
+    // each piece's distance from the hub in settlement units (0: there at once)
+    const P=g.children.map(c=>{_rvB.setFromObject(c);const ctr=_rvB.isEmpty()?hub.clone():g.worldToLocal(_rvB.getCenter(new THREE.Vector3()));
+      const d=dist(ctr);return{c,ctr,d:c.userData.setNow||d<.35||d>3.4?0:d}});
+    const anchors=P.filter(x=>x.d>0&&!isTube(x.c)&&!x.c.userData.sup);
+    // a walkway comes just after the building at its far end, and a support just after the walkway it holds up
+    P.forEach(x=>{if(!x.d||!isTube(x.c))return;const pts=x.c.geometry.parameters.path.getPoints(8);const far=dist(pts[0])>dist(pts[pts.length-1])?pts[0]:pts[pts.length-1];
+      let best=null,bd=1e9;anchors.forEach(a=>{const e=a.ctr.distanceTo(far);if(e<bd){bd=e;best=a}});if(best)x.d=best.d+1e-3;x.pts=pts});
+    const tubes=P.filter(x=>x.pts);
+    P.forEach(x=>{if(!x.d||!x.c.userData.sup||!tubes.length)return;let best=null,bd=1e9;tubes.forEach(t=>t.pts.forEach(q=>{const e=q.distanceTo(x.ctr);if(e<bd){bd=e;best=t}}));if(best)x.d=best.d+2e-3});
+    const grow=P.filter(x=>x.d>0).sort((a,b)=>a.d-b.d);
+    P.forEach(x=>{if(!x.d)x.c.userData.rvAt=-1});grow.forEach((x,n)=>x.c.userData.rvAt=n/grow.length);g.userData.rv=1}
+  settleShow(g,f)}
+// only a piece whose state changes is touched (rvOn false: hidden here), since the merge hides the original meshes it
+// joined, and showing one of those would undo that merge (checkMerges)
+function settleShow(g,f){if(g.userData.rvF===f)return;g.userData.rvF=f;
+  g.children.forEach(c=>{const at=c.userData.rvAt;if(at==null)return;const want=f>=1||at<f;if(want!==(c.userData.rvOn!==false)){c.visible=want;c.userData.rvOn=want}})}
+function animateSettlement(w,dt){if(!w.settle)return;
+  // a growing level is checked about once a second (by the real clock: the merge runs the animation at other moments)
+  {const t=performance.now();if(!(t<w.rvNext)){w.rvNext=t+1000;const lv=settleLv(w.idx);if(lv&&w.settle[lv-1]&&w.settle[lv-1].userData.rvF!==1)settleReveal(w,w.idx)}}if(w.setAnim&&w.settle[0]&&w.settle[0].visible)w.setAnim.forEach(f=>f(dt));
   if(w.settle[0]&&w.settle[0].visible)updateGlows(w.setGlows);
   if(w.setHalo&&w.settle[2]&&w.settle[2].visible){w.setHalo.rotation.y+=dt*.6;w.setBeacon.material.emissiveIntensity=1+Math.sin(simTime*2.2);
     w.setShow.emissive.setHSL((simTime*.08)%1,.9,.55);w.setShow.color.copy(w.setShow.emissive);w.setHolo.rotation.y+=dt*1.5;w.setHoloRing.rotation.x+=dt*.9;w.setDish.rotation.y+=dt*.7}}
@@ -4914,14 +5045,14 @@ function featTick(w,i,dt){const on=cam.focus===i,U=w.mat.userData;
   // (Beta 0.28) a finer sphere while zoomed in, so the ground is truly round under the base and landmarks (the 40 x 24
   // sphere's flat facets left wide things floating at their edges)
   if(!w.loGeo)w.loGeo=w.mesh.geometry;const hi=on&&U.det&&U.det.value>.01;
-  if(hi&&!w.hiTex){w.hiTex=1;surfJobs.unshift({i,step:surfaceJob(PLANETS[i],i,w.mat,1024)})}
+  if(hi&&!w.hiTex){w.hiTex=1;surfJobs.unshift({i,P:PLANETS[i],mat:w.mat,TW:1024})}
   if(hi&&!w.hiGeo)w.hiGeo=new THREE.SphereGeometry(PLANETS[i].size,160,100);
   const want=hi?w.hiGeo:w.loGeo;if(w.mesh.geometry!==want)w.mesh.geometry=want;
   if(on&&(!w.feat||w.featSig!==featSig(i)))buildFeatures(w,i);
   if(w.feat){w.feat.visible=on&&U.det.value>.05;if(w.feat.visible)w.featAnim.forEach(f=>f(dt))}}
 const W=PLANETS.map((P,i)=>{
   const mat=new THREE.MeshStandardMaterial({map:planetTex(P,i*977+13),roughness:P.gas?.75:P.kind==='water'?.45:.95,metalness:0,transparent:true});
-  addRim(mat,P,i);surfJobs.push({i,step:surfaceJob(P,i,mat)});
+  addRim(mat,P,i);surfJobs.push({i,P,mat});
   const mesh=new THREE.Mesh(new THREE.SphereGeometry(P.size,40,24),mat);mesh.userData.i=i;mesh.rotation.z=.3;scene.add(mesh);
   const ringM=P.ring?makeRing(P,i,mesh):null;
   const pts=[];for(let k=0;k<=128;k++){const a=k/128*Math.PI*2;pts.push(new THREE.Vector3(Math.cos(a)*P.r,0,Math.sin(a)*P.r))}
@@ -4956,7 +5087,7 @@ const flowTone=i=>!keepsUp(planetFlow(i))?'bn':spareHaul(i)?'ex':'';
 function crewStars(i){const p=S.planets[i],n=p.teams.length,cap=ptsCap(i),al=p.al||{};let put=0;for(const k in al)put+=al[k]||0;
   let h='';for(let k=0;k<n;k++){const need=k<n-1?(k+1)*PTS_PER_CREW:cap;h+=put>=need?'★':'☆'}
   return `<span class="st">${h}</span>${'☆'.repeat(TEAM_MAX-n)}`}
-function planetLabel(i){const p=S.planets[i],ft=flowTone(i);return p.u?`${p.set?`<span class="sp">${'◆'.repeat(p.set)}</span>`:''}<b${ft==='bn'?' class="bnk"':ft==='ex'?' class="exk"':''}>${PLANETS[i].n}</b>${crewStars(i)}${S.park&&S.park.i===i?'<span class="pkm">⌂ station</span>':''}`:`<b>${PLANETS[i].n}</b>${fmt(PLANETS[i].cost)} cr`}
+function planetLabel(i){const p=S.planets[i],ft=flowTone(i);return p.u?`${p.set?`<span class="sp">${'◆'.repeat(p.set-(settleF(i)<1?1:0))}${settleF(i)<1?'◇':''}</span>`:''}<b${ft==='bn'?' class="bnk"':ft==='ex'?' class="exk"':''}>${PLANETS[i].n}</b>${crewStars(i)}${S.park&&S.park.i===i?'<span class="pkm">⌂ station</span>':''}`:`<b>${PLANETS[i].n}</b>${fmt(PLANETS[i].cost)} cr`}
 function refreshWorld(){
   syncDocks();
   const firstLocked=S.planets.findIndex(p=>!p.u);
@@ -5542,7 +5673,7 @@ function viewPlanet(){
   const rate=mineRate(i),hl=haul(i),shipsBN=!keepsUp(planetFlow(i));
   h+=viewTeams(i,shipsBN,rate,hl)+viewSettlement(i);
   return h}
-// the hire button sits under the Specialists card's title, and the settlement button under the Settlement card's title
+// the hire button sits under the Specialists card's title; the settlement's next level comes after its name and population
 // hiring the next crew: locked until the planet owns all the points its crews have room for, then three candidates
 function hireBtn(i){const p=crewState(S.planets[i]),n=p.teams.length;if(n>=TEAM_MAX)return '';const c=teamHireCost(i,n),can=S.cash>=c,K=CREW_KIND[n],cap=ptsCap(i);
   let h=`<div class="hire${hireReady(i)?'':' locked'}"><div class="hh"><span>${embIcon(i,n,16)}Hire ${n===1?'a Shift Crew':'Instructors'}</span><span class="num">${fmt(c)} credits</span></div>`;
@@ -5571,16 +5702,25 @@ function viewPrograms(i){const p=crewState(S.planets[i]);if(p.teams.length<3)ret
     h+=`<div class="progrow${done?' done':''}"><div><b>${g.n}${done?' ✓':''}</b><span>${g.d}</span>${on?`<div class="bar"><i style="width:${Math.min(100,(1-(run.until-now)/(t*1000))*100).toFixed(1)}%;background:var(--ore)"></i></div>`:''}</div>
       ${done?'':on?`<span class="num pst">${fmtTime((run.until-now)/1000)}</span>`:`<button class="btn ghost" data-act="prog" data-p="${i}" data-id="${id}" ${run||S.cash<c?'disabled':''} type="button">Train<small>${fmt(c)} · ${Math.round(t/60)}m</small></button>`}</div>`}
   return h+(run?'<p class="hs"><span>One program at a time.</span></p>':'')+'</div>'}
-function settleBtn(i){const p=S.planets[i];if(p.teams.length<TEAM_MAX||settleLv(i)>=3)return '';const lv=settleLv(i),c=settleCost(i),[nm,ups]=SETTLE[i];
-  return `<button class="btn wide" data-act="settle" data-p="${i}" ${S.cash>=c?'':'disabled'} type="button">${lv?'Grow '+nm+' into a '+SETTLE_LV[lv]:'Found '+nm}: ${ups[lv][0]}<small>${fmt(c)} credits · ${settleDesc(i,ups[lv][1])}</small></button>`}
-// settlement card: its three upgrades, what each does, and which are built
-function viewSettlement(i){const p=S.planets[i],[nm,ups]=SETTLE[i],lv=settleLv(i),ready=p.teams.length>=TEAM_MAX;
-  let h=`<div class="card"><div class="head"><h3>Settlement</h3><span class="num" style="font-size:12px;color:var(--muted)">${lv} / 3 levels</span></div>${settleBtn(i)}
-    <div class="head"><span style="font:600 15px var(--f-body)">${nm}</span><span class="num" style="font-size:12px;color:var(--muted)">${lv?SETTLE_LV[lv-1]:ready?'Not founded':'Locked'}</span></div>`;
-  if(!ready)h+=`<p style="font-size:12px">Hire all ${TEAM_MAX} mining crews to found ${nm} here.</p>`;
-  h+='<div class="rows">';
-  ups.forEach(([un,kind],k)=>{const done=k<lv;
-    h+=`<div class="row"><div class="txt"><span class="t">${done?'<span style="color:var(--ship)">✓</span> ':''}${un}<span style="color:var(--muted);font:500 11px var(--f-body);margin-left:6px">${SETTLE_LV[k]}</span></span><span class="s">${settleDesc(i,kind)}</span></div>${!done&&k===lv&&ready?`<span class="num" style="font-size:12px;color:var(--muted);white-space:nowrap">${fmt(settleCost(i))} cr</span>`:''}</div>`});
+// the next settlement level: its two upgrades to pick from, locked until the level before is full
+function settleNext(i){const p=S.planets[i],lv=settleLv(i);if(p.teams.length<TEAM_MAX||lv>=3)return '';const c=settleCost(i),grown=settleGrown(i),can=grown&&S.cash>=c,nm=SETTLE[i][0];
+  let h=`<div class="hire${grown?'':' locked'}"><div class="hh"><span>${lv?'Grow into a '+SETTLE_LV[lv]:'Found '+esc(nm)}</span><span class="num">${fmt(c)} credits</span></div>
+    <p class="hs"><span>${grown?`Pick one upgrade. ${lv===2?'The City\'s perk helps every planet. ':''}It grows in over ${fmtWait(SETTLE_GROW[lv]*60)}.`:`Opens when the ${SETTLE_LV[lv-1]} is full, in <b style="color:var(--ink)">${fmtWait(settleLeft(i))}</b>.`}</span></p>`;
+  h+=`<div class="cands">${settleOpts(i,lv).map(([un,kind],k)=>`<div class="cand"><div><b>${un}</b><span>${settleDesc(i,kind)}</span></div><button class="btn" data-act="settle" data-p="${i}" data-c="${k}" ${can?'':'disabled'} type="button">${lv?'Build':'Found'}<small>${fmt(c)}</small></button></div>`).join('')}</div>`;
+  return h+'</div>'}
+// an upgrade's strength while its level is still filling up
+const settleSoFar=(kind,f)=>{const v=settleNow(kind,f);return SETTLE_VAL[kind]>=1.5?`×${v.toFixed(2)} so far`:`+${((v-1)*100).toFixed(1)}% so far`};
+// settlement card: the next level's choice, how full the newest level is, and each level's upgrade (the one picked, or
+// the two it offers)
+function viewSettlement(i){const p=S.planets[i],nm=SETTLE[i][0],lv=settleLv(i),ready=p.teams.length>=TEAM_MAX,f=settleF(i),grow=lv&&f<1;
+  let h=`<div class="card"><div class="head"><h3>Settlement</h3><span class="num" style="font-size:12px;color:var(--muted)">${lv} / 3 levels</span></div>
+    <div class="head"><span style="font:600 15px var(--f-body)">${esc(nm)}</span><span class="num" style="font-size:12px;color:var(--muted)">${lv?(grow?'Growing ':'')+SETTLE_LV[lv-1]:ready?'Not founded':'Locked'}</span></div>`;
+  if(!ready)h+=`<p style="font-size:12px">Hire all ${TEAM_MAX} mining crews to found ${esc(nm)} here.</p>`;
+  if(lv)h+=`<p class="hs setpop"><span>Population <b style="color:var(--ink)">${settlePop(i).toLocaleString('en-US')}</b> / ${settleCap(i).toLocaleString('en-US')}</span><span>${grow?`full in ${fmtWait(settleLeft(i))}`:'Full'}</span></p><div class="bar"><i style="width:${(f*100).toFixed(1)}%;background:var(--ship)"></i></div>`;
+  h+=settleNext(i)+'<div class="rows">';
+  for(let k=0;k<3;k++){if(ready&&k===lv)continue;const tag=`<span style="color:var(--muted);font:500 11px var(--f-body);margin-left:6px">${SETTLE_LV[k]}</span>`;
+    if(k<lv){const [un,kind]=settleKind(i,k);h+=`<div class="row"><div class="txt"><span class="t"><span style="color:var(--ship)">✓</span> ${un}${tag}</span><span class="s">${settleDesc(i,kind)}${grow&&k===lv-1?` · ${settleSoFar(kind,f)}`:''}</span></div></div>`}
+    else{const o=settleOpts(i,k);h+=`<div class="row"><div class="txt"><span class="t">${o[0][0]} or ${o[1][0]}${tag}</span><span class="s">${settleDesc(i,o[0][1])}, or ${settleDesc(i,o[1][1])}</span></div></div>`}}
   return h+'</div></div>'}
 
 // small rates keep two decimals so a trickle never reads 0/s
@@ -5775,7 +5915,7 @@ function viewProbe(){const pr=S.probe,st=pr.st,nw=Date.now(),cmt=pr.out?(galType
   const ago=t=>{const s=Math.max(0,(nw-t)/1000);return s<60?'just now':s<3600?Math.floor(s/60)+'m ago':Math.floor(s/3600)+'h '+Math.floor(s%3600/60)+'m ago'};
   // the probe's chip is always there, so the page doesn't shift when the probe launches or docks; it can only zoom while
   // the probe is out
-  pnavHTML=zoomChipNav('probe','Space probe',pr.out?'nm-out':'nm-mut',!pr.out);let h='<h2 class="sr">Space probe</h2>';
+  pnavHTML=zoomChipNav('probe','Space probe',pr.out?'nm-out':'',!pr.out);let h='<h2 class="sr">Space probe</h2>';
   /* one card for both states with the same rows, so it keeps its size whatever the probe is doing:
      title and time · bar · status line · Expected haul · Worth about */
   {const out=pr.out,f=out?Math.min(1,(nw-out.at)/(ECON.PROBE_FLY*1000)):1-Math.max(0,pr.nextAt-nw)/(ECON.PROBE_EVERY*1000),o=out?out.ore:null,
@@ -5868,7 +6008,7 @@ function viewResearch(){
   const ready=open.filter(canResearch).length;
   // where the station is: parked above a planet, or on its way to one
   const where=(parkMoving()?'Moving to ':'Parked at ')+PLANETS[S.park.i].n;
-  const stn=S.st&&S.st.name?S.st.name:'Station';pnavHTML=zoomChipNav('station',stn,ready?'nm-ready':'nm-mut');
+  const stn=S.st&&S.st.name?S.st.name:'Station';pnavHTML=zoomChipNav('station',stn,ready?'nm-ready':'');
   let h=`<div class="sthead"><h2 class="sr">${esc(stn)}</h2><span class="stwhere">${where}</span></div>
 ${viewBestPark()}
     <div class="card rescard"><div class="head"><h3>Research</h3><span class="num" style="font-size:12px;color:${ready?'var(--ore)':'var(--muted)'}">${ready?ready+' ready':open.length+' open'}</span></div><p style="font-size:12px;margin:0">Projects cost credits and ore, and the biggest also need bars from the Smelter. Sell everything and auto-sell keep back the ore and bars your projects need.</p><div class="grid">`;
@@ -6104,6 +6244,7 @@ function viewWarp(){
   // Your save: export, import, backups and erase (SAVE TRANSFER)
   {const nb=saveBakKeys().length;
   h+=`<div class="card"><h3>Your save</h3><p style="font-size:12px">Keep a copy of your game, or move it to another device, as a sealed save code. If anything in a code is changed, it won't load.</p>
+    <p style="font-size:12px">${IS_APP?"Your game is saved on this device. Uninstalling the app or clearing its storage erases it.":"Your game is saved only in this browser. Clearing the browser's data for this site erases it, so export it now and then."} Last exported: ${S.bk.exp?dd(S.bk.exp):'never'}.</p>
     <div class="nmrow"><button class="btn ghost" data-act="svexp" type="button">Export save</button><button class="btn ghost" data-act="svimp" type="button">Import save</button></div>
     ${nb?`<button class="btn ghost wide" data-act="svbak" type="button">Restore a backup (${nb})</button>`:''}
     <button class="btn ghost wide${armed('reset')?' warn':''}" data-act="reset" type="button">${armed('reset')?'Tap again to erase your save':'Erase save and start over'}</button>
@@ -6286,16 +6427,22 @@ function parkEval(x,base){base=base||parkBase();const G=parkG(x),rows=[];let n0=
    event), or after PR_REFRESH as orbits drift. A ranking's age is wall-clock time (Date.now), since a phone's
    performance clock stops while it sleeps, and one older than PR_REFRESH no longer counts as ready.
    The Park window never works a forecast out on the spot (that froze the game for a second on phones in the late
-   game): it waits for the running ranking, which does that spot next (PR_WANT). */
-const PR_BUDGET=4,PR_REFRESH=300e3;
-let PR=null,PRJ=null,PR_WANT=-1;
+   game): it waits for the running ranking, which does that spot next (PR_WANT).
+   (Beta 0.44.2) While the player is touching the game or the view is gliding (busy), the ranking takes only PR_BUSY ms
+   a frame, so the frames that are being watched closely stay light. And a change has to settle for PR_SETTLE ms before a
+   new ranking starts (unless the Park window is waiting for one), so buying several upgrades in a row starts one
+   ranking, not one per tap. */
+const PR_BUDGET=4,PR_BUSY=1.5,PR_SETTLE=1500,PR_REFRESH=300e3;
+let PR=null,PRJ=null,PR_WANT=-1,prSig='',prSigAt=0;
 function econSig(){const now=Date.now(),g=galNow();
-  return JSON.stringify([S.planets.map(p=>p.u?[p.teams.length,p.al,p.pts,(p.perks||[]).map(x=>x&&x.id?x.id+(x.ready>now?'~':''):0),Object.keys(p.done||{}).length,p.set||0]:0),
+  return JSON.stringify([S.planets.map(p=>p.u?[p.teams.length,p.al,p.pts,(p.perks||[]).map(x=>x&&x.id?x.id+(x.ready>now?'~':''):0),Object.keys(p.done||{}).length,p.set||0,(p.sc||[]).join('')]:0),
     Object.keys(S.research).length,S.perm,S.park,g&&g.type])}
 function parkJob(){if(!parkOK()||S.planets.filter(p=>p.u).length<2){PRJ=null;return}
-  const t0=performance.now(),sig=econSig();
+  const t0=performance.now(),sig=econSig(),budget=busy(t0)?PR_BUSY:PR_BUDGET;
+  if(sig!==prSig){prSig=sig;prSigAt=Date.now()}
   if(PRJ&&PRJ.sig!==sig)PRJ=null;
   if(!PRJ){if(PR&&PR.S===S&&PR.sig===sig&&Date.now()-PR.t<PR_REFRESH)return;
+    if(Date.now()-prSigAt<PR_SETTLE&&PR_WANT<0)return; // (still changing)
     const js=[];S.planets.forEach((p,j)=>{if(p.u)js.push(j)});const here=parkDest();
     PRJ={sig,S,js,k:0,dests:js.filter(x=>x!==here),d:0,base:{now:{},bal:{},keep:{}},cur:null,list:[]}}
   const J=PRJ;if(J.S!==S){PRJ=null;return}
@@ -6309,7 +6456,7 @@ function parkJob(){if(!parkOK()||S.planets.filter(p=>p.u).length<2){PRJ=null;ret
         c.rows.push({j,now:J.base.now[j],as,bal:bl,behind:J.base.keep[j]&&!B.keep});c.n0+=J.base.now[j];c.b0+=J.base.bal[j];c.a1+=as;c.b1+=bl})}
     else{const cost=fuelCost(x),gain=c.b1-Math.max(c.n0,c.b0);J.list.push({x,rows:c.rows,now:c.n0,here:c.b0,as:c.a1,there:c.b1,gain,cost,payback:gain>0?cost/gain:Infinity});J.cur=null;J.d++;
       if(x===PR_WANT){parkAskRefresh();return}}
-  }while(performance.now()-t0<PR_BUDGET)}
+  }while(performance.now()-t0<budget)}
 // the latest finished ranking (empty until the first one is done); parkRankReady says whether it matches the game now
 // and is less than PR_REFRESH old
 function parkRank(){return PR&&PR.S===S?PR.list:[]}
@@ -6448,11 +6595,12 @@ function svCheck(){const r=unsealSave($('svCode').value);SV.s=r.s||null;SV.arm=n
   svSay(r.s?'Ready to load: '+saveSum(r.s):r.err,!!r.s);return !!r.s}
 async function svCopy(){const t=$('svCode');let ok=false;try{await navigator.clipboard.writeText(t.value);ok=true}catch(e){}
   if(!ok){try{t.focus();t.select();ok=document.execCommand('copy')}catch(e){}}
+  if(ok){S.bk.exp=Date.now();save()}
   svSay(ok?'Copied. Paste it somewhere safe.':"Couldn't copy it automatically. Select the code and copy it.",ok)}
 function svDownload(){const d=new Date(),nm=((S.st&&S.st.name)||'Star Quarry').replace(/[^A-Za-z0-9]+/g,'-').replace(/^-|-$/g,'')||'Star-Quarry';
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([$('svCode').value+'\n'],{type:'text/plain'}));
   a.download=`${nm}-${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}.sqsave`;
-  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),5000);svSay('Saved as '+a.download+'.',true)}
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),5000);S.bk.exp=Date.now();save();svSay('Saved as '+a.download+'.',true)}
 $('svMain').addEventListener('click',()=>{if(SV.mode==='exp')svCopy();else svCheck()});
 $('svFile').addEventListener('click',()=>{if(SV.mode==='exp')svDownload();else{$('svPick').value='';$('svPick').click()}});
 $('svPick').addEventListener('change',()=>{const f=$('svPick').files&&$('svPick').files[0];if(!f)return;
@@ -6469,6 +6617,24 @@ $('svList').addEventListener('click',ev=>{const b=ev.target.closest('[data-svk]'
   const e=replaceSave(it.s,'Backup restored. The game you were playing was kept as a backup.');if(e)svSay(e,false)});
 $('svClose').addEventListener('click',()=>{$('sv').hidden=true;SV.arm=null});
 $('sv').addEventListener('click',e=>{if(e.target.id==='sv'){$('sv').hidden=true;SV.arm=null}});
+/* ----- Keeping the save safe (Beta 0.44.3) -----
+   In a browser the save is in the site's local storage, and so are its backups: clearing the site's data erases them
+   all. Two things help (not in the Android app, whose storage only goes when it's uninstalled or its storage cleared):
+   - once the game has some progress (bkProgress), the first tap of each session asks the browser to keep the site's
+     storage (navigator.storage.persist), so it isn't cleared on its own when space runs low. Chrome and Safari decide
+     silently; Firefox asks the player once. It can't stop a player clearing the data on purpose.
+   - with that progress, if the game hasn't been copied or downloaded from Export save for a week (S.bk.exp), a toast
+     says where to export it, at most once a week (S.bk.nag): 3 minutes after the game opens, every 30 minutes after,
+     and just after a warp. S.bk is kept through warps and travels with an exported save. */
+const BK_EVERY=7*86400e3;
+const bkProgress=()=>S.warps>0||S.planets.filter(p=>p.u).length>=3;
+function bkRemind(){if(IS_APP||SAVE_BLOCK||!bkProgress())return;const n=Date.now();
+  if(n-(+S.bk.exp||0)<BK_EVERY||n-(+S.bk.nag||0)<BK_EVERY)return;S.bk.nag=n;save();
+  toast("Your game is saved only in this browser, so clearing its site data erases it. Export save on the Warp tab keeps a copy safe.",8000)}
+setTimeout(bkRemind,180e3);setInterval(bkRemind,1800e3);
+function bkPersist(){if(bkPersist.done||IS_APP||!bkProgress())return;bkPersist.done=1;const st=navigator.storage;
+  if(st&&st.persist&&st.persisted)st.persisted().then(p=>p||st.persist()).catch(()=>{})}
+addEventListener('pointerdown',bkPersist,{capture:true,passive:true});
 /* ===================== STATION NAME =====================
    Asked at the start of every new game (and once for games already in progress); kept through warps.
    Every name the station has had is kept with its date in S.st.hist and shown in the Captain's log. */
@@ -6608,14 +6774,16 @@ const GUIDE=[
 <li>Probes keep flying while the game is closed, up to the offline limit.</li></ul>`],
 ['Settlements',`<ul>
 <li>A planet with all 3 teams hired can found a settlement, then grow it from Outpost to Town to City.</li>
-<li>Levels 1 and 2 boost that planet. Level 3 adds a perk for the whole galaxy.</li>
+<li>Each level offers two upgrades: pick one. Levels 1 and 2 boost that planet (or its newest ore's price). Level 3 adds a perk for the whole galaxy.</li>
+<li>A new level grows in over time (Outpost 10 minutes, Town 30 minutes, City 1 hour 30 minutes), also while the game is closed. Its population fills up, its upgrade gets stronger as it does, and its buildings go up one by one.</li>
+<li>The next level can be built once the one before is full. A planet's label shows ◆ for each full level and ◇ for one still growing.</li>
 <li>Each type of world builds its settlement its own way. See Colonies up close.</li>
 <li>Settlements reset when you warp.</li></ul>`],
 ['Colonies up close',`<p>Zoom in on a claimed planet to watch its colony at work. Each mining crew has its own World Works far out across the planet; its miners drive out, gather ore at the Works' edge and tip their loads at the unloading station in the middle of the mine works pad. A covered conveyor carries the ore to the garage on the mine head, and another takes it on to the landing pad. On terran worlds the walkers keep to land, and on ocean worlds the skimmers keep to water. Each part of the base grows with a different part of your progress:</p>
 <ul><li><b>Mine and miners:</b> the mine and its works pad grow with each crew you hire (a weighbridge and a second floodlight with the second crew, a control booth with the third), and every crew brings 2 miners and another World Works, each further out than the last. Every World Works grows with the crews too.</li>
 <li><b>Landing pad:</b> grows when the planet has 12 Velocity + Cargo points, and again at 24.</li>
 <li><b>Refinery:</b> built when you hire the Shift Crew, extended when the planet learns Prospecting, and finished when all five training programs are done. It's for show and doesn't change income.</li>
-<li><b>Settlement:</b> grows with each level: Outpost, Town, City.</li></ul>
+<li><b>Settlement:</b> grows with each level: Outpost, Town, City. A new level's buildings go up one by one as its population grows, spreading out from the central hub.</li></ul>
 <p>Each type of world has its own buildings, miners and landscape:</p>
 <ul><li><b>Rocky worlds:</b> laser rovers cutting ore at the rim of a terraced open pit, with a headframe, glowing ore crystals, a bucket-wheel excavator and an ore stacker; a concrete pad with a control tower; a crusher, ball mill and smelt stack. Settlement domes are banked with rubble and joined by covered tubes.</li>
 <li><b>Molten worlds:</b> heat-shielded crawlers ladling at the rim of a large bubbling, sparking magma pool, a nodding pump-jack and a carousel of glowing ingot moulds; a stilted pad with a blast deflector; a foundry pouring glowing ingots. Charcoal domes stand on stilts above the hot ground. Out on the plains, volcanoes erupt and lava pools bubble.</li>
@@ -6648,8 +6816,8 @@ const GUIDE=[
 <li>Ore is hauled, overflow is sold, furnaces keep smelting and probes keep flying. A welcome-back message shows what you earned.</li></ul>`],
 ['Your station and updates',`<ul>
 <li>Name your station when a new galaxy starts, or rename it any time from the Station card in the Captain's Log on the Warp tab. Past names are kept in its history.</li>
-<li>The Version panel checks for updates, and What's changed lists every change by date.</li>
-<li><b>Your save</b> on the Warp tab exports your game as a sealed save code to keep somewhere safe or move to another device, and imports one back. If anything in a code is changed, it won't load. Before an import replaces your game, the game you were playing is kept as a backup, and Restore a backup brings it back. A save that couldn't be loaded is kept as a backup too.</li>
+<li>The Version panel checks for updates, and What's changed lists what each release changed, newest first.</li>
+<li><b>Your save</b> on the Warp tab exports your game as a sealed save code to keep somewhere safe or move to another device, and imports one back. If anything in a code is changed, it won't load. Before an import replaces your game, the game you were playing is kept as a backup, and Restore a backup brings it back. A save that couldn't be loaded is kept as a backup too. In a browser, your game and its backups are kept only in that browser, so clearing its data for this site erases them: export now and then (the card shows when you last did). Once you've made some progress, the game asks the browser not to clear its storage on its own, and if you haven't exported for a week it reminds you, at most once a week.</li>
 <li>There are no ads, purchases or premium currency. Everything is earned by playing.</li></ul>`],
 ['Tips and tricks',`<ul>
 <li><b>Follow the red button.</b> On the Planet tab the red upgrade button is the one that adds the most income for its price.</li>
@@ -6672,6 +6840,7 @@ const GUIDE=[
 <li><b>Use all three missions.</b> Each card says how long it should take at your pace, so pick the ones that fit how you'll play this week. Your third mission each week is an Elite one, with a bigger goal and reward, and complete at least one every week to keep your streak. Permanent boosts stay through every warp, so they're worth the most over time.</li>
 <li><b>Play the galaxy events.</b> Point a furnace at the ore in an ore rush, rebalance planets that turn red in a solar storm, and go looking for derelicts: each salvage is 10 minutes of income, plus whatever is still aboard.</li>
 <li><b>Settlement perks are galaxy-wide.</b> A level 3 settlement boosts every planet, not just its own.</li>
+<li><b>Pick settlement upgrades for the weak spot.</b> If a planet's ships can't keep up, pick its ship velocity or cargo upgrade rather than more mining. Found settlements early: they grow while you do other things.</li>
 </ul>`]];
 // opening a guide section that runs off the bottom of the window scrolls it into view (its title stays on screen)
 $('glist').addEventListener('toggle',e=>{const d=e.target;if(!d.open)return;const L=$('glist'),a=L.getBoundingClientRect(),b=d.getBoundingClientRect();
@@ -6767,7 +6936,8 @@ const ACTIONS={
     // (Beta 0.37.5) opening: bring the mission record into view if it's below (or above) what's showing
     if(evBInfo)setTimeout(()=>{const s=pbody.querySelector('.evsrc');if(!s)return;const r=s.getBoundingClientRect(),P=pbody.getBoundingClientRect();
       if(r.bottom>P.bottom-8)pbody.scrollBy({top:Math.min(r.bottom-P.bottom+16,r.top-P.top-60),behavior:'smooth'});else if(r.top<P.top)pbody.scrollBy({top:r.top-P.top-60,behavior:'smooth'})},80)},
-  settle:b=>{const i=+b.dataset.p,lv=settleLv(i);if(buySettle(i)){refreshWorld();toast(lv?`${SETTLE[i][0]} grew into a ${SETTLE_LV[lv]}.`:`${SETTLE[i][0]} founded on ${PLANETS[i].n}.`);save()}},
+  settle:b=>{const i=+b.dataset.p,c=+b.dataset.c||0,lv=settleLv(i);if(buySettle(i,c)){refreshWorld();const nm=SETTLE[i][0],un=settleKind(i,lv)[0],t=fmtWait(SETTLE_GROW[lv]*60);
+    toast(lv?`${nm} is growing into a ${SETTLE_LV[lv]} with ${un}. It fills up in ${t}.`:`${nm} founded on ${PLANETS[i].n} with ${un}. It fills up in ${t}.`,4000);save()}},
   tplus:(b,a)=>{const i=+b.dataset.p,t=tuneOf(i),q=planAdd(planCopy(t.plan),b.dataset.k,a==='tplus'?1:-1);if(planOK(i,q))t.plan=q},
   tminus:(b,a)=>ACTIONS.tplus(b,a),
   tcancel:b=>{tuneOf(+b.dataset.p).plan={}},
@@ -6791,7 +6961,7 @@ const ACTIONS={
   auto:b=>{S.auto[b.dataset.k]=!S.auto[b.dataset.k]},
   slot:b=>{const sl=S.slots[+b.dataset.i],r=+b.dataset.r;setSlot(sl,r<0?null:r)},
   res:b=>{const r=RESEARCH.find(x=>x.id===b.dataset.id);if(buyResearch(r)){toast(r.n+' complete.');if(r.id==='smelt')toast('The Smelter tab is open. Pick an ore for your furnace.',4000);save()}},
-  warp:b=>{if(!armed('warp')){arm={k:'warp',until:Date.now()+4000}}else{const g=pendingDM();S.warpLog.unshift({at:Date.now(),dur:Date.now()-(S.born||Date.now()),earned:S.runEarned,dust:g,planets:S.planets.filter(p=>p.u).length});S.warpLog.length=Math.min(S.warpLog.length,10);S=newRun({warpLog:S.warpLog,dm:S.dm+g,lifetime:S.lifetime,warps:S.warps+1,music:S.music,nfmt:S.nfmt,words:S.words,probeLife:S.probeLife,life:S.life,perm:S.perm,ev:S.ev,st:S.st,tour:S.tour});arm=null;resetGalaxyUI();refreshWorld();recenter();save();toast(`Warped. +${fmt(g)} star dust. Everything now sells for +${fmt(S.dm)}%.`,4500);setTab('planet')}},
+  warp:b=>{if(!armed('warp')){arm={k:'warp',until:Date.now()+4000}}else{const g=pendingDM();S.warpLog.unshift({at:Date.now(),dur:Date.now()-(S.born||Date.now()),earned:S.runEarned,dust:g,planets:S.planets.filter(p=>p.u).length});S.warpLog.length=Math.min(S.warpLog.length,10);S=newRun({warpLog:S.warpLog,dm:S.dm+g,lifetime:S.lifetime,warps:S.warps+1,music:S.music,nfmt:S.nfmt,words:S.words,probeLife:S.probeLife,life:S.life,perm:S.perm,ev:S.ev,st:S.st,tour:S.tour,bk:S.bk});arm=null;resetGalaxyUI();refreshWorld();recenter();save();toast(`Warped. +${fmt(g)} star dust. Everything now sells for +${fmt(S.dm)}%.`,4500);setTimeout(bkRemind,5000);setTab('planet')}},
   updcheck:b=>{updCheck(true)},
   rename:b=>{nameStation(false)},
   parkask:b=>{parkAsk(+b.dataset.p)},
@@ -6856,7 +7026,7 @@ function frame(now){
   const prevDraw=lastDraw,t0=performance.now();lastDraw=now;
   let dt=(now-lastT)/1000;lastT=now;
   if(dt>3){offline(dt,dt>60)}else step(Math.min(dt,.25));
-  probeTick(Date.now());veinTick(Date.now());progTick(Date.now());
+  probeTick(Date.now());veinTick(Date.now());progTick(Date.now());settleTick(Date.now());
   updateWorld(Math.min(dt,.25));glideView(Math.min(dt,.1));evPlayTick(Math.min(dt,.25));starMat.uniforms.t.value=performance.now()/1000%3600;{const r0=performance.now();withBaseFade(()=>renderer.render(scene,camera));res.draw=performance.now()-r0}placeLabels();tourFrame();
   // furnace progress bars move every frame, not just when the panel redraws
   if(tab==='smelter')document.querySelectorAll('[data-smelt]').forEach(el=>{const sl=S.slots[+el.dataset.smelt];if(sl)el.style.width=(sl.r===null?0:sl.p*100).toFixed(2)+'%'});
@@ -6921,12 +7091,13 @@ const tHire=(gi,n,ch,id,x)=>({k:'A',ch,id,t:()=>`Hire ${n===1?'a Shift Crew':'th
   done:()=>tCrews(gi())>n,at:()=>({tab:'planet',p:gi(),q:[`[data-act="hire"][data-p="${gi()}"][data-c]`]}),prog:()=>[S.cash,teamHireCost(gi(),n),'credits']});
 const tRes=(id,ch,t,x)=>({k:'A',ch,t,x:()=>x()+tResNeed(id),ok:()=>`${RESEARCH.find(r=>r.id===id).n} is already researched.`,
   done:()=>has(id),at:()=>({tab:'research',q:[`[data-act="res"][data-id="${id}"]`]}),prog:()=>[S.cash,RESEARCH.find(r=>r.id===id).cost,'credits']});
-// the settlement's next level on planet gi()
+// the settlement's next level on planet gi(): founding it, then waiting for the level before to fill up and the credits
 const tSettle=(gi,lv,ch)=>({k:lv===1?'A':'W',ch,id:lv===1?'settle':null,t:()=>`${lv===1?'Found':'Grow'} ${SETTLE[gi()][0]}${lv>1?' into a '+SETTLE_LV[lv-1]:''}`,
-  x:()=>lv===1?`With all three crews hired, ${tN(gi())} can found ${SETTLE[gi()][0]}. Each level boosts this planet, and the City level helps every planet you own.`
-    :`Each settlement level costs more. ${lv===3?'The City is the last level, and its perk helps the whole galaxy.':'Keep earning: the ring shows the button when you can afford it.'}`,
+  x:()=>lv===1?`With all three crews hired, ${tN(gi())} can found ${SETTLE[gi()][0]}. Pick one of two upgrades. A settlement grows over time, and its upgrade gets stronger as it fills up.`
+    :`A settlement level must fill up before the next can be built, and each costs more. ${lv===3?'The City is the last level: its perk helps every planet you own.':'Then pick the next upgrade: the ring shows it when you can afford it.'}`,
   ok:()=>{const n=SETTLE_LV[Math.max(lv,settleLv(gi()))-1];return`${SETTLE[gi()][0]} is already ${/^[AEIOU]/.test(n)?'an':'a'} ${n}.`},done:()=>settleLv(gi())>=lv,
-  at:()=>lv===1||S.cash>=settleCost(gi())?{tab:'planet',p:gi(),q:[`[data-act="settle"][data-p="${gi()}"]`]}:null,prog:()=>settleLv(gi())<lv?[S.cash,settleCost(gi()),'credits']:null});
+  at:()=>lv===1||settleGrown(gi())&&S.cash>=settleCost(gi())?{tab:'planet',p:gi(),q:[`[data-act="settle"][data-p="${gi()}"][data-c]`]}:null,
+  prog:()=>settleLv(gi())>=lv?null:settleGrown(gi())?[S.cash,settleCost(gi()),'credits']:[settlePop(gi()),settleCap(gi()),'settlers']});
 const TOUR=[
   // chapter 0: welcome and the screen
   {k:'L',ch:0,shut:1,t:'Welcome to Star Quarry',x:()=>'You run a mining station. Mining crews dig ore on planets, haulers fly it here, and you sell it for credits. Tap Next to start the tour.',at:()=>({w:STP,wr:1.2})},
@@ -6956,7 +7127,7 @@ const TOUR=[
   // chapter 2: a second planet, the Market and research
   tClaim(tB,2),
   {k:'L',ch:2,t:'More ores',x:()=>`${tN(tB())} mines ${PLANETS[tB()].mix.map(([o])=>ORES[o].n).join(' and ')}. Each ore sells at its own price, and newer planets' ores are worth more.`,at:()=>({tab:'market',q:['[data-act="sellall"]']})},
-  {k:'L',ch:2,id:'surge',t:'Market Surge',x:()=>'When ▲ turns orange, call a Market Surge from the Market: for 10 minutes everything sells for double, up to a limit. Save up ore before you call it.',at:()=>({el:'#od'})},
+  {k:'L',ch:2,id:'surge',t:'Market Surge',x:()=>'When ▲ turns orange, call a Market Surge from the Market: for 10 minutes everything sells for double, up to a limit. Keep selling as normal while it runs: saving up ore first gains nothing.',at:()=>({el:'#od'})},
   tRes('auto',2,'Research',()=>'The Station tab holds research, which boosts your whole station. Research Trade Contracts so ore can sell itself.'),
   {k:'A',ch:2,t:'Auto-sell',x:()=>'Tap Auto on an ore to sell it as soon as it arrives. Ore that open research needs is always kept back.',ok:()=>'Auto-sell is already on.',done:tAuto,at:()=>({tab:'market',q:['[data-act="auto"]']})},
   {k:'L',ch:2,t:'Research costs',x:()=>'Later projects cost ore as well as credits, and the biggest also need bars from the Smelter. Selling everything and auto-sell keep back what open research needs.',at:()=>({tab:'research'})},
@@ -6980,12 +7151,12 @@ const TOUR=[
   tRes('smelt',4,'The Smelter',()=>'Research the Smelter to turn ore into bars. Eight ore make one bar worth twelve, so smelting adds half again to the ore\'s value.'),
   {k:'A',ch:4,t:'Start a furnace',x:()=>'Pick an ore for a furnace. It turns that ore into bars as it arrives, and the Market sells the bars.',ok:()=>'A furnace is already running.',
     done:()=>S.slots.some(sl=>sl.r!==null),at:()=>({tab:'smelter',q:['[data-act="slot"]:not([data-r="-1"])']})},
-  {k:'L',ch:4,id:'smbal',t:'Smelter Balance',x:()=>"Balance picks the best ore for each furnace, and can put research's bars first. A dot on the Smelter tab means a furnace needs a look.",at:()=>({tab:'smelter',q:['[data-act="smbal"]']})},
+  {k:'L',ch:4,id:'smbal',t:'Smelter Balance',x:()=>"Balance picks the best ore for each furnace, and can put research's bars first. The Smelter tab turns orange when a furnace needs a look.",at:()=>({tab:'smelter',q:['[data-act="smbal"]']})},
   tPts(tC,10,4),
   {k:'L',ch:4,t:'Space probes',x:()=>'Every so often a probe leaves the station on its own and comes back with a haul of ore. ◈ turns teal while one is out: tap it to follow the probe.',at:()=>({el:'#probeInfo'})},
   {k:'L',ch:4,id:'park',t:'Station thrusters',x:()=>"Your station can park near any planet you own, which shortens that planet's trips. Park shows a forecast first. Planets that lose out get a free perk swap.",
     at:()=>({tab:'planet',p:tC(),q:['[data-act="parkask"]']})},
-  {k:'L',ch:4,id:'events',t:'Events',x:()=>'Each week brings event missions with rewards, and some days bring a galaxy event such as a comet or a derelict to salvage. A dot on the Events tab means something new.',at:()=>({el:'.tab[data-tab="events"]'})},
+  {k:'L',ch:4,id:'events',t:'Events',x:()=>'Each week brings event missions with rewards, and every 12 hours a galaxy event, such as a comet or a derelict to salvage. The Events tab turns orange when something new is waiting.',at:()=>({el:'.tab[data-tab="events"]'})},
   {k:'L',ch:4,id:'away',t:'Time away',x:()=>'The game keeps earning while it\'s closed, up to the offline limit shown in the Captain\'s Log. Research can raise the limit.',at:()=>({el:'#rate'})},
   // chapter 5: build one planet all the way up
   {k:'L',ch:5,enter:()=>{const f=S.tour.f;if(f.mx==null)f.mx=tBest()},t:()=>`Build up ${tN(tM())}`,
@@ -7016,8 +7187,8 @@ const TOUR=[
 const TF={};function tourFlag(k){TF[k]=1}
 const tOwn=n=>S.planets.filter(p=>p.u).length>=n;
 const TIPS=[
-  {id:'surge',les:'surge',t:'Market Surge is ready',x:()=>'▲ is orange: call a Market Surge from the Market and everything sells for double for 10 minutes, up to a limit. Save up ore before you call it.',when:()=>tOwn(2)&&surgeReady(),at:()=>({el:'#od'})},
-  {id:'events',les:'events',t:'Something new in Events',x:()=>'Events bring weekly missions with rewards, and some days a galaxy event. The dot on the Events tab means something new is waiting.',
+  {id:'surge',les:'surge',t:'Market Surge is ready',x:()=>'▲ is orange: call a Market Surge from the Market and everything sells for double for 10 minutes, up to a limit. Keep selling as normal while it runs: saving up ore first gains nothing.',when:()=>tOwn(2)&&surgeReady(),at:()=>({el:'#od'})},
+  {id:'events',les:'events',t:'Something new in Events',x:()=>'Events bring weekly missions with rewards, and every 12 hours a galaxy event. The Events tab turns orange when something new is waiting.',
     when:()=>tOwn(2)&&tab!=='events'&&document.querySelector('.tab[data-tab="events"]').classList.contains('alert'),at:()=>({el:'.tab[data-tab="events"]'})},
   {id:'away',les:'away',t:'Welcome back',x:()=>'The game keeps earning while it\'s closed, up to the offline limit shown in the Captain\'s Log. Research can raise the limit.',when:()=>!!TF.away,at:()=>({el:'#rate'})},
   {id:'over',les:'over',t:'Overflow sold',x:()=>"Ore a planet's ships couldn't carry was just sold at a quarter of its price. Upgrading Velocity or Cargo on that planet earns that ore at full price.",when:()=>!!TF.over},
@@ -7025,7 +7196,7 @@ const TIPS=[
     when:()=>S.planets[S.sel].u&&flowTone(S.sel)==='bn',at:()=>({tab:'planet',p:S.sel,q:tRed(S.sel)})},
   {id:'shift',les:'shift',t:'A new crew can be hired',x:()=>'A planet that owns every point its crews have room for can hire its next crew, which adds 20 more points of room.',
     when:()=>S.planets.some((p,i)=>p.u&&p.teams.length>0&&p.teams.length<TEAM_MAX&&hireReady(i))},
-  {id:'settle',les:'settle',t:'Found a settlement',x:()=>'A planet with all three crews can found a settlement on its Planet tab. Each level boosts that planet, and the City level helps every planet.',
+  {id:'settle',les:'settle',t:'Found a settlement',x:()=>'A planet with all three crews can found a settlement on its Planet tab. Each level offers two upgrades and grows in over time; the City level helps every planet.',
     when:()=>S.planets.some((p,i)=>p.u&&p.teams.length>=TEAM_MAX&&settleLv(i)<1)},
   {id:'swap',les:'park',t:'A free perk swap',x:()=>'Moving the station left some planets short of ships, so they get one free, instant perk swap until the next move. Look for "free swap" on their perks.',
     when:()=>S.planets.some(p=>p.u&&p.swapFree)},
