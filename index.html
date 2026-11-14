@@ -1996,6 +1996,26 @@ const DER_LOG=['"Day 212. The hull keeps ringing like a bell. Mira says it\'s th
 function derInfo(n){const R=rng(((n*911+57)%2147483646+2147483646)%2147483646+1);R();R();
   const pick=a=>a[Math.floor(R()*a.length)];const name=pick(DER_PRE)+' '+pick(DER_NAME),cls=pick(DER_CLASS),yrs=12+Math.floor(R()*78),cause=pick(DER_CAUSE),log=pick(DER_LOG),f=R();
   return{name,cls,yrs,cause,log,find:f<.45?'cache':f<.7?'dust':'none'}}
+// the derelict's hull panel texture (kept from the old haulers, which were its only other user until Beta 0.48.0):
+// plates of slightly different tone, dark seams, a few hatches and rivet rows
+const HAUL_TEX=(()=>{const N=256,cv=document.createElement('canvas');cv.width=cv.height=N;const g=cv.getContext('2d'),r=rng(4711);
+  g.fillStyle='#ececec';g.fillRect(0,0,N,N);
+  const plate=(x,y,w,h,d)=>{if(d>0&&(w>40||h>40)&&r()<.85){if(w>=h){const s=Math.round(w*(.35+r()*.3));plate(x,y,s,h,d-1);plate(x+s,y,w-s,h,d-1)}else{const s=Math.round(h*(.35+r()*.3));plate(x,y,w,s,d-1);plate(x,y+s,w,h-s,d-1)}return}
+    const v=Math.round(222+r()*30);g.fillStyle=`rgb(${v},${v},${v})`;g.fillRect(x+1,y+1,w-2,h-2);
+    g.strokeStyle='rgba(70,74,84,.85)';g.lineWidth=1.6;g.strokeRect(x+.8,y+.8,w-1.6,h-1.6);
+    g.fillStyle='rgba(255,255,255,.35)';g.fillRect(x+2,y+2,w-4,1);
+    if(w>26&&h>26&&r()<.25){const hw=w*.5,hh=h*.4,hx=x+(w-hw)/2,hy=y+(h-hh)/2;g.strokeStyle='rgba(60,64,74,.9)';g.lineWidth=1.2;g.strokeRect(hx,hy,hw,hh);g.fillStyle='rgba(0,0,0,.06)';g.fillRect(hx,hy,hw,hh)}
+    if(r()<.5){g.fillStyle='rgba(60,64,74,.7)';for(let k=4;k<w-3;k+=6)g.fillRect(x+k,y+3,1.2,1.2)}};
+  plate(0,0,N,N,6);
+  for(let k=0;k<1400;k++){const v=r()<.5?0:255;g.fillStyle=`rgba(${v},${v},${v},.04)`;g.fillRect(r()*N,r()*N,1.5,1.5)}
+  const t=new THREE.CanvasTexture(cv);t.colorSpace=THREE.SRGBColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=4;return t})();
+// merge parts [geometry, matrix, colour] keeping each part's own normals and texture coordinates
+function mergeKeep(parts){let n=0;const gs=parts.map(([g,m,c])=>{const q=(g.index?g.toNonIndexed():g.clone()).applyMatrix4(m);n+=q.attributes.position.count;return[q,c]});
+  const pos=new Float32Array(n*3),nor=new Float32Array(n*3),uv=new Float32Array(n*2),col=new Float32Array(n*3);let o=0;
+  gs.forEach(([q,c])=>{const p=q.attributes.position.array,nn=q.attributes.normal.array,u=q.attributes.uv?q.attributes.uv.array:null,k=p.length/3;pos.set(p,o*3);nor.set(nn,o*3);if(u)uv.set(u,o*2);
+    for(let j=0;j<k;j++){col[(o+j)*3]=c.r;col[(o+j)*3+1]=c.g;col[(o+j)*3+2]=c.b}o+=k});
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('normal',new THREE.BufferAttribute(nor,3));
+  g.setAttribute('uv',new THREE.BufferAttribute(uv,2));g.setAttribute('color',new THREE.BufferAttribute(col,3));g.computeBoundingSphere();return g}
 let derBuilt=false,derAnim=null;const derParts={halo:derelictObj.userData.halo};
 const derPS=()=>derParts.ps||(derParts.ps={gas:PSys(70,DER_GLOW,false),spark:PSys(60,DER_GLOW,true)},scene.add(derParts.ps.gas.pts),scene.add(derParts.ps.spark.pts),derParts.ps);
 function derBuild(){if(derBuilt)return;derBuilt=true;const c=x=>new THREE.Color(x).convertSRGBToLinear(),Z=Math.PI/2,r=rng(9157);
