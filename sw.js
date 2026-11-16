@@ -1,8 +1,8 @@
 // Star Quarry offline support. The game page is always re-checked with the server when online (no-cache,
 // so GitHub Pages' 10-minute browser cache can't hold back an update)
 // and served from the cache when offline.
-const CACHE='starquarry-11913ef367';
-const CORE=['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png','./icon-maskable-512.png','./apple-touch-icon.png','./three-r187.min.js','./sky-2537c021.jpg'];
+const CACHE='starquarry-a1c9e3032c';
+const CORE=['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png','./icon-maskable-512.png','./apple-touch-icon.png','./three-r187.min.js','./sky-2537c021.jpg','./css-core-df4d088b.css','./css-orig-0f57c96b.css','./css-sp-6ba94aec.css'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
 // The game's own address (the folder and index.html) is the only page kept for offline play. A response replaces
@@ -22,7 +22,7 @@ self.addEventListener('fetch',e=>{
       if(await realGame(r)){const copy=r.clone();e.waitUntil(caches.open(CACHE).then(c=>c.put('./index.html',copy)));return r}
       return (await caches.match('./index.html'))||r||Response.error()})());return}
   if(req.mode==='navigate'||(same&&url.pathname.endsWith('.html')))return;
-  // icons, manifest, Three.js, the sky and web fonts: cache first, refreshed in the background, and only a
+  // icons, manifest, Three.js, the sky, the stylesheets and web fonts: cache first, refreshed in the background, and only a
   // successful response is ever stored
   e.respondWith(caches.match(req).then(hit=>{
     const net=fetch(req).then(r=>{if(r&&r.ok&&!r.redirected){const copy=r.clone();caches.open(CACHE).then(c=>c.put(req,copy))}return r}).catch(()=>hit||Response.error());

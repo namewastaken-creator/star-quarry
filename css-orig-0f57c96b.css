@@ -1,0 +1,102 @@
+/* Layout: full-bleed 3D orbit view, a thin instrument HUD on top, a pull-up console sheet at the bottom. */
+:root{--void:#05060d; --panel:rgba(13,16,32,.68);--card:rgba(12,15,32,.5); --panel2:#161a33; --line:#272c4d;
+  --ink:#e8eaf5; --muted:#8c92b4; --ship:#5fd4c4; --ship-rgb:95,212,196; --bad:#ff7a7a; --good:#86e39a; --stn:#6aa8ff; --brass:#c99a4a}
+body{background:radial-gradient(120% 80% at 70% 10%,#151a3a 0%,#090b1a 45%,var(--void) 100%)}
+.plabel b{color:var(--ink);font-size:12px}
+/* the station's name under the station, in the station's own blue (--stn); orange (like a Research button you can press) when a project is ready */
+.stlabel{font:700 11px/1.1 var(--f-display);letter-spacing:.14em}
+.pkrow b{font:600 12px var(--f-data)}
+.bprow b{font:600 14px var(--f-body);color:var(--ink)}
+
+/* HUD */
+#hud{background:linear-gradient(#05060dcc,#05060d00)}
+.cash{flex-direction:column;gap:3px}
+.cash .lbl{font:600 var(--fs-xs) var(--f-display);letter-spacing:.18em;color:var(--muted)}
+.cash .val{font:700 24px/1 var(--f-display);color:var(--ore);font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.cash .val small{font:600 13px/1 var(--f-display);letter-spacing:.04em;color:var(--ore)}
+/* the three status lines under the credits: one size, one spacing; the tappable ones are underlined */
+.cash .rate{color:var(--muted)}
+/* the Steam Surge line under the income: orange "Surge ready", teal "×2 Surge · 6m left" while one runs, nothing while
+   it recharges; tapping it opens the Market. It hangs below the credits block (absolute), so it never changes the top
+   bar's height and the map's framing (viewBox) doesn't shift when it comes and goes */
+.rsurge{left:0;top:100%;margin-top:3px;font:500 11px/1.3 var(--f-data);color:var(--ore);background:none;border:0;padding:3px 0;text-shadow:0 0 8px rgba(var(--ore-rgb),.45)}
+.rsurge.on{color:var(--ship);text-shadow:0 0 8px rgba(var(--ship-rgb),.45)}
+.rsurge:focus-visible{border-radius:3px}
+/* the buttons over the map: round icons in one row, music always at the right. Full screen (phone browsers only) and
+   Recenter (only while the view isn't the whole galaxy) appear to its left; holding music opens the volume (#volpop) */
+.hi{width:36px;height:36px;border-radius:50%;background:rgba(13,16,32,.75);color:var(--muted);border:1px solid var(--line)}
+.hi svg{width:16px;height:16px;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#music.on{color:var(--ship);border-color:#2d6b66}
+/* music off: dimmed, with a slash through the note */
+#music:not(.on){opacity:.75}
+#music:not(.on)::after{left:9px;right:9px;top:50%;background:currentColor}
+#center{border-color:var(--ore-dim)}
+#volpop{border:1px solid var(--line);border-radius:10px}
+#volpop label{font:600 10px var(--f-display)}
+
+/* Sheet */
+/* (Beta 0.46.8) no backdrop blur: blurring the live map behind the panel cost the browser a pass over most of a phone's
+   screen on every frame, so the panel is a little more opaque instead */
+#sheet{background:rgba(13,16,32,.74);border-top:1px solid var(--line)}
+.tabbar{border-bottom:1px solid var(--line)}
+.tab{background:none;border:0;color:var(--muted);font:700 13px var(--f-display);letter-spacing:.07em;padding:17px 9px 15px}
+.tab.on{color:var(--ink)}
+.tab.alert{color:var(--ore)}
+.tab.out{color:var(--ship)}
+.evi.on,.btn.evunb[aria-expanded="true"] .evi{color:var(--ship)}
+@media (hover:hover){.evi:hover,.btn.evunb:hover .evi{color:var(--ship)}}
+.tab.on::after{content:"";position:absolute;left:22%;right:22%;bottom:-1px;height:2px;background:var(--ore)}
+/* a selected chip (planet list, Station and Probe tabs) has the furnace ore chips' highlight: a 2px orange ring, white label
+   (a status colour, .nm-*, still wins) */
+.chip.on{box-shadow:inset 0 0 0 1px var(--ore);color:var(--ink)}
+.flowh b{color:var(--ink)}
+.flown b{color:var(--ink)}
+.fchart text{font:500 9px var(--f-data);fill:var(--muted)}
+/* drag handles: mining on the left edge, hauling (Speed and Cargo) on the right, each with up and down arrows */
+.th{color:#1a1206}
+.tkeep b{color:var(--ore)}
+.btn{color:#2a1700}
+.pm .pmm small{font-size:10px}
+.crewby b{font:600 13px var(--f-body);color:var(--ink)}.perkrow b{color:var(--ink);font-weight:600}
+.perklist .btn small{font:500 11px var(--f-body)}
+.progrow b{font:600 13px var(--f-body);color:var(--ink)}
+.rtt{background:#2a1700}
+.cand b{font:700 13px var(--f-body);color:var(--ink)}
+.crewl b{color:var(--ore);font-weight:600}
+.perkc>b{font:700 13px var(--f-body);color:var(--ore)}
+/* in the panel every usable button is orange, except the mining crews' upgrade buttons, which stay green and red
+   (+) and outlined (−); the warning buttons keep their colour, the unavailable-mission buttons stay grey, and toggles
+   fill in when on */
+#pbody .btn.ghost:not(:disabled):not(.evunb):not(.warn):not(.pmm){color:#2a1700}
+#pbody .tog.on{color:#2a1700}
+.fstat b{font-weight:600}
+.note b{color:var(--ink);font-weight:600}
+.tog.on{color:var(--good)}
+.orechip.on{box-shadow:inset 0 0 0 1px var(--ore);color:var(--ink)}
+@media (min-width:760px){#sheet{border:1px solid var(--line);border-radius:12px}}
+/* (Beta 0.50) the Chronicle and the Clockwork Archive (10b-chronicle.js), in the brass of the bases and the station:
+   the logbook window (#chr), its banner (#chrban), the gear badges (.chb) and the Warp tab's two cards */
+#chr .box{border-color:rgba(201,154,74,.55);background:repeating-linear-gradient(180deg,transparent 0 27px,rgba(201,154,74,.05) 27px 28px),linear-gradient(180deg,rgba(201,154,74,.14),transparent 140px),var(--panel2)}
+#chr .chrbadge{border:1px solid rgba(201,154,74,.45);border-radius:10px}
+.chb circle{fill:var(--panel2);stroke:var(--line);stroke-width:1}
+.chb text{font:700 10px var(--f-data);fill:var(--muted);text-anchor:middle}
+.chb.on path{fill:rgba(201,154,74,.32);stroke:var(--brass)}
+.chron .new{color:#2a1700}
+#chrban{border:1px solid rgba(201,154,74,.6);border-radius:12px}
+
+/* (Beta 0.50) markup the Spacepunk skin (spacepunk.css) uses that this look doesn't: the income dial, the credits column
+   wrapper (laid out as if it weren't there) and the drawn music note (this look keeps the ♪ glyph). --shut is the
+   collapsed panel's height, which viewBox reads. */
+:root{--shut:56px}
+.cash .dial,#music svg{display:none}
+.cash .ctxt{display:contents}
+.wsh{border-radius:6px;border:1px solid var(--line);border-left:3px solid var(--line);background:var(--card);color:var(--ink)}
+.wsec:not(.shut) .wsh{border-left-color:var(--ore);background:var(--panel2)}
+.wsh .wic{background:var(--panel2);box-shadow:inset 0 0 0 1px var(--line)}
+.wsh .wic svg{stroke:var(--ore);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.wsh .wt{font:700 15px/1.2 var(--f-display)}
+.wgauge svg{width:104px;height:68px}
+.wgauge .ndl{stroke:var(--ink);stroke-width:2.5;stroke-linecap:round}.wgauge .hub{fill:var(--ore)}
+.wtiles div{background:var(--panel2)}.wtiles b{font:500 14px var(--f-data);color:var(--ink)}
+/* the Spacepunk skin's cover logo (spacepunk.css); this look shows the app icon */
+#cover .logo-sp{display:none}

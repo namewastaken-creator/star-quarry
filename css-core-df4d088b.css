@@ -1,0 +1,565 @@
+/* Shared by both HUD skins (style.css, the original look, and spacepunk.css): always on, before them. Everything here
+   looks the same in both skins: layout, z-order, safe-area insets, animations and the rules the skins had word for word.
+   A skin keeps only what it draws differently (colours, borders, fonts, decoration), and a rule a skin changes stays in
+   that skin. A style change that applies to both skins goes here; one that differs goes in both skins (src/skincss.py
+   warns at build time when one skin styles a selector the other doesn't). */
+:root{--ore:#f0a33c; --ore-dim:#7a5420;
+  /* colour triples for rgba(var(--ore-rgb),.5); --void-rgb and --panel-rgb are the original look's, and spacepunk.css
+     sets its own --void-rgb (its panels are palette colours: use var(--panel) there, not --panel-rgb) */
+  --ore-rgb:240,163,60; --ship-rgb:95,212,196; /* each skin sets its own --ship-rgb to match its --ship */ --void-rgb:5,6,13; --panel-rgb:13,16,32;
+  /* stacking: the toast (20) < the tutorial's layer (dimming 24, spotlight and line 25, card 26, the open volume popup 27)
+     < windows < the hover tip < the cover */
+  --z-toast:20; --z-tour:25; --z-modal:30; --z-tip:40; --z-cover:50;
+  /* type and corner scales */
+  --fs-xs:10px; --fs-sm:11px; --fs-md:12px; --fs-lg:13px; --fs-xl:14px;
+  --r-sm:4px; --r-md:8px; --r-lg:12px; --r-pill:999px;
+  --f-display:"Saira Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-data:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  color-scheme:dark}
+[hidden]{display:none!important}
+html,body{height:100%;overflow:hidden;margin:0}
+/* the page scrolls but never zooms: pan-x pan-y leaves out pinch-zoom and double-tap zoom (build.py's viewport) */
+html,body{touch-action:pan-x pan-y}
+img{max-width:100%}
+body{color:var(--ink);font-family:var(--f-body);font-size:var(--fs-xl);-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+#scene{position:fixed;top:0;left:0;width:100%;height:100%;touch-action:none;display:block}
+#labels{position:fixed;inset:0;pointer-events:none;overflow:hidden}
+.plabel{position:absolute;transform:translate(-50%,0);font:600 11px/1.1 var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);white-space:nowrap;text-align:center;text-shadow:0 1px 3px #000}
+.plabel b{display:block}
+.plabel.sel b{color:var(--ore)}
+.plabel .st{color:var(--ore)}
+.plabel .sp{display:block;color:var(--ship);font-size:var(--fs-xs);letter-spacing:.25em;margin-bottom:1px}
+.plabel b.bnk,.plabel.sel b.bnk{color:var(--bad)}
+.plabel b.exk,.plabel.sel b.exk{color:var(--good)}
+.plabel.locked{opacity:.6}
+.plabel{transition:opacity .25s}
+.stlabel{position:absolute;transform:translate(-50%,0);text-align:center;text-transform:uppercase;color:var(--stn);white-space:nowrap;text-shadow:0 1px 3px #000;pointer-events:none;transition:color .3s}
+.stlabel.ready{color:var(--ore);text-shadow:0 0 8px rgba(var(--ore-rgb),.55),0 1px 3px #000}
+.nm-bn{color:var(--bad)!important}
+.nm-ex{color:var(--good)!important}
+.nm-st{color:var(--stn)!important}
+.sthead{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.sthead .stwhere{font:500 12px var(--f-data);color:var(--muted)}
+.nm-ready{color:var(--ore)!important}
+.nm-lock{color:var(--muted)!important}
+.pkm{display:block;font:600 var(--fs-xs) var(--f-display);letter-spacing:.14em;color:var(--stn);margin-top:1px}
+.pkrow{display:flex;justify-content:space-between;gap:8px;font:500 12px var(--f-body);color:var(--muted);border-top:1px solid var(--line);padding-top:6px}
+.pkrow b{text-align:right}
+.bprow{display:flex;align-items:center;gap:10px;border-top:1px solid var(--line);padding-top:8px}
+.bprow>div{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.bprow span{font:500 12px/1.35 var(--f-body);color:var(--muted)}
+.bprow .btn{min-width:72px}
+.pkh{margin:6px 0 0;font:600 11px var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.smchk{display:flex;align-items:center;gap:8px;font:500 13px var(--f-body);color:var(--ink)}
+.smchk input{width:18px;height:18px;accent-color:var(--ore);margin:0}
+#blBuy{display:flex;flex-direction:column;gap:6px}
+#blBuy .blhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font:600 13px var(--f-body);color:var(--ink)}
+#blBuy .blhead b{font:600 13px var(--f-data);color:var(--ore)}
+#blRange{width:100%;accent-color:var(--ore);margin:4px 0;height:28px}
+.stlabel small{display:block;font:600 var(--fs-xs) var(--f-display);letter-spacing:.12em;color:var(--stn);opacity:.75;margin-top:2px}
+#nmIn{width:100%;box-sizing:border-box;background:var(--panel);border:1px solid var(--line);border-radius:6px;color:var(--ink);font:600 16px var(--f-body);padding:10px 12px}
+#nmIn:focus{outline:2px solid var(--ship);outline-offset:1px}
+#svCode{width:100%;box-sizing:border-box;background:var(--panel);border:1px solid var(--line);border-radius:6px;color:var(--ink);font:11px/1.4 var(--f-data);padding:8px 10px;resize:none;word-break:break-all}
+#svCode:focus{outline:2px solid var(--ship);outline-offset:1px}
+#svMsg.ok{color:var(--good)}
+#svMsg.err{color:var(--bad)}
+.svbak{display:flex;gap:8px;align-items:center;justify-content:space-between;border-top:1px solid var(--line);padding:8px 0;font-size:var(--fs-md)}
+.svbak .btn{flex:none}
+.nmrow{display:flex;gap:8px}
+.nmrow .btn{flex:1}
+.plabel.crowd{opacity:0}
+#hud{position:fixed;top:0;left:0;right:0;padding-top:calc(env(safe-area-inset-top,0px) + 8px);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;gap:12px;align-items:flex-start;justify-content:space-between;pointer-events:none;padding-bottom:12px;transition:opacity .4s}
+/* (spacepunk) the HUD fades out while the salvage probes break up a derelict (body.cine, derVisuals) and during a build
+   show (body.bshow, buildShow) */
+body.cine #hud,body.bshow #hud{opacity:0;pointer-events:none}
+body.cine #hud *,body.bshow #hud *{pointer-events:none}
+/* the tutorial's card, spotlight and dimming wait out a show too (they'd point at a top bar that isn't there) */
+body.cine #tbox,body.cine #tring,body.cine #tdim,body.bshow #tbox,body.bshow #tring,body.bshow #tdim{opacity:0!important;pointer-events:none!important}
+.cash{position:relative;display:flex;min-width:0}
+.cash .lbl{text-transform:uppercase}
+.cash .val{pointer-events:auto;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+.cash .val small{margin-left:5px}
+.cash .val:focus-visible{outline:2px solid var(--ship);outline-offset:3px;border-radius:3px}
+.cash .rate{font:500 11px/1.3 var(--f-data);font-variant-numeric:tabular-nums}
+.cash .probe{color:var(--ship);pointer-events:auto;background:none;border:0;padding:3px 0;margin:-3px 0;text-align:left;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px}
+.cash .probe:focus-visible{outline:2px solid var(--ship);outline-offset:2px}
+.hudr{position:relative;display:flex;align-items:center;gap:6px;pointer-events:auto}
+.rsurge{position:absolute;white-space:nowrap;pointer-events:auto;cursor:pointer}
+.rsurge:focus-visible{outline:2px solid var(--ship);outline-offset:2px}
+.hi{position:relative;flex:none;display:grid;place-items:center;padding:0;font:600 18px/1 var(--f-data);cursor:pointer;
+  -webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none;touch-action:pan-x pan-y}
+.hi:not([hidden]){animation:hiIn .2s ease-out}
+@keyframes hiIn{from{opacity:0;transform:scale(.8)}}
+.hi svg{fill:none}
+.hi:focus-visible{outline:2px solid var(--ship);outline-offset:2px}
+#music:not(.on)::after{content:'';position:absolute;height:2px;margin-top:-1px;border-radius:1px;transform:rotate(-45deg)}
+#center{color:var(--ore)}
+/* the volume popup sits above a tip or tour card (z-index 26) while it's open */
+#hud.volopen{z-index:calc(var(--z-tour) + 2)}
+#volpop{position:absolute;top:calc(100% + 8px);right:0;width:210px;padding:10px 12px;background:var(--panel2);box-shadow:0 10px 30px rgba(0,0,0,.5);display:flex;flex-direction:column;gap:6px}
+#volpop label{letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+#volN{min-width:3ch;text-align:right;color:var(--ink);font-size:var(--fs-md)}
+.vol{display:flex;align-items:center;gap:10px}
+.vol input{flex:1;min-width:0;accent-color:var(--ore)}
+#sheet{position:fixed;left:0;right:0;bottom:0;display:flex;flex-direction:column;height:62%;padding-bottom:env(safe-area-inset-bottom,0px);transition:height .25s ease}
+#sheet.collapsed{height:calc(var(--shut) + env(safe-area-inset-bottom,0px))}
+#sheet.collapsed #pbody{display:none}
+/* (Beta 0.46.8) the performance line (Settings → Graphics → Performance), riding on the panel's top-left corner */
+#fps{position:absolute;left:max(8px,env(safe-area-inset-left,0px));bottom:100%;margin-bottom:6px;pointer-events:none;background:rgba(var(--void-rgb),.62);border:1px solid var(--line);border-radius:var(--r-sm);padding:2px 6px;font:600 11px/1.3 var(--f-display);letter-spacing:.06em;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--good)}
+#fps.slow{color:var(--ore)}
+#fps.bad{color:var(--bad)}
+/* (Beta 0.47.0.215) the benchmark's progress, above the performance line (Settings → Graphics → Benchmark) */
+#bench{position:absolute;left:max(8px,env(safe-area-inset-left,0px));bottom:100%;margin-bottom:30px;pointer-events:none;background:rgba(var(--void-rgb),.78);border:1px solid var(--line);border-radius:var(--r-sm);padding:3px 8px;font:600 12px/1.3 var(--f-display);letter-spacing:.04em;white-space:nowrap;color:var(--ink)}
+.seg.gfxres{display:flex;margin:2px 0 6px}
+.seg.gfxres button{flex:1 1 auto;padding:8px 6px}
+.tabbar{display:flex;align-items:stretch;padding-left:max(4px,env(safe-area-inset-left,0px));padding-right:max(4px,env(safe-area-inset-right,0px))}
+.tabscroll{position:relative;flex:1;min-width:0;display:flex;overflow-x:auto;scrollbar-width:none;overscroll-behavior-x:contain}
+.tabscroll::-webkit-scrollbar{display:none}
+.tab{flex:1 0 auto;text-transform:uppercase;cursor:pointer;position:relative;white-space:nowrap}
+.tab.alert{text-shadow:0 0 8px rgba(var(--ore-rgb),.45)}
+.tab.out{text-shadow:0 0 8px rgba(var(--ship-rgb),.45)}
+.tab.alert.go{color:var(--good);text-shadow:0 0 8px rgba(134,227,154,.45)}
+.sub b.wx{color:#fff;font-weight:700}
+.l2{min-height:calc(2 * 1.45em);line-height:1.45}
+.evmeta{display:flex;flex-wrap:nowrap;overflow:hidden;gap:6px;font:600 10px var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.evmeta span{border:1px solid var(--line);border-radius:3px;padding:2px 6px;white-space:nowrap;flex:none}
+.evmeta span.evstamp{flex:0 1 auto;overflow:hidden;text-overflow:ellipsis}
+.evgoal{font:600 13px var(--f-body);color:var(--ink)}
+.evrew{font-size:var(--fs-md);color:var(--ship)}
+.evrew.fail{color:var(--bad)}
+.evlog{font-size:var(--fs-md);color:var(--ink);margin:0}
+.evlog i{color:var(--muted)}
+.evrew .evx{color:var(--ore);font-weight:700;margin-left:.45em;white-space:nowrap}
+.evlab{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.evlab .num{font-size:var(--fs-md);color:var(--ore)}
+.card.evdone{border-color:rgba(134,227,154,.55);box-shadow:inset 0 0 0 1px rgba(134,227,154,.18)}
+.evmeta span.evstamp{color:var(--good);border-color:rgba(134,227,154,.6);background:rgba(134,227,154,.08);white-space:nowrap}
+.evmeta span.evstamp.fail{color:var(--bad);border-color:rgba(255,122,122,.55);background:rgba(255,122,122,.07)}
+.btn.ghost.evunb{position:relative;color:var(--muted);width:100%;padding-right:46px;padding-left:46px}
+.evi{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;width:26px;height:26px;border-radius:50%;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font:italic 700 14px Georgia,serif;text-transform:none;letter-spacing:0;cursor:pointer;padding:0}
+.btn.evunb .evi{position:absolute;right:8px;top:50%;transform:translateY(-50%)}
+.evi.on,.btn.evunb[aria-expanded="true"] .evi{border-color:var(--ship)}@media (hover:hover){.evi:hover,.btn.evunb:hover .evi{border-color:var(--ship)}}
+
+.evsrc{display:flex;flex-direction:column;gap:8px;padding:10px 12px;background:var(--card)}
+.evsrc .card{margin:0}
+.evwhy{font-size:var(--fs-md);color:var(--muted);border-left:2px solid var(--ship);padding:2px 0 2px 9px;margin:0}
+.evmeta span.evstamp.elite{color:var(--ore);border-color:rgba(var(--ore-rgb),.55);background:rgba(var(--ore-rgb),.08)}
+.card.evelite{border-color:rgba(var(--ore-rgb),.45)}
+.evpace{font:500 12px var(--f-body);color:var(--muted)}
+.evmeta span.evstamp.run{color:var(--ship);border-color:rgba(var(--ship-rgb),.5);background:rgba(var(--ship-rgb),.07)}
+.tab[hidden]{display:none}
+#pbody>*{flex-shrink:0}
+#pbody{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding-block:12px 18px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:12px;-webkit-overflow-scrolling:touch}
+h2{font:700 24px/1 var(--f-display);letter-spacing:.03em;margin:0;text-wrap:balance}
+h3{font:600 11px var(--f-display);letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin:0}
+p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
+.num{font-family:var(--f-data);font-variant-numeric:tabular-nums}
+.chips{display:flex;align-items:flex-start;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chips.wrap{flex-wrap:wrap;overflow-x:visible}
+.chipnav{display:flex;align-items:center;gap:6px;min-width:0}
+.chipnav .chips{flex:1;min-width:0;position:relative}
+/* the Planet tab's planet list sits above the scrolling page (in #pnavHost, outside #pbody), so it stays at the top with
+   the panel's own see-through background behind it and nothing scrolls under it (Beta 0.19.8) */
+#pnavHost{flex:0 0 auto;padding:12px max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px))}
+#pnavHost:empty{display:none}
+#sheet.collapsed #pnavHost{display:none}
+.chipnav.more-r .tabscroll{-webkit-mask-image:linear-gradient(to right,#000 82%,transparent);mask-image:linear-gradient(to right,#000 82%,transparent)}
+.chipnav.more-l .tabscroll{-webkit-mask-image:linear-gradient(to left,#000 82%,transparent);mask-image:linear-gradient(to left,#000 82%,transparent)}
+.chipnav.more-l.more-r .tabscroll{-webkit-mask-image:linear-gradient(to right,transparent,#000 14%,#000 86%,transparent);mask-image:linear-gradient(to right,transparent,#000 14%,#000 86%,transparent)}
+.tabbar.chipnav{gap:2px}
+.chipnav.more-r .chips{-webkit-mask-image:linear-gradient(to right,#000 82%,transparent);mask-image:linear-gradient(to right,#000 82%,transparent)}
+.chipnav.more-l .chips{-webkit-mask-image:linear-gradient(to left,#000 82%,transparent);mask-image:linear-gradient(to left,#000 82%,transparent)}
+.chipnav.more-l.more-r .chips{-webkit-mask-image:linear-gradient(to right,transparent,#000 14%,#000 86%,transparent);mask-image:linear-gradient(to right,transparent,#000 14%,#000 86%,transparent)}
+.chip{flex:0 0 auto;background:var(--panel2);border:1px solid var(--line);color:var(--muted);border-radius:var(--r-pill);padding:6px 11px;font:600 12px var(--f-display);letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+.chip.on{border-color:var(--ore)}
+.chip.lock{border-style:dashed}
+/* the planet, station and probe chips' label: browsers round Saira Condensed's ascent (13.62px at 12px) up to 14 and snap
+   the baseline to whole CSS pixels, which leaves the capitals 0.38px low in the chip (a device pixel on a phone); padding
+   can only move it a whole pixel, a transform moves it by the fraction */
+.chip .cl{display:inline-block;transform:translateY(-.38px)}
+.head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.ores{display:flex;flex-wrap:wrap;gap:6px}
+.ore{display:inline-flex;align-items:center;gap:6px;font:500 12px var(--f-body);color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:var(--r-sm);padding:3px 8px}
+.ore i{width:9px;height:9px;border-radius:2px;display:inline-block}
+.rows{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--card)}
+.row+.row{border-top:1px solid var(--line)}
+.row .txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.row .t{font:600 15px var(--f-body)}
+.row .s{font:500 12px var(--f-data);color:var(--muted);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.row.trow{min-height:98px;box-sizing:border-box;align-items:center}
+.tmx{margin-left:6px;font:500 11px var(--f-data);color:var(--muted)}
+.row.trow .s.l1{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.35}
+.row.trow .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .s.l1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;overflow-wrap:normal}
+.flowh{display:flex;justify-content:space-between;gap:8px;font:500 12px var(--f-data);color:var(--muted);font-variant-numeric:tabular-nums}
+.flown{display:flex;flex-direction:column;font:500 12px var(--f-body);color:var(--muted);line-height:1.35}
+.flown span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fchart{display:block;width:100%;height:58px}
+.fchart .cap{fill:none;stroke:var(--ship);stroke-width:1.6}
+.fchart .mine{stroke:var(--ore);stroke-width:1.2;stroke-dasharray:4 3}
+.fchart .gain{fill:rgba(var(--ship-rgb),.22)}
+.fchart .loss{fill:rgba(255,122,122,.28)}
+.fchart .now{stroke:var(--ink);stroke-width:1.2}
+.tune{border:1px solid var(--line);border-radius:9px;padding:8px 10px;display:flex;flex-direction:column;gap:6px;background:rgba(255,255,255,.02)}
+.thead{display:flex;justify-content:space-between;align-items:center;gap:6px;font:500 11px var(--f-data);color:var(--muted);flex-wrap:wrap}
+.thead .lg{display:inline-block;width:12px;height:0;border-top:2px solid var(--ore);margin:0 4px 3px 0;vertical-align:middle}
+.thead .lg.lh{border-top-color:var(--ship);margin-left:8px}
+.tctl{display:flex;gap:6px}
+/* only the handles drag; the rest of the chart scrolls the panel like any other content */
+.tchart{position:relative;user-select:none;-webkit-user-select:none;margin:0 6px}
+.tchart .tsvg{height:100px}
+.tsvg .ghost{opacity:.35}
+.tsvg .cap.after{stroke-dasharray:5 3}
+.tsvg .avg{stroke:var(--ship);stroke-width:1;stroke-dasharray:1 3;opacity:.8}
+.th{position:absolute;width:22px;height:22px;margin-top:-11px;border-radius:50%;border:2px solid #0b0e1d;box-shadow:0 0 0 1px rgba(255,255,255,.25);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:7px;line-height:1;cursor:ns-resize;touch-action:none}
+/* a bigger invisible area to grab around each handle */
+.th::before{content:'';position:absolute;inset:-10px}
+.th b{pointer-events:none}
+.th.thm{background:var(--ore);left:-9px}
+.th.thh{background:var(--ship);right:-9px;color:#062320}
+.tchart.drag .th{transform:scale(1.25)}
+.tsum{display:flex;justify-content:space-between;gap:2px 8px;flex-wrap:wrap;font:500 12px/1.35 var(--f-body);color:var(--muted)}
+.tsum > span:first-child{flex:1 1 100%;min-height:calc(2 * 1.35em)}
+.tplan{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font:600 12px/1.35 var(--f-body);color:var(--ore)}
+.tplan b{white-space:nowrap}
+.tbtns{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.tkeep{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px dashed var(--ore);border-radius:var(--r-md);padding:6px 8px;font:500 12px/1.35 var(--f-body);color:var(--muted)}
+.tkeep .btn{min-width:64px;padding:6px 10px}
+.silo{display:flex;align-items:center;gap:8px;font:500 12px var(--f-data);color:var(--muted)}
+.silo .bar{flex:1;height:6px}
+.flowbar{display:flex;height:8px;border-radius:var(--r-sm);overflow:hidden;background:var(--panel2)}
+.flowbar .ok{background:var(--ship);box-shadow:0 0 8px rgba(var(--ship-rgb),.5)}
+.flowbar .lost{background:repeating-linear-gradient(45deg,var(--bad) 0 4px,rgba(255,122,122,.35) 4px 8px)}
+/* planet read-outs and notes keep a fixed size so changing numbers or wording never shifts the cards below */
+.row .s.l2{line-height:1.35;height:2.7em;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.row .s.l3{line-height:1.35;height:4.05em;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+.note.fix{line-height:1.35;min-height:4.75em;align-content:flex-start;align-items:flex-start}
+.note.fix1{line-height:1.35;min-height:1.35em}
+.row.trow .s2{line-height:1.35;height:2.7em;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:normal}
+.btn{background:var(--ore);border:1px solid transparent;border-radius:6px;padding:9px 12px;font:700 14px var(--f-display);letter-spacing:.06em;text-transform:uppercase;cursor:pointer;min-width:96px;display:flex;flex-direction:column;align-items:center;line-height:1.1;font-variant-numeric:tabular-nums}
+.btn small{font:500 11px var(--f-data);letter-spacing:0;text-transform:none;opacity:.85}
+.btn:disabled{background:#1d2240;color:var(--muted);cursor:default}
+.btn.ghost{background:none;border:1px solid var(--line);color:var(--ink)}
+.btn.ghost:disabled{color:#4a5075}
+.btn.ship{background:var(--ship);color:#052523}
+.pm{display:flex;flex-direction:column-reverse;gap:5px;flex:0 0 auto;width:92px}
+.pm .btn{min-width:0;width:100%}
+/* + and − keep one size in every state (buy, free, plan, Maxed) */
+.pm .btn:not(.pmm){height:46px;box-sizing:border-box;justify-content:center}
+.pm .pmm{height:27px;box-sizing:border-box}
+.pm .pmm{flex-direction:row;justify-content:center;gap:6px;padding:6px;font-size:var(--fs-lg);line-height:1}
+.pm .pmm small{white-space:nowrap}
+.row.trow .bn{margin-left:5px;letter-spacing:.05em;padding:1px 4px;font-size:var(--fs-xs)}
+.sub{border-top:1px solid var(--line);padding-top:10px;display:flex;flex-direction:column;gap:7px}
+/* Warp tab cards: sub-sections are set apart by their headers and spacing, without a line */
+.sub.nl{border-top:0;padding-top:12px}
+.crewby{display:flex;align-items:center;gap:6px;min-width:0}
+.crewby b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.crewq{font:500 12px/1.35 var(--f-body);color:var(--muted);margin-top:-4px}
+.crewby span{font:500 12px var(--f-body);color:var(--muted);white-space:nowrap}
+.sub h4{margin:0;font:600 11px var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.sub .head .num{font-size:var(--fs-md);color:var(--muted)}
+.perkrow,.progrow{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid var(--line);border-radius:var(--r-md);padding:7px 9px}
+.perkrow span{font:500 13px/1.35 var(--f-body);color:var(--muted)}
+.perkrow i{font-style:normal;color:var(--ore)}
+.perkrow .btn,.progrow .btn{min-width:84px;padding:6px 8px;font-size:var(--fs-md)}
+.perklist{display:flex;flex-direction:column;gap:5px;padding-left:8px}
+.perklist .btn{text-transform:none;letter-spacing:0;font:600 13px var(--f-body);align-items:flex-start;text-align:left}
+.progrow>div{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.progrow span{font:500 12px/1.35 var(--f-body);color:var(--muted)}
+.progrow.done{opacity:.7}
+.progrow.done b{color:var(--good)}
+.progrow .pst{font:500 12px var(--f-data);color:var(--ore);white-space:nowrap}
+.hire{border:1px solid var(--line);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:8px;background:rgba(255,255,255,.02)}
+.hire .hh{display:flex;justify-content:space-between;align-items:center;gap:8px;font:600 14px var(--f-body);color:var(--ink)}
+.hire .hh .num{font-size:var(--fs-md);color:var(--ore)}
+.hire.locked{opacity:.8}
+.hire.locked .hh .num{color:var(--muted)}
+.hire .hs{margin:0;font-size:var(--fs-md);color:var(--muted);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.roles{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.role{all:unset;box-sizing:border-box;cursor:pointer;border:1px solid var(--line);border-radius:9px;padding:8px 9px;display:flex;flex-direction:column;gap:3px;background:var(--panel2);min-height:74px}
+.role:hover:not(:disabled){border-color:var(--ship)}
+.role:focus-visible{outline:2px solid var(--ship);outline-offset:2px}
+.role .rn{font:700 13px var(--f-body);color:var(--ink);display:flex;flex-wrap:wrap;align-items:center;gap:5px}
+.role .rn i{font:600 var(--fs-xs) var(--f-display);font-style:normal;letter-spacing:.1em;text-transform:uppercase;color:var(--ship);border:1px solid var(--ship);border-radius:3px;padding:1px 4px}
+.role .rs{font:500 11px/1.35 var(--f-body);color:var(--muted)}
+.role.rec{border-color:var(--ship)}
+.role:disabled{opacity:.45;cursor:default}
+.fh{display:flex;align-items:center;gap:8px}
+.rtb{font-size:var(--fs-md);letter-spacing:.08em}
+.rtb small{white-space:normal;line-height:1.35;margin-top:2px}
+.rtt{font:700 var(--fs-xs) var(--f-display);font-style:normal;letter-spacing:.1em;text-transform:uppercase;color:var(--ore);border-radius:3px;padding:2px 5px;margin-left:8px;vertical-align:1px}
+.note.rtn span{color:var(--ore)}
+.fh .tog{padding:3px 8px}
+.lnk{all:unset;cursor:pointer;color:var(--ship);font:600 12px var(--f-body);white-space:nowrap}
+.cands{display:flex;flex-direction:column;gap:6px}
+.cand{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:9px;padding:8px 9px;background:var(--panel2)}
+.cand>div{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.cand span{font:500 12px/1.35 var(--f-body);color:var(--ore)}
+.cand .btn{flex:0 0 92px}
+.setpop{margin:4px 0;font-size:var(--fs-md);color:var(--muted);display:flex;justify-content:space-between;gap:8px}
+.setpop+.bar{margin-bottom:8px}
+.rb{display:inline-block;margin-left:6px;font:600 var(--fs-xs) var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--ship);border:1px solid var(--ship);border-radius:3px;padding:1px 4px;vertical-align:2px}
+.crewl{display:flex;flex-direction:column;gap:2px;font:500 12px/1.35 var(--f-body);color:var(--muted)}
+.crewl span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.perkc{border:1px solid var(--ore);border-radius:10px;padding:9px;display:flex;flex-direction:column;gap:7px;background:rgba(240,170,60,.06)}
+.perkc .pk2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.perkc .btn{font-size:var(--fs-md);line-height:1.3;white-space:normal;text-transform:none;letter-spacing:0;padding:8px}
+.ptc{margin-left:6px;font:500 12px var(--f-data);color:var(--muted);font-variant-numeric:tabular-nums}
+.btn.ship.bnr{background:var(--bad);color:#2b0606}
+.btn.ship:disabled{background:#173538;color:#9fe8dc;box-shadow:inset 0 0 0 1px var(--ship)}
+.btn.ship.bnr:disabled{background:#3a1d26;color:#ffb3b3;box-shadow:inset 0 0 0 1px var(--bad)}
+/* a maxed trait that is still the bottleneck keeps the faded red look of any red button that can't be pressed */
+.btn.up{background:#232849;color:var(--ink);border:1px solid #343a66}
+.btn.up.hot{background:var(--bad);color:#2b0606;border-color:var(--bad);box-shadow:0 0 0 3px rgba(255,122,122,.18)}
+.btn.up.hot:disabled{background:#3a1d26;color:#ffb3b3;border-color:var(--bad);box-shadow:none}
+.bn{display:inline-block;margin-left:6px;font:600 10px var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--bad);border:1px solid var(--bad);border-radius:3px;padding:1px 5px;vertical-align:2px}
+.btn.warn{background:var(--bad);color:#2b0606}
+.btn.wide{width:100%}
+#pbody .btn.ghost:not(:disabled):not(.evunb):not(.warn):not(.pmm){background:var(--ore);border-color:var(--ore)}
+#pbody .tog{border-color:var(--ore);color:var(--ore)}
+#pbody .tog.on{background:var(--ore);border-color:var(--ore)}
+#pbody .role:not(:disabled){border-color:var(--ore)}
+#pbody .role:not(:disabled) .rn{color:var(--ore)}
+#pbody .lnk{color:var(--ore)}
+.btn:focus-visible,.chip:focus-visible,.tab:focus-visible,.tog:focus-visible{outline:2px solid var(--ship);outline-offset:2px}
+.fstat{font:500 12px/18px var(--f-body);height:18px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.note{font:500 12px var(--f-body);color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.note .warnc{color:var(--ore)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{background:none;border:0;color:var(--muted);font:600 12px var(--f-display);letter-spacing:.08em;padding:6px 10px;cursor:pointer}
+.seg button.on{background:var(--panel2);color:var(--ore)}
+.bar{height:6px;background:#1a1f3c;border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ore)}
+.tog{background:none;border:1px solid var(--line);color:var(--muted);border-radius:var(--r-sm);font:600 11px var(--f-display);letter-spacing:.1em;padding:5px 8px;cursor:pointer;text-transform:uppercase}
+.tog.on{border-color:var(--good)}
+/* the zoom level: five small orange dashes under the name, the current level's lit (none lit between levels or centred elsewhere) */
+.zd{display:flex;gap:4px;pointer-events:none}
+.zd i{display:block;width:9px;height:3px;border-radius:1.5px;background:var(--ore);opacity:.28;transition:opacity .2s,box-shadow .2s}
+.zd i.on{opacity:1;box-shadow:0 0 5px var(--ore)}
+/* a zoomable item's chip (planet list, Station and Probe tabs) with the level dashes centred under it; the wrapper isn't
+   positioned, so the list's scroll glide still measures the chip itself */
+.chipz{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:7px;padding-bottom:6px}
+/* the Station and Probe tabs' chip takes the tab's status colour: orange when there's something to do (research ready),
+   teal while the probe is out, otherwise the selected chip's white */
+.nm-out{color:var(--ship)!important}
+.chip:disabled{opacity:.55;cursor:default}
+/* the probe's chip is disabled while it's home (nothing to zoom to), but its name stays white; the dimmed dashes show it */
+.chipz .chip:disabled{opacity:1}
+.chip:disabled+.zd{opacity:.4}
+/* a heading only screen readers find (the Planet, Station and Probe tabs' name, which shows on screen as the chip) */
+.sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.ptype{margin-top:3px;font:600 10px var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);white-space:nowrap}@media (prefers-reduced-motion:reduce){.zd i{transition:none}}
+
+.rescard .card{background:var(--panel2,var(--card))}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-md);padding:12px;display:flex;flex-direction:column;gap:8px}
+.card.own{opacity:.55}
+.big{font:700 34px/1 var(--f-display);color:#c9b8ff}
+.stat{display:flex;justify-content:space-between;gap:10px;font:500 13px var(--f-body);color:var(--muted)}
+.stat span:last-child{color:var(--ink);font-family:var(--f-data)}
+.empty{padding:14px;border:1px dashed var(--line);border-radius:var(--r-md);color:var(--muted);text-align:center}
+/* messages sit in the middle of the open space above the panel (placeToast), never over the panel or the planet list */
+#toast{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);background:var(--panel2);border:1px solid var(--line);color:var(--ink);padding:10px 14px;border-radius:var(--r-md);font:500 13px var(--f-body);max-width:min(92vw,420px);text-align:center;opacity:0;transition:opacity .3s;pointer-events:auto;cursor:pointer;line-height:1.4;z-index:var(--z-toast)}
+#toast.show{opacity:1}
+#modal,#upd,#chg,#gd,#ab,#nm,#pk,#bl,#sm,#sv,#tq,#big,#chr{position:fixed;inset:0;z-index:var(--z-modal);background:rgba(3,4,10,.62);display:grid;place-items:center;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#modal .box,#upd .box,#chg .box,#gd .box,#ab .box,#nm .box,#pk .box,#bl .box,#sm .box,#sv .box,#tq .box,#big .box,#chr .box{width:min(100%,360px);background:var(--panel2);border:1px solid var(--line);border-radius:var(--r-lg);padding:18px;display:flex;flex-direction:column;gap:10px;box-shadow:0 18px 50px rgba(0,0,0,.5)}
+#modal .tag,#upd .tag,#chg .tag,#gd .tag,#ab .tag,#nm .tag,#pk .tag,#sv .tag,#tq .tag,#big .tag,#chr .tag{font:600 11px var(--f-display);letter-spacing:.16em;text-transform:uppercase;color:var(--good)}
+#chg .box,#gd .box,#ab .box{max-height:min(80vh,640px);box-sizing:border-box;width:min(100%,396px)}
+#chg,#gd,#ab,#big{grid-template-columns:minmax(0,1fr);justify-items:center}
+.glist{gap:8px;padding-bottom:2px}
+.glist details{border:1px solid var(--line);border-radius:9px;padding:0 11px;background:rgba(255,255,255,.02)}
+.glist summary{cursor:pointer;list-style:none;padding:10px 0;font:600 13px var(--f-display);letter-spacing:.04em;color:var(--ink);display:flex;justify-content:space-between;gap:8px}
+.glist summary::-webkit-details-marker{display:none}
+.glist summary::after{content:'+';color:var(--muted);font-weight:500}
+.glist details[open] summary::after{content:'−'}
+.glist details.tips summary{color:var(--ship)}
+.glist details>div{padding:0 0 11px;display:flex;flex-direction:column;gap:7px}
+.glist p{margin:0;font:500 13px/1.45 var(--f-body);color:var(--ink)}
+.glist ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
+.glist li{font:500 13px/1.45 var(--f-body);color:var(--ink)}
+/* (Beta 0.35.1) About: the studio logo, then the facts as stat rows */
+#ab .box{overflow-y:auto}
+#big .box{max-height:min(84vh,640px);box-sizing:border-box;overflow-y:auto}
+#big #bbody p{margin:0;color:var(--ink)}
+#big #bbody ul{margin:6px 0 0;padding-left:18px;font-size:var(--fs-lg);display:flex;flex-direction:column;gap:6px}
+#ab .box>*{flex-shrink:0}
+#ab .logo{display:block;width:min(100%,176px);aspect-ratio:1;margin:0 auto;border-radius:var(--r-lg);border:1px solid var(--line)}
+#ab h2{text-align:center;margin:0}
+#ab .sub{text-align:center;font-size:var(--fs-md);margin:-6px auto 0}
+#abbody{display:flex;flex-direction:column;gap:8px}
+#ab .rows{display:flex;flex-direction:column;gap:6px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r-md);background:rgba(255,255,255,.02)}
+#gd li b,#gd p b{font:700 13px/1.45 var(--f-body);color:var(--ink);white-space:normal;margin:0}
+.clist{overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:18px;margin-right:-6px;padding-right:6px}
+.clist h4{margin:0 0 4px;font:600 11px var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.clist ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:11px}
+.clist li{font:500 13px/1.4 var(--f-body);color:var(--ink)}
+#clist h4 b{font:600 12px var(--f-data);letter-spacing:0;text-transform:none;color:var(--ship);margin-right:8px;white-space:nowrap}
+#clist h5{margin:9px 0 5px;font:600 12px var(--f-body);color:var(--ink)}
+#clist ul{gap:5px;padding-left:13px}
+#clist li{position:relative}
+#clist li::before{content:'';position:absolute;left:-10px;top:.6em;width:4px;height:4px;border-radius:50%;background:var(--muted)}
+#udesc .cnote{display:block;margin-top:6px;color:var(--muted);font-size:var(--fs-lg)}
+#modal .eff{display:flex;justify-content:space-between;gap:10px;font:500 13px var(--f-body);color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
+#modal .eff span:last-child{color:var(--ink);font-family:var(--f-data)}
+.needs{display:flex;flex-direction:column;gap:5px}
+.ore i.unk{background:transparent!important;border:1px dashed var(--muted)}
+.orechip{display:inline-flex;align-items:center;gap:6px;font:500 12px var(--f-body);letter-spacing:0;text-transform:none;color:var(--ink);background:var(--card);border-radius:var(--r-sm);padding:6px 10px;text-decoration:none}
+.orechip i{width:9px;height:9px;border-radius:2px;display:inline-block}
+.orechip.on{border-color:var(--ore)}
+.evgoal .ore{padding:1px 6px;vertical-align:1px}
+.chip.orechip{cursor:pointer}
+.oretip{cursor:help;text-decoration:underline dotted rgba(140,146,180,.6);text-underline-offset:3px}
+#tip{position:fixed;z-index:var(--z-tip);max-width:240px;background:var(--panel2);border:1px solid var(--line);border-radius:var(--r-md);padding:7px 10px;font:500 12px/1.4 var(--f-body);color:var(--ink);box-shadow:0 8px 24px rgba(0,0,0,.45);pointer-events:none}
+#tip b{color:var(--ship);font-weight:600}
+.need{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:8px;row-gap:3px;align-items:center;font-size:var(--fs-md)}
+.need .num{text-align:right;color:var(--bad)}
+.need.ok .num{color:var(--good)}
+.need .nbar{grid-column:1/3;height:3px;background:#1a1f3c;border-radius:2px;overflow:hidden}
+.need .nbar i{display:block;height:100%;background:var(--bad)}
+.need.ok .nbar i{background:var(--good)}
+.ore.res{cursor:pointer;font:inherit;font-size:var(--fs-md);font-weight:500}
+.ore.res::after{content:"i";font:600 10px var(--f-data);color:var(--muted);border:1px solid var(--line);border-radius:50%;width:14px;height:14px;display:inline-grid;place-items:center;margin-left:2px}
+/* the guided tour (TOUR): its box in the galaxy window, the ring on the thing to tap, the dimming round it for the
+   first few steps, and the line joining the box to a ring inside the panel */
+#tbox{position:fixed;z-index:calc(var(--z-tour) + 1);left:16px;width:min(420px,calc(100% - 32px));box-sizing:border-box;background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--ore);border-radius:10px;padding:9px 12px 10px;display:flex;flex-direction:column;gap:6px;box-shadow:0 10px 30px rgba(0,0,0,.5);font:500 13px/1.4 var(--f-body);color:var(--ink);transition:top .3s ease,left .3s ease}
+#tbox .tbh{display:flex;align-items:center;justify-content:space-between;gap:8px;font:600 11px var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+#tbox .tbh span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#tbox .tbc{display:flex;gap:4px;flex:none}
+#tbox .tbc button{background:none;border:1px solid var(--line);color:var(--muted);border-radius:var(--r-sm);font:600 12px/1 var(--f-body);width:30px;height:26px;cursor:pointer;padding:0}
+#tbox .tbt{font:700 17px/1.1 var(--f-display);letter-spacing:.03em;color:var(--ink)}
+#tbox .tbt.ok{color:var(--good)}
+#tbox p{margin:0;color:var(--ink)}
+#tbox .tbp{display:flex;flex-direction:column;gap:3px;font:500 12px var(--f-data);color:var(--muted)}
+#tbox .bar{height:5px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden}
+#tbox .bar i{display:block;height:100%;background:var(--ore)}
+#tbox .tbr{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#tbox .tbr .lnk{background:none;border:0;color:var(--muted);font:500 12px var(--f-body);text-decoration:underline;cursor:pointer;padding:6px 0}
+#tbox .tbr .btn{min-width:88px;padding:7px 12px}
+#tbox .tbr .btn.ghost{min-width:0}
+#tbox ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:2px}
+#tbox ol li.on{color:var(--ore)}
+#tbox ol li.ok{color:var(--good)}
+#tbox ol li .lnk{background:none;border:0;padding:0;color:var(--good);font:inherit;text-decoration:underline;cursor:pointer}
+.clh{display:flex;align-items:center;gap:8px}
+.tbadge{background:none;border:0;padding:2px;cursor:pointer;line-height:0;border-radius:50%}
+.tbadge:focus-visible{outline:2px solid var(--ship);outline-offset:2px}
+#tbox.mini{padding:6px 10px;gap:0}
+#tbox .tbc button.tba{color:var(--ore);border-color:var(--ore-dim);font-size:var(--fs-md)}
+#tbox.mini .tbm{display:flex;align-items:center;gap:8px}
+#tbox.mini .tbm .tbt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:15px}
+#tbox.mini .tbm .btn{min-width:0;padding:5px 10px}
+#tring{position:fixed;z-index:var(--z-tour);pointer-events:none;border:2px solid var(--ore);border-radius:10px;box-sizing:border-box;box-shadow:0 0 0 3px rgba(var(--ore-rgb),.25),0 0 18px rgba(var(--ore-rgb),.55)}
+/* (Beta 0.50.1) the pulse is a second, brighter glow faded in and out (opacity runs on the compositor; animating the ring's
+   own box-shadow repainted it every frame) */
+#tring::after{content:'';position:absolute;inset:-2px;border-radius:inherit;pointer-events:none;box-shadow:0 0 0 8px rgba(var(--ore-rgb),.1),0 0 28px rgba(var(--ore-rgb),.75);opacity:0;animation:tpulse 1.3s ease-in-out infinite}
+#tring.pt{border-radius:50%}
+#tring.edge{border-radius:14px;display:grid;place-items:center;color:var(--ore);font:700 13px var(--f-display);background:rgba(13,16,32,.85)}
+@keyframes tpulse{50%{opacity:1}}
+#tdim{position:fixed;z-index:calc(var(--z-tour) - 1);pointer-events:none;border-radius:var(--r-lg);box-shadow:0 0 0 200vmax rgba(3,4,10,.55)}
+#tline{position:fixed;inset:0;z-index:var(--z-tour);pointer-events:none;width:100%;height:100%}
+#tline line{stroke:var(--ore);stroke-width:1.5;stroke-dasharray:4 4;opacity:.7}@media (prefers-reduced-motion:reduce){#tring::after{animation:none}#tbox{transition:none}}
+@media (min-width:760px){#sheet{left:auto;width:430px;right:16px;bottom:16px;height:min(640px,calc(100% - 120px))}}
+@media (prefers-reduced-motion:reduce){#sheet,#toast{transition:none}}
+
+/* opening cover, styled like the tester invitation. Its dark backdrop shows at once. On the web the Fair Tap Studios logo
+   fades in on it (.logo), pauses and fades out; then the nebula, stars and title fade in (.in), pause, and the whole
+   cover fades out (.off) over the game */
+#cover{position:fixed;inset:0;z-index:var(--z-cover);pointer-events:none;background:var(--void);display:flex;align-items:center;justify-content:center;transition:opacity .6s ease}
+#cover.off{opacity:0}
+#cover>*{opacity:0;transition:opacity .8s ease}
+#cover.in>:not(.studio){opacity:1}
+/* the studio logo plays from the first paint, even while the game's script is still loading: 0.6 s in, 1 s, 0.6 s out */
+@keyframes studio{0%{opacity:0}27%{opacity:1}73%{opacity:1}100%{opacity:0}}
+#cover .studio{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;animation:studio 2.2s ease both}
+#cover.nologo .studio{display:none}
+#cover .studio img{width:192px;height:192px;border-radius:50%}
+#cover .sky,#cover canvas{position:absolute;inset:0;width:100%;height:100%}
+#cover .sky{background:62% 50%/cover no-repeat;filter:brightness(2.2)}
+#cover .sky::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(var(--void-rgb),.15),rgba(var(--void-rgb),.55) 50%,rgba(var(--void-rgb),.15))}
+#cover .cv{position:relative;display:flex;flex-direction:column;align-items:center;gap:22px;padding:0 16px}
+#cover .cv img{width:112px;height:112px;border-radius:26px;box-shadow:0 0 0 1px var(--line),0 12px 40px rgba(var(--ore-rgb),.18)}
+#cover h1{margin:0;font:700 clamp(44px,13vw,64px)/.9 var(--f-display);letter-spacing:.04em;text-transform:uppercase;color:var(--ink);white-space:nowrap}
+#cover h1 span{color:var(--ore)}@media (prefers-reduced-motion:reduce){#cover,#cover>*{transition:none}#cover .studio{display:none}}
+
+#chr .box{max-height:min(84vh,640px);box-sizing:border-box;overflow-y:auto}
+#chr .tag{color:var(--brass)}
+#chr .who{margin:-6px 0 0;font:600 11px var(--f-data);color:var(--ship);letter-spacing:.04em}
+#chr #chrbody{display:flex;flex-direction:column;gap:8px}
+#chr #chrbody p{margin:0;color:var(--ink);font-size:var(--fs-xl);line-height:1.5}
+#chr .chrbadge{display:flex;align-items:center;gap:10px;padding:8px 10px;font-size:var(--fs-md);color:var(--muted)}
+#chr .chrbadge b{color:var(--ink)}
+.chb{flex:none}
+.chb path{fill:rgba(255,255,255,.04);stroke:var(--line);stroke-width:1.2;stroke-linejoin:round}
+.chb.on circle{stroke:var(--brass)}
+.chb.on text{fill:var(--brass)}
+.chron .chrow{display:flex;align-items:center;gap:10px;width:100%;min-height:46px;padding:6px 8px;margin-top:6px;border:1px solid var(--line);border-radius:10px;background:transparent;color:inherit;text-align:left;font:inherit;cursor:pointer}
+.chron .chrow.off{cursor:default;opacity:.6}
+.chron .chrow .txt{display:flex;flex-direction:column;flex:1;min-width:0}
+.chron .chrow .t{font-size:var(--fs-lg);color:var(--ink)}
+.chron .chrow .s{font-size:var(--fs-sm);color:var(--muted)}
+.chron .chrow .go{font:600 11px var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--brass)}
+.chron .new{font:600 var(--fs-xs) var(--f-display);letter-spacing:.12em;text-transform:uppercase;font-style:normal;background:var(--brass);border-radius:var(--r-sm);padding:1px 4px;margin-left:4px;vertical-align:2px}
+#chrban{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 74px);transform:translate(-50%,-8px);z-index:var(--z-tour);display:flex;align-items:center;gap:10px;max-width:min(92vw,360px);padding:7px 12px 7px 8px;background:var(--panel2);color:var(--ink);font:inherit;text-align:left;cursor:pointer;box-shadow:0 10px 30px rgba(0,0,0,.45);opacity:0;transition:opacity .3s,transform .3s}
+#chrban.show{opacity:1;transform:translate(-50%,0)}
+#chrban .t{display:flex;flex-direction:column;min-width:0}
+#chrban .k{font:600 10px var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:var(--brass)}
+#chrban b{font-size:var(--fs-lg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#chrban .go{margin-left:auto;font:600 11px var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--brass)}@media (prefers-reduced-motion:reduce){#chrban{transition:none}}
+
+.echo .echorow{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+.echo .echorow .txt{display:flex;flex-direction:column;flex:1;min-width:0}
+.echo .echorow .t{font-size:var(--fs-lg);color:var(--ink)}
+.echo .echorow .lv{font:500 11px var(--f-data);color:var(--brass);margin-left:4px}
+.echo .echorow .s{font-size:var(--fs-sm);color:var(--muted)}
+.echo .echorow .go{font:600 11px var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--good)}
+.echo .echorow .btn{flex:none;min-width:86px}
+.echo .big{color:var(--brass)}
+/* the station's name fades while the sun or a planet passes in front of it (placeLabels) */
+.stlabel{transition:color .3s,opacity .25s}
+.stlabel.crowd{opacity:0}
+/* Settings → HUD theme: the theme picker, a sideways-scrolling row of chips (hscroll) like the other pickers, each with
+   its theme's swatch: its metal over its plate (the palettes set --mh/--ms/--ph/--ps on the swatch itself) */
+.skinchip{display:inline-flex;align-items:center;gap:7px}
+.skinchip .sw{flex:none;width:16px;height:16px;border-radius:50%;--sw1:hsl(var(--mh) var(--ms) 58%);--sw2:hsl(var(--ph) var(--ps) 14%);background:linear-gradient(135deg,var(--sw1) 0 50%,var(--sw2) 50%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)}
+/* (Beta 0.50) the Warp tab's ledger index (as in spacepunk.css, in this look's colours): every heading a row (icon, title, live readout, chevron), lit amber
+   while its section is open; the warp gauge at the top of Galaxy Warp */
+.wrow{display:flex;align-items:center;gap:6px;margin:6px 0}
+.wrow h2{flex:1;min-width:0;margin:0;font-size:inherit}
+.wsh{display:flex;width:100%;align-items:center;gap:10px;padding:9px 12px;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.wsh:focus-visible{outline:2px solid var(--ship);outline-offset:2px}
+.wsh .wic{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center}
+.wsh .wic svg{width:16px;height:16px;fill:none}
+.wsh .wt{flex:1;min-width:0;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wsh .wrd{flex:none;display:flex;flex-direction:column;align-items:flex-end;font:500 11px/1.35 var(--f-data);letter-spacing:0;text-transform:none;color:var(--muted);max-width:42%}
+.wsh .wrd span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.wsh .wrd b{font-weight:500}
+.wr-go{color:var(--good)}
+.wr-soon{color:var(--ore)}
+.wsh .chev{flex:none;width:7px;height:7px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:translateY(-2px) rotate(45deg);transition:transform .2s}
+.wsec.shut .wsh .chev{transform:rotate(-45deg)}
+.wgauge .wgtop{display:flex;align-items:center;gap:12px}
+.wgauge svg{flex:none}
+.wgauge svg path,.wgauge svg line{fill:none;stroke-width:6}
+.wgauge .trk{stroke:var(--line)}
+.wgauge .sn{stroke:var(--ore)}
+.wgauge .gn{stroke:var(--good)}
+.wgauge .big{font-size:26px;line-height:1.1}
+.wgauge .wgs{font-size:var(--fs-md);color:var(--muted)}
+.wtiles{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}
+.wtiles div{display:flex;flex-direction:column;gap:2px;padding:7px 9px;border-radius:6px;box-shadow:inset 0 0 0 1px var(--line)}
+.wtiles span{font-size:var(--fs-sm);color:var(--muted)}
+
+/* ===== (Beta 0.50.1) polish shared by both skins ===== */
+/* every control gets the same keyboard focus ring (0 specificity, so a control's own ring above still wins) */
+:where(button,a[href],input,select,textarea,[role=button],[tabindex]:not([tabindex="-1"])):focus-visible{outline:2px solid var(--ship);outline-offset:2px}
+/* bigger touch targets without changing the look: an invisible hit area reaching above and below the small controls,
+   to about 40 px tall (sideways it stays the control's own width, so neighbours in a row never steal each other's taps) */
+.tog,.chip,.evi,#tbox .tbc button,.perkrow .btn,.progrow .btn{position:relative}
+.btn.evunb .evi{position:absolute}
+.tog::after,.chip::after,.evi::after,#tbox .tbc button::after,.perkrow .btn::after,.progrow .btn::after{content:'';position:absolute;left:0;right:0;top:-8px;bottom:-8px}
+/* reduced motion: nothing slides, pulses or fades for long, wherever it was set */
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}

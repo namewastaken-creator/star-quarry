@@ -1,0 +1,184 @@
+/* Layout: full-bleed 3D orbit view, a thin instrument HUD on top, a pull-up console sheet at the bottom.
+   (Beta 0.50) The spacepunk look of the bases and station: iron plates (--panel, --card, --panel2), brass trim and rivets
+   (--brass, --brassL, --brassD), amber lamp light (--ore), radium teal for anything live (--ship), cream ink, and
+   engraved nameplates in Cinzel (--f-plate) for the tabs, headings and labels. */
+:root{--void:#0b0a0d; --void-rgb:11,10,13; --panel:hsl(calc(var(--ph) + 1.7) calc(var(--ps) * 1.02) 11.6% / .72);--card:hsl(calc(var(--ph) + 1.7) calc(var(--ps) * 1.18) 10.0% / .6); --panel2:hsl(calc(var(--ph) + 1.7) calc(var(--ps) * 0.98) 12.0%); --line:hsl(calc(var(--ph) + 7.3) calc(var(--ps) * 1.55) 22.0%);
+  --ink:hsl(calc(var(--mh) + 5.1) var(--ms) 86.1%); --muted:hsl(calc(var(--ph) + 13.9) calc(var(--ps) * 1.18) 59.0%); --ship:#52e6c6; --ship-rgb:82,230,198; --bad:#ee6b52; --good:#9ad87e; --stn:#86b8dc; --brass:hsl(calc(var(--mh) - 0.2) calc(var(--ms) * 0.98) 53.9%);
+  --brassL:hsl(calc(var(--mh) + 3.6) calc(var(--ms) * 1.25) 68.4%); --brassD:hsl(calc(var(--mh) - 1.3) var(--ms) 34.9%); --iron:hsl(calc(var(--ph) - 1.0) calc(var(--ps) * 0.88) 14.9%); --copper:hsl(calc(var(--mh) - 18.2) calc(var(--ms) * 0.92) 47.8%);
+  --f-plate:"Cinzel",Georgia,"Times New Roman",serif}
+body{background:radial-gradient(120% 80% at 70% 10%,hsl(calc(var(--mh) - 10.7) calc(var(--ms) * 0.65) 12.2%) 0%,hsl(calc(var(--ph) - 5.0) calc(var(--ps) * 1.33) 5.9%) 45%,var(--void) 100%)}
+.plabel b{color:var(--brassL);font:700 12px/1.15 var(--f-plate);letter-spacing:.1em}
+/* the station's name under the station, in the station's own blue (--stn); orange (like a Research button you can press) when a project is ready */
+.stlabel{font:700 12px/1.15 var(--f-plate);letter-spacing:.1em}
+.pkrow b{font:600 12px var(--f-data)}
+.bprow b{font:600 14px var(--f-body);color:var(--ink)}
+
+/* HUD */
+#hud{background:linear-gradient(hsl(calc(var(--ph) - 5.0) calc(var(--ps) * 1.05) 3.7% / .7),hsl(calc(var(--ph) - 5.0) calc(var(--ps) * 1.05) 3.7% / 0))}
+/* the credits gauge: a riveted iron capsule with a brass pressure dial (its needle climbs with income, dialNeedle), the
+   credit total in amber nixie digits and the income in radium teal */
+.cash{align-items:center;gap:9px;padding:5px 15px 5px 5px;border-radius:32px 12px 12px 32px;
+  background:linear-gradient(180deg,hsl(var(--ph) calc(var(--ps) * 0.77) 20.4%),hsl(calc(var(--ph) - 2.5) calc(var(--ps) * 0.89) 11.8%));box-shadow:inset 0 0 0 1.5px var(--brassD),inset 0 2px 0 1.5px hsl(calc(var(--mh) + 3.6) calc(var(--ms) * 1.25) 68.4% / .18),0 6px 16px rgba(0,0,0,.55)}
+.cash::after{content:"";position:absolute;right:5px;top:7px;bottom:7px;width:3px;pointer-events:none;
+  background:radial-gradient(circle,hsl(calc(var(--mh) + 4.6) calc(var(--ms) * 1.45) 77.1%) 0 1px,hsl(calc(var(--mh) - 3.1) calc(var(--ms) * 1.06) 26.5%) 1.4px,transparent 1.8px) 50% 0/3px 9px repeat-y;opacity:.75}
+.dial{position:relative;width:48px;height:48px;flex:none;border-radius:50%;
+  background:radial-gradient(circle at 50% 42%,hsl(calc(var(--mh) + 5.3) calc(var(--ms) * 1.13) 88.6%),hsl(calc(var(--mh) + 5.3) calc(var(--ms) * 0.85) 74.3%) 60%,hsl(calc(var(--mh) + 0.1) calc(var(--ms) * 0.69) 43.7%) 62.5%,hsl(calc(var(--mh) + 3.6) calc(var(--ms) * 1.25) 68.4%) 68%,hsl(calc(var(--mh) - 2.7) calc(var(--ms) * 1.06) 30.2%) 75%,hsl(calc(var(--mh) - 0.2) calc(var(--ms) * 0.98) 53.9%) 82%,hsl(calc(var(--mh) - 4.4) calc(var(--ms) * 0.93) 19.2%) 100%);box-shadow:0 2px 5px rgba(0,0,0,.6)}
+.dial svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.dial .tk{stroke:hsl(calc(var(--mh) - 0.9) calc(var(--ms) * 1.03) 14.5%);stroke-width:1.1;fill:none}
+.dial .red{stroke:#a8382c;stroke-width:2.6;fill:none}
+.dial text{font:700 4.6px var(--f-plate);letter-spacing:.06em;fill:hsl(calc(var(--mh) - 2.7) calc(var(--ms) * 1.1) 22.0%);text-anchor:middle}
+.dial .ndl{transform-origin:24px 26px;transform:rotate(-120deg);transition:transform 1.2s cubic-bezier(.3,1.5,.5,1)}
+.dial .ndl path{stroke:#a8382c;stroke-width:1.6;stroke-linecap:round}
+.dial circle{fill:var(--brass);stroke:hsl(calc(var(--mh) - 2.7) calc(var(--ms) * 1.1) 22.0%);stroke-width:.8}
+.ctxt{display:flex;flex-direction:column;gap:2px;min-width:0}
+.cash .lbl{font:700 var(--fs-xs) var(--f-plate);letter-spacing:.2em;color:var(--brassL)}
+.cash .val{font:700 22px/1 var(--f-data);color:#ffcf8a;font-variant-numeric:tabular-nums;letter-spacing:0;text-shadow:0 0 6px rgba(255,140,40,.85),0 0 14px rgba(255,110,20,.4);white-space:nowrap}
+.cash .val small{font:700 12px/1 var(--f-plate);letter-spacing:.06em;color:#ffcf8a}
+/* the status lines under the credits: one size, one spacing; the tappable ones are underlined */
+.cash .rate{color:var(--ship);text-shadow:0 0 8px rgba(82,230,198,.45)}
+/* the Steam Surge button under the credits gauge (a copper pill with a lit lamp in this theme): "Surge ready", teal "×2 Surge · 6m left" while one runs, nothing while
+   it recharges; tapping it opens the Market. It hangs below the credits block (absolute), so it never changes the top
+   bar's height and the map's framing (viewBox) doesn't shift when it comes and goes */
+.rsurge{left:4px;top:100%;margin-top:7px;display:flex;align-items:center;gap:7px;font:700 11px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:hsl(calc(var(--mh) - 6.0) calc(var(--ms) * 1.3) 8.2%);border:0;border-radius:14px;padding:4px 11px 4px 4px;
+  background:linear-gradient(hsl(calc(var(--mh) + 0.7) calc(var(--ms) * 1.54) 71.4%),hsl(calc(var(--mh) - 11.1) calc(var(--ms) * 0.97) 50.6%));box-shadow:inset 0 0 0 1px hsl(calc(var(--mh) + 2.4) calc(var(--ms) * 1.82) 82.5%),0 3px 10px hsl(calc(var(--mh) - 18.2) calc(var(--ms) * 0.92) 47.8% / .5)}
+.rsurge::before{content:"";width:16px;height:16px;border-radius:50%;background:radial-gradient(circle,hsl(calc(var(--mh) + 10.5) calc(var(--ms) * 1.82) 90.8%),#ffa94d 55%,#a8382c);box-shadow:0 0 8px #ffa94d}
+.rsurge.on{color:#062a24;background:linear-gradient(#a6f6e2,#3fb79c);box-shadow:inset 0 0 0 1px #c8fff2,0 3px 10px rgba(82,230,198,.4)}
+.rsurge.on::before{background:radial-gradient(circle,#f0fffb,#52e6c6 55%,#1d6e5e);box-shadow:0 0 8px #52e6c6}
+/* the buttons over the map: brass portholes in one row, music always at the right, their icons lit radium teal when on.
+   Full screen (phone browsers only) and Recenter (only while the view isn't the whole galaxy) appear to its left;
+   holding music opens the volume (#volpop) */
+.hi{width:40px;height:40px;border-radius:50%;color:var(--ship);border:0;
+  background:radial-gradient(circle,#16252a 0 54%,transparent 55%),conic-gradient(from 20deg,hsl(calc(var(--mh) + 3.6) calc(var(--ms) * 1.25) 68.4%),hsl(calc(var(--mh) - 1.3) var(--ms) 34.9%),hsl(calc(var(--mh) - 0.2) calc(var(--ms) * 0.98) 53.9%),hsl(calc(var(--mh) - 3.1) calc(var(--ms) * 1.06) 26.5%),hsl(calc(var(--mh) + 3.6) calc(var(--ms) * 1.25) 68.4%),hsl(calc(var(--mh) - 1.3) var(--ms) 34.9%),hsl(calc(var(--mh) + 3.6) calc(var(--ms) * 1.25) 68.4%));
+  box-shadow:0 4px 10px rgba(0,0,0,.6),inset 0 0 0 1px hsl(calc(var(--mh) - 0.9) calc(var(--ms) * 1.03) 14.5%)}
+.hi svg{width:17px;height:17px;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 3px rgba(82,230,198,.75))}
+#fs{color:var(--brassL)}
+#fs svg{filter:none}
+/* music off: dark glass with a red slash through the note */
+#music:not(.on){color:#6c7a76}
+#music:not(.on) svg{filter:none}
+#music:not(.on)::after{left:11px;right:11px;top:50%;background:#c9503c}
+#center svg{filter:drop-shadow(0 0 3px rgba(var(--ore-rgb),.75))}
+#volpop{border:1px solid var(--brassD);border-radius:10px}
+#volpop label{font:700 10px var(--f-plate)}
+
+/* Sheet */
+/* (Beta 0.46.8) no backdrop blur: blurring the live map behind the panel cost the browser a pass over most of a phone's
+   screen on every frame, so the panel is a little more opaque instead */
+#sheet{background:linear-gradient(180deg,hsl(calc(var(--ph) + 2.3) calc(var(--ps) * 0.91) 15.9% / .95),hsl(calc(var(--ph) + 0.7) calc(var(--ps) * 0.95) 9.6% / .92) 64px,hsl(calc(var(--ph) - 1.0) calc(var(--ps) * 0.78) 8.4% / .9));border-top:3px solid var(--brass);box-shadow:0 -1px 0 hsl(calc(var(--mh) + 3.2) calc(var(--ms) * 1.4) 74.1%),0 -12px 28px rgba(0,0,0,.5)}
+.tabbar{border-bottom:2px solid hsl(calc(var(--mh) - 1.3) calc(var(--ms) * 0.96) 40.0%)}
+.tab{background:linear-gradient(hsl(calc(var(--ph) - 1.9) calc(var(--ps) * 0.78) 21.8%),hsl(calc(var(--ph) - 1.0) calc(var(--ps) * 0.9) 14.5%));border:0;border-radius:6px 6px 0 0;margin:10px 2px;box-shadow:inset 0 0 0 1px hsl(calc(var(--ph) + 5.0) calc(var(--ps) * 1.22) 27.8%);color:hsl(calc(var(--mh) + 3.2) calc(var(--ms) * 0.73) 67.3%);font:700 11px var(--f-plate);letter-spacing:.1em;padding:13px 10px 12px}
+/* the open tab keeps its plate and gets a lit brass line under its name (as the live game's underline) */
+.tab.on{color:hsl(calc(var(--mh) + 4.7) calc(var(--ms) * 1.43) 83.5%)}
+.tab.on::before{content:"";position:absolute;left:22%;right:22%;bottom:5px;height:2px;border-radius:1px;background:var(--brassL);box-shadow:0 0 6px hsl(calc(var(--mh) + 3.6) calc(var(--ms) * 1.25) 68.4% / .75)}
+.tab.alert{color:var(--ore)}
+.tab.out{color:var(--ship)}
+.evi.on,.btn.evunb[aria-expanded="true"] .evi{color:var(--ship)}
+@media (hover:hover){.evi:hover,.btn.evunb:hover .evi{color:var(--ship)}}
+/* a lit lamp on a nameplate whose tab has news (.alert amber, .out teal, .go green), so it still shows on the open brass plate */
+.tab.alert::after,.tab.out::after{content:"";position:absolute;top:4px;right:4px;width:5px;height:5px;border-radius:50%;background:var(--ore);box-shadow:0 0 6px var(--ore)}
+.tab.out::after{background:var(--ship);box-shadow:0 0 6px var(--ship)}
+.tab.alert.go::after{background:var(--good);box-shadow:0 0 6px var(--good)}
+/* a selected chip (planet list, Station and Probe tabs) has the furnace ore chips' highlight: a 2px orange ring, white label
+   (a status colour, .nm-*, still wins) */
+.chip.on{box-shadow:inset 0 0 0 1px var(--ore);color:var(--ink)}
+.flowh b{color:var(--ink)}
+.flown b{color:var(--ink)}
+.fchart text{font:500 9px var(--f-data);fill:var(--muted)}
+/* drag handles: mining on the left edge, hauling (Speed and Cargo) on the right, each with up and down arrows */
+.th{color:hsl(calc(var(--mh) - 2.0) calc(var(--ms) * 1.14) 6.3%)}
+.tkeep b{color:var(--ore)}
+.btn{color:hsl(calc(var(--mh) - 5.1) calc(var(--ms) * 1.82) 8.2%)}
+.pm .pmm small{font-size:10px}
+.crewby b{font:600 13px var(--f-body);color:var(--ink)}.perkrow b{color:var(--ink);font-weight:600}
+.perklist .btn small{font:500 11px var(--f-body)}
+.progrow b{font:600 13px var(--f-body);color:var(--ink)}
+.rtt{background:hsl(calc(var(--mh) - 5.1) calc(var(--ms) * 1.82) 8.2%)}
+.cand b{font:700 13px var(--f-body);color:var(--ink)}
+.crewl b{color:var(--ore);font-weight:600}
+.perkc>b{font:700 13px var(--f-body);color:var(--ore)}
+/* in the panel every usable button is orange, except the mining crews' upgrade buttons, which stay green and red
+   (+) and outlined (−); the warning buttons keep their colour, the unavailable-mission buttons stay grey, and toggles
+   fill in when on */
+#pbody .btn.ghost:not(:disabled):not(.evunb):not(.warn):not(.pmm){color:hsl(calc(var(--mh) - 5.1) calc(var(--ms) * 1.82) 8.2%)}
+#pbody .tog.on{color:hsl(calc(var(--mh) - 5.1) calc(var(--ms) * 1.82) 8.2%)}
+.fstat b{font-weight:600}
+.note b{color:var(--ink);font-weight:600}
+.tog.on{color:var(--good)}
+.orechip.on{box-shadow:inset 0 0 0 1px var(--ore);color:var(--ink)}
+@media (min-width:760px){#sheet{border:1px solid var(--line);border-radius:12px}}
+/* (Beta 0.50) the Chronicle and the Clockwork Archive (10b-chronicle.js), in the brass of the bases and the station:
+   the logbook window (#chr), its banner (#chrban), the gear badges (.chb) and the Warp tab's two cards */
+#chr .box{border-color:hsl(calc(var(--mh) - 0.2) calc(var(--ms) * 0.98) 53.9% / .55);background:repeating-linear-gradient(180deg,transparent 0 27px,hsl(calc(var(--mh) - 0.2) calc(var(--ms) * 0.98) 53.9% / .05) 27px 28px),linear-gradient(180deg,hsl(calc(var(--mh) - 0.2) calc(var(--ms) * 0.98) 53.9% / .14),transparent 140px),var(--panel2)}
+#chr .chrbadge{border:1px solid hsl(calc(var(--mh) - 0.2) calc(var(--ms) * 0.98) 53.9% / .45);border-radius:10px}
+.chb circle{fill:var(--panel2);stroke:var(--line);stroke-width:1}
+.chb text{font:700 10px var(--f-data);fill:var(--muted);text-anchor:middle}
+.chb.on path{fill:hsl(calc(var(--mh) - 0.2) calc(var(--ms) * 0.98) 53.9% / .32);stroke:var(--brass)}
+.chron .new{color:hsl(calc(var(--mh) - 5.1) calc(var(--ms) * 1.82) 8.2%)}
+#chrban{border:1px solid hsl(calc(var(--mh) - 0.2) calc(var(--ms) * 0.98) 53.9% / .6);border-radius:12px}
+
+/* (Beta 0.50) the spacepunk panel: engraved headings, iron plates with a brass edge, brass push buttons (pressed in with a
+   tap), radium-teal ship buttons, glass ore tubes for bars, and brass-framed windows. Sizes match the plain styles above,
+   so nothing in the panel moves */
+h2{font:800 22px/1.05 var(--f-plate);letter-spacing:.05em;color:var(--brassL)}
+h3{font:700 10px var(--f-plate);letter-spacing:.2em;color:var(--brass)}
+.sub h4,.clist h4,.pkh{font-family:var(--f-plate);font-weight:700;color:var(--brass)}
+.card,.rows,.hire,.tune{border-color:var(--line);box-shadow:inset 0 1px 0 hsl(calc(var(--mh) + 3.6) calc(var(--ms) * 1.25) 68.4% / .07),0 1px 0 rgba(0,0,0,.35)}
+.card{background:linear-gradient(180deg,hsl(calc(var(--ph) + 3.0) calc(var(--ps) * 1.12) 17.5% / .55),hsl(calc(var(--ph) + 1.7) calc(var(--ps) * 1.18) 10.0% / .6))}
+.row{background:hsl(calc(var(--ph) + 1.7) calc(var(--ps) * 1.18) 10.0% / .6)}
+.chip{background:linear-gradient(hsl(calc(var(--ph) + 0.7) calc(var(--ps) * 0.92) 20.0%),hsl(calc(var(--ph) + 7.3) calc(var(--ps) * 1.38) 12.4%));border-color:hsl(calc(var(--ph) + 8.3) calc(var(--ps) * 1.67) 28.2%);color:hsl(calc(var(--mh) + 3.2) calc(var(--ms) * 0.73) 67.3%)}
+.chip.on{border-color:var(--brassL);box-shadow:inset 0 0 0 1px var(--brassL),0 0 8px hsl(calc(var(--mh) + 3.6) calc(var(--ms) * 1.25) 68.4% / .25);color:var(--ink)}
+.btn{background:linear-gradient(hsl(calc(var(--mh) + 4.9) calc(var(--ms) * 1.44) 75.7%),hsl(calc(var(--mh) - 0.2) calc(var(--ms) * 1.16) 58.6%) 52%,hsl(calc(var(--mh) - 1.3) calc(var(--ms) * 1.02) 42.2%));color:hsl(calc(var(--mh) - 6.0) calc(var(--ms) * 1.3) 8.2%);border-color:transparent;box-shadow:inset 0 0 0 1px hsl(calc(var(--mh) + 5.2) calc(var(--ms) * 1.82) 85.3% / .75),0 2px 0 hsl(calc(var(--mh) - 2.7) calc(var(--ms) * 1.1) 22.0%),0 3px 6px rgba(0,0,0,.4);text-shadow:0 1px 0 hsl(calc(var(--mh) + 4.5) calc(var(--ms) * 1.82) 87.3% / .35)}
+.btn:active:not(:disabled){transform:translateY(1px);box-shadow:inset 0 0 0 1px hsl(calc(var(--mh) + 5.2) calc(var(--ms) * 1.82) 85.3% / .75),0 1px 0 hsl(calc(var(--mh) - 2.7) calc(var(--ms) * 1.1) 22.0%)}
+.btn:disabled{background:linear-gradient(hsl(calc(var(--ph) + 2.7) calc(var(--ps) * 0.84) 20.2%),hsl(calc(var(--ph) - 1.0) calc(var(--ps) * 0.95) 13.7%));color:hsl(calc(var(--ph) + 12.9) calc(var(--ps) * 1.06) 46.7%);box-shadow:inset 0 0 0 1px hsl(calc(var(--ph) + 8.6) calc(var(--ps) * 1.25) 26.1%);text-shadow:none}
+.btn.ghost{background:hsl(calc(var(--ph) + 1.7) calc(var(--ps) * 1.18) 10.0% / .4);border:1px solid var(--brassD);color:var(--ink);box-shadow:none;text-shadow:none}
+.btn.ghost:disabled{color:hsl(calc(var(--ph) + 11.0) calc(var(--ps) * 1.1) 35.7%);border-color:var(--line)}
+.btn.ship{background:linear-gradient(#a6f6e2,#52c8ac 55%,#2f8a76);color:#062a24;box-shadow:inset 0 0 0 1px #c8fff2,0 2px 0 #1c4a40,0 3px 8px rgba(82,230,198,.25);text-shadow:none}
+.btn.ship:disabled{background:#173a36;color:#9fe8dc;box-shadow:inset 0 0 0 1px var(--ship)}
+.btn.warn,.btn.ship.bnr,.btn.up.hot{background:linear-gradient(#ff9a7e,#d9553c 55%,#9c3424);color:#2b0606;box-shadow:inset 0 0 0 1px #ffc2b0,0 2px 0 #5a1c12;text-shadow:none}
+.btn.ship.bnr:disabled,.btn.up.hot:disabled{background:#3a1f1a;color:#ffb3a3;box-shadow:inset 0 0 0 1px var(--bad)}
+.btn.up{background:linear-gradient(hsl(calc(var(--ph) - 1.9) calc(var(--ps) * 0.78) 21.8%),hsl(calc(var(--ph) - 1.0) calc(var(--ps) * 0.9) 14.5%));color:var(--ink);border:1px solid hsl(calc(var(--ph) + 8.3) calc(var(--ps) * 1.67) 28.2%);box-shadow:0 2px 0 hsl(calc(var(--ph) + 0.7) calc(var(--ps) * 1.33) 6.9%);text-shadow:none}
+#pbody .btn.ghost:not(:disabled):not(.evunb):not(.warn):not(.pmm){background:linear-gradient(hsl(calc(var(--mh) + 4.9) calc(var(--ms) * 1.44) 75.7%),hsl(calc(var(--mh) - 0.2) calc(var(--ms) * 1.16) 58.6%) 52%,hsl(calc(var(--mh) - 1.3) calc(var(--ms) * 1.02) 42.2%));color:hsl(calc(var(--mh) - 6.0) calc(var(--ms) * 1.3) 8.2%);border-color:transparent;box-shadow:inset 0 0 0 1px hsl(calc(var(--mh) + 5.2) calc(var(--ms) * 1.82) 85.3% / .75),0 2px 0 hsl(calc(var(--mh) - 2.7) calc(var(--ms) * 1.1) 22.0%),0 3px 6px rgba(0,0,0,.4)}
+#pbody .tog.on{background:linear-gradient(hsl(calc(var(--mh) + 4.9) calc(var(--ms) * 1.44) 75.7%),hsl(calc(var(--mh) - 0.2) calc(var(--ms) * 0.98) 53.9%));color:hsl(calc(var(--mh) - 6.0) calc(var(--ms) * 1.3) 8.2%)}
+.seg{border-color:var(--brassD)}
+.seg button.on{background:linear-gradient(hsl(calc(var(--mh) + 4.9) calc(var(--ms) * 1.44) 75.7%),hsl(calc(var(--mh) - 0.2) calc(var(--ms) * 0.98) 53.9%) 60%,hsl(calc(var(--mh) - 1.3) calc(var(--ms) * 0.96) 40.0%));color:hsl(calc(var(--mh) - 6.0) calc(var(--ms) * 1.3) 8.2%)}
+.bar,.need .nbar,.flowbar{background:linear-gradient(hsl(calc(var(--ph) - 5.0) calc(var(--ps) * 0.87) 4.5%),hsl(calc(var(--ph) + 1.7) calc(var(--ps) * 1.02) 11.6%));box-shadow:inset 0 0 0 1px hsl(calc(var(--mh) - 1.8) calc(var(--ms) * 0.86) 23.9%),inset 0 1px 2px rgba(0,0,0,.7)}
+.bar i{box-shadow:0 0 6px var(--ore)}
+.evmeta span,.rb,.role .rn i{border-radius:2px}
+.evi{background:var(--panel2)}
+.empty{border-color:hsl(calc(var(--ph) + 8.3) calc(var(--ps) * 1.67) 28.2%)}
+.oretip{text-decoration-color:hsl(calc(var(--ph) + 13.9) calc(var(--ps) * 1.18) 59.0% / .6)}
+.th{border-color:hsl(calc(var(--ph) - 2.5) calc(var(--ps) * 1.21) 8.6%)}
+#fps,#bench{background:hsl(calc(var(--ph) + 0.7) calc(var(--ps) * 1.41) 6.5% / .78);border-color:var(--brassD)}
+#tring.edge{background:hsl(calc(var(--ph) + 1.7) calc(var(--ps) * 1.18) 10.0% / .88)}
+/* windows: an iron plate in a brass frame with a rivet at each corner, the tag above the title engraved */
+#modal .box,#upd .box,#chg .box,#gd .box,#ab .box,#nm .box,#pk .box,#bl .box,#sm .box,#sv .box,#tq .box,#big .box,#chr .box{border:2px solid var(--brass);
+  background:radial-gradient(circle at 9px 9px,hsl(calc(var(--mh) + 4.6) calc(var(--ms) * 1.45) 77.1%) 0 1.5px,hsl(calc(var(--mh) - 3.1) calc(var(--ms) * 1.06) 26.5%) 2px,transparent 2.6px),radial-gradient(circle at calc(100% - 9px) 9px,hsl(calc(var(--mh) + 4.6) calc(var(--ms) * 1.45) 77.1%) 0 1.5px,hsl(calc(var(--mh) - 3.1) calc(var(--ms) * 1.06) 26.5%) 2px,transparent 2.6px),
+    radial-gradient(circle at 9px calc(100% - 9px),hsl(calc(var(--mh) + 4.6) calc(var(--ms) * 1.45) 77.1%) 0 1.5px,hsl(calc(var(--mh) - 3.1) calc(var(--ms) * 1.06) 26.5%) 2px,transparent 2.6px),radial-gradient(circle at calc(100% - 9px) calc(100% - 9px),hsl(calc(var(--mh) + 4.6) calc(var(--ms) * 1.45) 77.1%) 0 1.5px,hsl(calc(var(--mh) - 3.1) calc(var(--ms) * 1.06) 26.5%) 2px,transparent 2.6px),
+    linear-gradient(180deg,hsl(calc(var(--ph) - 1.0) calc(var(--ps) * 0.81) 16.1%),hsl(calc(var(--ph) - 2.5) calc(var(--ps) * 0.99) 10.6%));box-shadow:0 0 0 1px hsl(calc(var(--mh) - 0.9) calc(var(--ms) * 1.03) 14.5%),inset 0 1px 0 hsl(calc(var(--mh) + 4.4) calc(var(--ms) * 1.82) 83.3% / .15),0 18px 50px rgba(0,0,0,.6)}
+#modal .tag,#upd .tag,#chg .tag,#gd .tag,#ab .tag,#nm .tag,#pk .tag,#sv .tag,#tq .tag,#big .tag,#chr .tag,#sm .tag,#bl .tag{font-family:var(--f-plate);font-weight:700}
+.glist details{border-color:var(--line);background:hsl(calc(var(--ph) + 3.0) calc(var(--ps) * 1.12) 17.5% / .3)}
+.glist summary{font-family:var(--f-plate);font-weight:700;letter-spacing:.06em;color:var(--brassL)}
+#toast,#tip{border-color:var(--brassD);background:hsl(calc(var(--ph) + 1.7) calc(var(--ps) * 0.98) 12.0%)}
+#tbox{border-color:var(--brassD);border-left-color:var(--ore);background:linear-gradient(180deg,hsl(calc(var(--ph) - 1.0) calc(var(--ps) * 0.81) 16.1%),hsl(calc(var(--ph) - 2.5) calc(var(--ps) * 0.92) 11.4%))}
+#tbox .tbt{font-family:var(--f-plate);font-weight:800;color:var(--brassL)}
+#cover h1{font-family:var(--f-plate);font-weight:800;letter-spacing:.06em;color:var(--brassL)}
+@media (min-width:760px){#sheet{border:3px solid var(--brass);box-shadow:0 0 0 1px hsl(calc(var(--mh) - 0.9) calc(var(--ms) * 1.03) 14.5%),0 14px 40px rgba(0,0,0,.55)}}
+@media (prefers-reduced-motion:reduce){.dial .ndl{transition:none}}
+
+/* the original look's ♪ glyph in the music button (this skin draws its own note); --shut: the collapsed panel's height (viewBox) */
+:root{--shut:66px}
+#music .mg{display:none}
+.wsh{border-radius:6px;border:1px solid var(--line);border-left:3px solid var(--brassD);background:linear-gradient(hsl(calc(var(--ph) + 3) calc(var(--ps) * 1.2) 20%),hsl(calc(var(--ph) + 3) calc(var(--ps) * 1.2) 15%));color:var(--brassL)}
+.wsec:not(.shut) .wsh{border-left-color:var(--brassL);background:linear-gradient(hsl(calc(var(--ph) + 3) calc(var(--ps) * 1.2) 24%),hsl(calc(var(--ph) + 3) calc(var(--ps) * 1.2) 18%))}
+.wsh .wic{background:var(--iron);box-shadow:inset 0 0 0 1px var(--brassD)}
+.wsh .wic svg{stroke:var(--brassL);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.wsh .wt{font:700 14px/1.2 var(--f-plate)}
+.wgauge svg{width:104px;height:68px}
+.wgauge .ndl{stroke:var(--brassL);stroke-width:2.5;stroke-linecap:round}.wgauge .hub{fill:var(--brass)}
+.wtiles div{background:var(--iron)}.wtiles b{font:500 14px var(--f-data);color:var(--ink)}
+/* (Beta 0.50) the cover in Spacepunk: its own logo (the app icon's planet, ore and orbit redrawn as the station's brass
+   habitat ring with lit portholes and the space probe riding it, in a riveted brass bezel) in place of the app icon, and
+   the title sized to the screen's width so STAR QUARRY fits a phone in the wider plate font */
+#cover .cv>img{display:none}
+#cover .logo-sp{width:124px;height:124px;filter:drop-shadow(0 10px 28px rgba(var(--ore-rgb),.22))}
+#cover h1{font-size:clamp(26px,10.6vw,60px);letter-spacing:.05em}
