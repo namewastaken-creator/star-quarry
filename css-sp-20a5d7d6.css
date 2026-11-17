@@ -148,6 +148,7 @@ h3{font:700 10px var(--f-plate);letter-spacing:.2em;color:var(--brass)}
 .empty{border-color:hsl(calc(var(--ph) + 8.3) calc(var(--ps) * 1.67) 28.2%)}
 .oretip{text-decoration-color:hsl(calc(var(--ph) + 13.9) calc(var(--ps) * 1.18) 59.0% / .6)}
 .th{border-color:hsl(calc(var(--ph) - 2.5) calc(var(--ps) * 1.21) 8.6%)}
+.hdot{border-color:hsl(calc(var(--ph) - 2.5) calc(var(--ps) * 1.21) 8.6%)}
 #fps,#bench{background:hsl(calc(var(--ph) + 0.7) calc(var(--ps) * 1.41) 6.5% / .78);border-color:var(--brassD)}
 #tring.edge{background:hsl(calc(var(--ph) + 1.7) calc(var(--ps) * 1.18) 10.0% / .88)}
 /* windows: an iron plate in a brass frame with a rivet at each corner, the tag above the title engraved */

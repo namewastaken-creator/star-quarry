@@ -54,6 +54,7 @@ body{background:radial-gradient(120% 80% at 70% 10%,#151a3a 0%,#090b1a 45%,var(-
 .fchart text{font:500 9px var(--f-data);fill:var(--muted)}
 /* drag handles: mining on the left edge, hauling (Speed and Cargo) on the right, each with up and down arrows */
 .th{color:#1a1206}
+.hdot{border-color:#0b0e1d}
 .tkeep b{color:var(--ore)}
 .btn{color:#2a1700}
 .pm .pmm small{font-size:10px}

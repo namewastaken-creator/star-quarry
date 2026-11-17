@@ -221,6 +221,19 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
 .th.thm{background:var(--ore);left:-9px}
 .th.thh{background:var(--ship);right:-9px;color:#062320}
 .tchart.drag .th{transform:scale(1.25)}
+/* the income hill: press anywhere on it to move the dot; the dot sits on the curve (positioned in %, since the drawing
+   is stretched), the faint dot is where the layout is now while a plan shows */
+.hchart{cursor:ew-resize;touch-action:none;margin-top:4px}
+.hsvg .hline{fill:none;stroke:var(--ship);stroke-width:2;vector-effect:non-scaling-stroke;stroke-linejoin:round}
+.hsvg .hfill{fill:var(--ship);opacity:.14}
+.hsvg .hzone{fill:var(--bad);opacity:.16}
+.hsvg .hbest{stroke:var(--ink);stroke-width:1;stroke-dasharray:2 3;vector-effect:non-scaling-stroke;opacity:.6}
+.hdot{position:absolute;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;background:var(--ore);border:2px solid #0b0e1d;box-shadow:0 0 0 1px rgba(255,255,255,.25);pointer-events:none}
+.hdot.ghost{opacity:.35;width:12px;height:12px;margin:-6px 0 0 -6px}
+.tchart.drag .hdot:not(.ghost){transform:scale(1.25)}
+.hbl{position:absolute;top:0;transform:translateX(-50%);font:500 9px var(--f-data);color:var(--muted);pointer-events:none}
+.hgauge{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font:500 12px var(--f-data);color:var(--muted);margin:4px 6px 0}
+.hgauge b{color:var(--ink)}
 .tsum{display:flex;justify-content:space-between;gap:2px 8px;flex-wrap:wrap;font:500 12px/1.35 var(--f-body);color:var(--muted)}
 .tsum > span:first-child{flex:1 1 100%;min-height:calc(2 * 1.35em)}
 .tplan{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font:600 12px/1.35 var(--f-body);color:var(--ore)}
