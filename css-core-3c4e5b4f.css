@@ -197,7 +197,6 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
 .row.trow.locked{opacity:.5}
 .row.trow.locked .lk{margin-left:6px;font-size:.85em;filter:grayscale(1)}
 .row .s.l1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;overflow-wrap:normal}
-.flowh{display:flex;justify-content:space-between;gap:8px;font:500 12px var(--f-data);color:var(--muted);font-variant-numeric:tabular-nums}
 .flown{display:flex;flex-direction:column;font:500 12px var(--f-body);color:var(--muted);line-height:1.35}
 .flown span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fchart{display:block;width:100%;height:58px}
@@ -207,10 +206,17 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
 .fchart .loss{fill:rgba(255,122,122,.28)}
 .fchart .now{stroke:var(--ink);stroke-width:1.2}
 .tune{border:1px solid var(--line);border-radius:9px;padding:8px 10px;display:flex;flex-direction:column;gap:6px;background:rgba(255,255,255,.02)}
-.thead{display:flex;justify-content:space-between;align-items:center;gap:6px;font:500 11px var(--f-data);color:var(--muted);flex-wrap:wrap}
-.thead .lg{display:inline-block;width:12px;height:0;border-top:2px solid var(--ore);margin:0 4px 3px 0;vertical-align:middle}
-.thead .lg.lh{border-top-color:var(--ship);margin-left:8px}
-.tctl{display:flex;gap:6px}
+/* (Beta 0.53) the tuning panel keeps one size: the header, the chart and three one-line slots (tuneUI); nothing wraps,
+   and while a plan shows the buttons and the third line swap their contents instead of adding rows */
+.thead{display:flex;justify-content:space-between;align-items:center;gap:6px;font:500 12px var(--f-data);color:var(--muted)}
+.trate{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.tctl{display:flex;gap:6px;flex:none}
+.tog:disabled{opacity:.45;cursor:default}
+.tinfo{display:flex;flex-direction:column;gap:2px}
+.tln{display:flex;justify-content:space-between;align-items:center;gap:8px;height:18px;font:500 12px/18px var(--f-data);color:var(--muted);white-space:nowrap;margin:0 2px}
+.tln > span{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.tln.tpl > span{color:var(--ore);font-weight:600}
+.trate b,.tln b{color:var(--ink)}
 /* only the handles drag; the rest of the chart scrolls the panel like any other content */
 .tchart{position:relative;user-select:none;-webkit-user-select:none;margin:0 6px}
 .tchart .tsvg{height:100px}
@@ -226,7 +232,7 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
 .tchart.drag .th{transform:scale(1.25)}
 /* the income hill: press anywhere on it to move the dot; the dot sits on the curve (positioned in %, since the drawing
    is stretched), the faint dot is where the layout is now while a plan shows */
-.hchart{cursor:ew-resize;touch-action:none;margin-top:4px}
+.hchart{cursor:ew-resize;touch-action:none}
 /* (Beta 0.52) a planet with no points yet: either chart is a dimmed preview with nothing to drag, which scrolls like the
    rest of the panel */
 .tchart.tpre{cursor:default;touch-action:auto;opacity:.75}
@@ -238,15 +244,6 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
 .hdot.ghost{opacity:.35;width:12px;height:12px;margin:-6px 0 0 -6px}
 .tchart.drag .hdot:not(.ghost){transform:scale(1.25)}
 .hbl{position:absolute;top:0;transform:translateX(-50%);font:500 9px var(--f-data);color:var(--muted);pointer-events:none}
-.hgauge{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font:500 12px var(--f-data);color:var(--muted);margin:4px 6px 0}
-.hgauge b{color:var(--ink)}
-.tsum{display:flex;justify-content:space-between;gap:2px 8px;flex-wrap:wrap;font:500 12px/1.35 var(--f-body);color:var(--muted)}
-.tsum > span:first-child{flex:1 1 100%;min-height:calc(2 * 1.35em)}
-.tplan{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font:600 12px/1.35 var(--f-body);color:var(--ore)}
-.tplan b{white-space:nowrap}
-.tbtns{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.tkeep{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px dashed var(--ore);border-radius:var(--r-md);padding:6px 8px;font:500 12px/1.35 var(--f-body);color:var(--muted)}
-.tkeep .btn{min-width:64px;padding:6px 10px}
 .silo{display:flex;align-items:center;gap:8px;font:500 12px var(--f-data);color:var(--muted)}
 .silo .bar{flex:1;height:6px}
 .flowbar{display:flex;height:8px;border-radius:var(--r-sm);overflow:hidden;background:var(--panel2)}
