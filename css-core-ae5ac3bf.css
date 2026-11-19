@@ -193,6 +193,9 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
 .tmx{margin-left:6px;font:500 11px var(--f-data);color:var(--muted)}
 .row.trow .s.l1{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.35}
 .row.trow .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* (Beta 0.52) Plasma Drills before Prospecting: listed but greyed and locked */
+.row.trow.locked{opacity:.5}
+.row.trow.locked .lk{margin-left:6px;font-size:.85em;filter:grayscale(1)}
 .row .s.l1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;overflow-wrap:normal}
 .flowh{display:flex;justify-content:space-between;gap:8px;font:500 12px var(--f-data);color:var(--muted);font-variant-numeric:tabular-nums}
 .flown{display:flex;flex-direction:column;font:500 12px var(--f-body);color:var(--muted);line-height:1.35}
@@ -224,6 +227,9 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
 /* the income hill: press anywhere on it to move the dot; the dot sits on the curve (positioned in %, since the drawing
    is stretched), the faint dot is where the layout is now while a plan shows */
 .hchart{cursor:ew-resize;touch-action:none;margin-top:4px}
+/* (Beta 0.52) a planet with no points yet: either chart is a dimmed preview with nothing to drag, which scrolls like the
+   rest of the panel */
+.tchart.tpre{cursor:default;touch-action:auto;opacity:.75}
 .hsvg .hline{fill:none;stroke:var(--ship);stroke-width:2;vector-effect:non-scaling-stroke;stroke-linejoin:round}
 .hsvg .hfill{fill:var(--ship);opacity:.14}
 .hsvg .hzone{fill:var(--bad);opacity:.16}
