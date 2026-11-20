@@ -69,7 +69,9 @@ body{color:var(--ink);font-family:var(--f-body);font-size:var(--fs-xl);-webkit-t
 .nmrow{display:flex;gap:8px}
 .nmrow .btn{flex:1}
 .plabel.crowd{opacity:0}
-#hud{position:fixed;top:0;left:0;right:0;padding-top:calc(env(safe-area-inset-top,0px) + 8px);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;gap:12px;align-items:flex-start;justify-content:space-between;pointer-events:none;padding-bottom:12px;transition:opacity .4s}
+#hud{position:fixed;top:0;left:0;right:0;padding-top:calc(env(safe-area-inset-top,0px) + 8px);padding-left:max(10px,env(safe-area-inset-left,0px));padding-right:max(10px,env(safe-area-inset-right,0px));display:flex;gap:12px;align-items:flex-start;justify-content:space-between;pointer-events:none;padding-bottom:12px;transition:opacity .4s}
+/* full screen on Android (html.fsup, 14-version-updates.js): no status bar, so the corners are free up to the edge */
+html.fsup #hud{padding-top:10px}
 /* (spacepunk) the HUD fades out while the salvage probes break up a derelict (body.cine, derVisuals) and during a build
    show (body.bshow, buildShow) */
 body.cine #hud,body.bshow #hud{opacity:0;pointer-events:none}
@@ -189,13 +191,7 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
 .row .txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .row .t{font:600 15px var(--f-body)}
 .row .s{font:500 12px var(--f-data);color:var(--muted);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
-.row.trow{min-height:98px;box-sizing:border-box;align-items:center}
-.tmx{margin-left:6px;font:500 11px var(--f-data);color:var(--muted)}
-.row.trow .s.l1{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.35}
-.row.trow .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* (Beta 0.52) Plasma Drills before Prospecting: listed but greyed and locked */
-.row.trow.locked{opacity:.5}
-.row.trow.locked .lk{margin-left:6px;font-size:.85em;filter:grayscale(1)}
 .row .s.l1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;overflow-wrap:normal}
 .flown{display:flex;flex-direction:column;font:500 12px var(--f-body);color:var(--muted);line-height:1.35}
 .flown span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -210,7 +206,7 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
    and while a plan shows the buttons and the third line swap their contents instead of adding rows */
 .thead{display:flex;justify-content:space-between;align-items:center;gap:6px;font:500 12px var(--f-data);color:var(--muted)}
 .trate{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
-.tctl{display:flex;gap:6px;flex:none}
+.tctl{display:flex;gap:4px;flex:none;width:116px}
 .tog:disabled{opacity:.45;cursor:default}
 .tinfo{display:flex;flex-direction:column;gap:2px}
 .tln{display:flex;justify-content:space-between;align-items:center;gap:8px;height:18px;font:500 12px/18px var(--f-data);color:var(--muted);white-space:nowrap;margin:0 2px}
@@ -230,22 +226,55 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
 .th.thm{background:var(--ore);left:-9px}
 .th.thh{background:var(--ship);right:-9px;color:#062320}
 .tchart.drag .th{transform:scale(1.25)}
-/* the income hill: press anywhere on it to move the dot; the dot sits on the curve (positioned in %, since the drawing
-   is stretched), the faint dot is where the layout is now while a plan shows */
-.hchart{cursor:ew-resize;touch-action:none}
-/* (Beta 0.52) a planet with no points yet: either chart is a dimmed preview with nothing to drag, which scrolls like the
-   rest of the panel */
+/* (Beta 0.54) the Balance card: the view button and the header buttons keep fixed widths, so prices and plans never
+   move them; the chart area keeps one height in both views, and a trait's details cover it instead of adding a row */
+.thead .btn{min-width:0;height:30px;padding:0 8px;justify-content:center;font-size:12px;letter-spacing:.06em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.thead .tview{flex:none;width:86px}
+.tctl .tb1{flex:1}
+.tctl .tbx{flex:none;width:34px;padding-left:0;padding-right:0}
+.tctl .tba{flex:1;min-width:0}
+.tbody{position:relative;height:104px}
+/* (Beta 0.52) a planet with no points yet: either view is a dimmed preview with nothing to drag */
 .tchart.tpre{cursor:default;touch-action:auto;opacity:.75}
-.hsvg .hline{fill:none;stroke:var(--ship);stroke-width:2;vector-effect:non-scaling-stroke;stroke-linejoin:round}
-.hsvg .hfill{fill:var(--ship);opacity:.14}
-.hsvg .hzone{fill:var(--bad);opacity:.16}
-.hsvg .hbest{stroke:var(--ink);stroke-width:1;stroke-dasharray:2 3;vector-effect:non-scaling-stroke;opacity:.6}
-.hdot{position:absolute;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;background:var(--ore);border:2px solid #0b0e1d;box-shadow:0 0 0 1px rgba(255,255,255,.25);pointer-events:none}
-.hdot.ghost{opacity:.35;width:12px;height:12px;margin:-6px 0 0 -6px}
-.tchart.drag .hdot:not(.ghost){transform:scale(1.25)}
-.hbl{position:absolute;top:0;transform:translateX(-50%);font:500 9px var(--f-data);color:var(--muted);pointer-events:none}
+.tchart.meters{height:104px;display:flex;flex-direction:column;justify-content:center;margin:0 12px}
+.mrow{display:flex;justify-content:space-between;gap:8px;font:500 12px/16px var(--f-data);color:var(--muted);white-space:nowrap}
+.mrow b{color:var(--ink)}
+.mtrk{position:relative;height:12px;border-radius:6px;background:var(--panel2);margin:3px 0 7px}
+.mtrk i{position:absolute;left:0;top:0;height:100%;border-radius:6px}
+.mtrk .mo{background:var(--ore)}
+.mtrk .mh{background:var(--ship)}
+.mtrk .mx{border-radius:0;background:repeating-linear-gradient(45deg,var(--bad) 0 4px,rgba(255,122,122,.35) 4px 8px)}
+.mtrk .mnow{width:2px;margin-left:-1px;border-radius:0;background:var(--ink);opacity:.45}
+.mtrk.thin{height:5px;margin:3px 0 0}
+.mtrk .mv{background:var(--stn)}
+.mtk{position:absolute;top:-11px;transform:translateX(-50%);font-size:9px;line-height:9px;color:var(--good);pointer-events:none}
+.th.side{top:50%;right:auto;margin:-11px 0 0 -11px;flex-direction:row;gap:0;cursor:ew-resize}
+.tsvg .tgt{stroke-width:1.5;stroke-dasharray:1 4;opacity:.75;vector-effect:non-scaling-stroke}
+.tsvg .tgm{stroke:var(--ore)}
+.tsvg .tgh{stroke:var(--ship)}
+.tsvg .tgp{font-size:12px;font-weight:600}
+.tchips{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin:0 2px}
+/* the trait buttons are the theme's chips, like the planet buttons, squeezed to fit four across */
+.chip.tchip{display:flex;align-items:center;justify-content:center;gap:4px;height:28px;padding:0 4px;font-size:11px;letter-spacing:.04em;white-space:nowrap;min-width:0}
+.tchip b{color:var(--ink);font:600 12px var(--f-data);letter-spacing:0}
+.tchip i{font:600 11px var(--f-data);font-style:normal;letter-spacing:0;margin-left:-2px}
+.tchip i.up{color:var(--good)}
+.tchip i.dn{color:var(--bad)}
+.tchip i.eq{color:var(--ink)}
+.tchip.lock b{filter:grayscale(1);font-size:10px}
+.tpop{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;gap:1px;padding:6px 10px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;font:500 12px/16px var(--f-data);color:var(--muted);overflow:hidden}
+.tpop .tph{display:flex;justify-content:space-between;align-items:center;color:var(--ink);font:600 14px var(--f-body);margin-bottom:2px}
+.tpop{cursor:pointer}
+.tpop p{margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tpop p b{color:var(--ink)}
 .silo{display:flex;align-items:center;gap:8px;font:500 12px var(--f-data);color:var(--muted)}
 .silo .bar{flex:1;height:6px}
+/* fixed widths for the numbers either side of the silo bar, wide enough for the longest, so the bar never changes size */
+.tln.silo{gap:6px}
+.tln.silo > span{flex:none}
+.tln.silo > span.num,.tln.silo > span:last-child{font-size:11px}
+.tln.silo > span.num{width:16ch;text-align:right}
+.tln.silo > span:last-child{width:13ch;text-align:right}
 .flowbar{display:flex;height:8px;border-radius:var(--r-sm);overflow:hidden;background:var(--panel2)}
 .flowbar .ok{background:var(--ship);box-shadow:0 0 8px rgba(var(--ship-rgb),.5)}
 .flowbar .lost{background:repeating-linear-gradient(45deg,var(--bad) 0 4px,rgba(255,122,122,.35) 4px 8px)}
@@ -254,21 +283,17 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
 .row .s.l3{line-height:1.35;height:4.05em;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
 .note.fix{line-height:1.35;min-height:4.75em;align-content:flex-start;align-items:flex-start}
 .note.fix1{line-height:1.35;min-height:1.35em}
-.row.trow .s2{line-height:1.35;height:2.7em;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:normal}
+.note.tnote{flex-wrap:nowrap;height:18px;line-height:18px}
+.tnote .tnl{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tnote .tcost{flex:none;margin-left:auto;white-space:nowrap}
+.tnote .tcost b{color:var(--ink)}
 .btn{background:var(--ore);border:1px solid transparent;border-radius:6px;padding:9px 12px;font:700 14px var(--f-display);letter-spacing:.06em;text-transform:uppercase;cursor:pointer;min-width:96px;display:flex;flex-direction:column;align-items:center;line-height:1.1;font-variant-numeric:tabular-nums}
 .btn small{font:500 11px var(--f-data);letter-spacing:0;text-transform:none;opacity:.85}
 .btn:disabled{background:#1d2240;color:var(--muted);cursor:default}
 .btn.ghost{background:none;border:1px solid var(--line);color:var(--ink)}
 .btn.ghost:disabled{color:#4a5075}
 .btn.ship{background:var(--ship);color:#052523}
-.pm{display:flex;flex-direction:column-reverse;gap:5px;flex:0 0 auto;width:92px}
-.pm .btn{min-width:0;width:100%}
 /* + and − keep one size in every state (buy, free, plan, Maxed) */
-.pm .btn:not(.pmm){height:46px;box-sizing:border-box;justify-content:center}
-.pm .pmm{height:27px;box-sizing:border-box}
-.pm .pmm{flex-direction:row;justify-content:center;gap:6px;padding:6px;font-size:var(--fs-lg);line-height:1}
-.pm .pmm small{white-space:nowrap}
-.row.trow .bn{margin-left:5px;letter-spacing:.05em;padding:1px 4px;font-size:var(--fs-xs)}
 .sub{border-top:1px solid var(--line);padding-top:10px;display:flex;flex-direction:column;gap:7px}
 /* Warp tab cards: sub-sections are set apart by their headers and spacing, without a line */
 .sub.nl{border-top:0;padding-top:12px}
@@ -324,15 +349,7 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
 .perkc{border:1px solid var(--ore);border-radius:10px;padding:9px;display:flex;flex-direction:column;gap:7px;background:rgba(240,170,60,.06)}
 .perkc .pk2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .perkc .btn{font-size:var(--fs-md);line-height:1.3;white-space:normal;text-transform:none;letter-spacing:0;padding:8px}
-.ptc{margin-left:6px;font:500 12px var(--f-data);color:var(--muted);font-variant-numeric:tabular-nums}
-.btn.ship.bnr{background:var(--bad);color:#2b0606}
 .btn.ship:disabled{background:#173538;color:#9fe8dc;box-shadow:inset 0 0 0 1px var(--ship)}
-.btn.ship.bnr:disabled{background:#3a1d26;color:#ffb3b3;box-shadow:inset 0 0 0 1px var(--bad)}
-/* a maxed trait that is still the bottleneck keeps the faded red look of any red button that can't be pressed */
-.btn.up{background:#232849;color:var(--ink);border:1px solid #343a66}
-.btn.up.hot{background:var(--bad);color:#2b0606;border-color:var(--bad);box-shadow:0 0 0 3px rgba(255,122,122,.18)}
-.btn.up.hot:disabled{background:#3a1d26;color:#ffb3b3;border-color:var(--bad);box-shadow:none}
-.bn{display:inline-block;margin-left:6px;font:600 10px var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--bad);border:1px solid var(--bad);border-radius:3px;padding:1px 5px;vertical-align:2px}
 .btn.warn{background:var(--bad);color:#2b0606}
 .btn.wide{width:100%}
 #pbody .btn.ghost:not(:disabled):not(.evunb):not(.warn):not(.pmm){background:var(--ore);border-color:var(--ore)}
@@ -512,7 +529,8 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
 .chb path{fill:rgba(255,255,255,.04);stroke:var(--line);stroke-width:1.2;stroke-linejoin:round}
 .chb.on circle{stroke:var(--brass)}
 .chb.on text{fill:var(--brass)}
-.chron .chrow{display:flex;align-items:center;gap:10px;width:100%;min-height:46px;padding:6px 8px;margin-top:6px;border:1px solid var(--line);border-radius:10px;background:transparent;color:inherit;text-align:left;font:inherit;cursor:pointer}
+.chron .chrow{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;padding:5px 8px;border:1px solid var(--line);border-radius:10px;background:transparent;color:inherit;text-align:left;font:inherit;cursor:pointer}
+.card.chron{gap:6px}
 .chron .chrow.off{cursor:default;opacity:.6}
 .chron .chrow .txt{display:flex;flex-direction:column;flex:1;min-width:0}
 .chron .chrow .t{font-size:var(--fs-lg);color:var(--ink)}
@@ -542,8 +560,12 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
 .skinchip{display:inline-flex;align-items:center;gap:7px}
 .skinchip .sw{flex:none;width:16px;height:16px;border-radius:50%;--sw1:hsl(var(--mh) var(--ms) 58%);--sw2:hsl(var(--ph) var(--ps) 14%);background:linear-gradient(135deg,var(--sw1) 0 50%,var(--sw2) 50%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)}
 /* (Beta 0.50) the Warp tab's ledger index (as in spacepunk.css, in this look's colours): every heading a row (icon, title, live readout, chevron), lit amber
-   while its section is open; the warp gauge at the top of Galaxy Warp */
-.wrow{display:flex;align-items:center;gap:6px;margin:6px 0}
+   while its section is open; the warp gauge at the top of Galaxy Warp. The headings sit the panel's own 12px gap apart,
+   and an open section's cards sit 8px under its heading and apart, as cards do inside a card; the chevron takes the
+   heading's text colour in each skin */
+.wrow{display:flex;align-items:center;gap:6px}
+.wsb{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.wsb[hidden]{display:none}
 .wrow h2{flex:1;min-width:0;margin:0;font-size:inherit}
 .wsh{display:flex;width:100%;align-items:center;gap:10px;padding:9px 12px;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .wsh:focus-visible{outline:2px solid var(--ship);outline-offset:2px}
@@ -555,7 +577,7 @@ p{margin:0;line-height:1.45;color:var(--muted);max-width:60ch}
 .wsh .wrd b{font-weight:500}
 .wr-go{color:var(--good)}
 .wr-soon{color:var(--ore)}
-.wsh .chev{flex:none;width:7px;height:7px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:translateY(-2px) rotate(45deg);transition:transform .2s}
+.wsh .chev{flex:none;width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-2px) rotate(45deg);transition:transform .2s}
 .wsec.shut .wsh .chev{transform:rotate(-45deg)}
 .wgauge .wgtop{display:flex;align-items:center;gap:12px}
 .wgauge svg{flex:none}

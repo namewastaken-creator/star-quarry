@@ -86,7 +86,6 @@ body{background:radial-gradient(120% 80% at 70% 10%,hsl(calc(var(--mh) - 10.7) c
 /* drag handles: mining on the left edge, hauling (Speed and Cargo) on the right, each with up and down arrows */
 .th{color:hsl(calc(var(--mh) - 2.0) calc(var(--ms) * 1.14) 6.3%)}
 .btn{color:hsl(calc(var(--mh) - 5.1) calc(var(--ms) * 1.82) 8.2%)}
-.pm .pmm small{font-size:10px}
 .crewby b{font:600 13px var(--f-body);color:var(--ink)}.perkrow b{color:var(--ink);font-weight:600}
 .perklist .btn small{font:500 11px var(--f-body)}
 .progrow b{font:600 13px var(--f-body);color:var(--ink)}
@@ -132,9 +131,7 @@ h3{font:700 10px var(--f-plate);letter-spacing:.2em;color:var(--brass)}
 .btn.ghost:disabled{color:hsl(calc(var(--ph) + 11.0) calc(var(--ps) * 1.1) 35.7%);border-color:var(--line)}
 .btn.ship{background:linear-gradient(#a6f6e2,#52c8ac 55%,#2f8a76);color:#062a24;box-shadow:inset 0 0 0 1px #c8fff2,0 2px 0 #1c4a40,0 3px 8px rgba(82,230,198,.25);text-shadow:none}
 .btn.ship:disabled{background:#173a36;color:#9fe8dc;box-shadow:inset 0 0 0 1px var(--ship)}
-.btn.warn,.btn.ship.bnr,.btn.up.hot{background:linear-gradient(#ff9a7e,#d9553c 55%,#9c3424);color:#2b0606;box-shadow:inset 0 0 0 1px #ffc2b0,0 2px 0 #5a1c12;text-shadow:none}
-.btn.ship.bnr:disabled,.btn.up.hot:disabled{background:#3a1f1a;color:#ffb3a3;box-shadow:inset 0 0 0 1px var(--bad)}
-.btn.up{background:linear-gradient(hsl(calc(var(--ph) - 1.9) calc(var(--ps) * 0.78) 21.8%),hsl(calc(var(--ph) - 1.0) calc(var(--ps) * 0.9) 14.5%));color:var(--ink);border:1px solid hsl(calc(var(--ph) + 8.3) calc(var(--ps) * 1.67) 28.2%);box-shadow:0 2px 0 hsl(calc(var(--ph) + 0.7) calc(var(--ps) * 1.33) 6.9%);text-shadow:none}
+.btn.warn{background:linear-gradient(#ff9a7e,#d9553c 55%,#9c3424);color:#2b0606;box-shadow:inset 0 0 0 1px #ffc2b0,0 2px 0 #5a1c12;text-shadow:none}
 #pbody .btn.ghost:not(:disabled):not(.evunb):not(.warn):not(.pmm){background:linear-gradient(hsl(calc(var(--mh) + 4.9) calc(var(--ms) * 1.44) 75.7%),hsl(calc(var(--mh) - 0.2) calc(var(--ms) * 1.16) 58.6%) 52%,hsl(calc(var(--mh) - 1.3) calc(var(--ms) * 1.02) 42.2%));color:hsl(calc(var(--mh) - 6.0) calc(var(--ms) * 1.3) 8.2%);border-color:transparent;box-shadow:inset 0 0 0 1px hsl(calc(var(--mh) + 5.2) calc(var(--ms) * 1.82) 85.3% / .75),0 2px 0 hsl(calc(var(--mh) - 2.7) calc(var(--ms) * 1.1) 22.0%),0 3px 6px rgba(0,0,0,.4)}
 #pbody .tog.on{background:linear-gradient(hsl(calc(var(--mh) + 4.9) calc(var(--ms) * 1.44) 75.7%),hsl(calc(var(--mh) - 0.2) calc(var(--ms) * 0.98) 53.9%));color:hsl(calc(var(--mh) - 6.0) calc(var(--ms) * 1.3) 8.2%)}
 .seg{border-color:var(--brassD)}
@@ -146,7 +143,6 @@ h3{font:700 10px var(--f-plate);letter-spacing:.2em;color:var(--brass)}
 .empty{border-color:hsl(calc(var(--ph) + 8.3) calc(var(--ps) * 1.67) 28.2%)}
 .oretip{text-decoration-color:hsl(calc(var(--ph) + 13.9) calc(var(--ps) * 1.18) 59.0% / .6)}
 .th{border-color:hsl(calc(var(--ph) - 2.5) calc(var(--ps) * 1.21) 8.6%)}
-.hdot{border-color:hsl(calc(var(--ph) - 2.5) calc(var(--ps) * 1.21) 8.6%)}
 #fps,#bench{background:hsl(calc(var(--ph) + 0.7) calc(var(--ps) * 1.41) 6.5% / .78);border-color:var(--brassD)}
 #tring.edge{background:hsl(calc(var(--ph) + 1.7) calc(var(--ps) * 1.18) 10.0% / .88)}
 /* windows: an iron plate in a brass frame with a rivet at each corner, the tag above the title engraved */
