@@ -142,34 +142,39 @@ kbd{font:500 .85em var(--f-data);background:var(--panel2);border:1px solid var(-
     </div>
   </div>
 
-  <section aria-labelledby="already">
-    <h2 id="already">Already playing?</h2>
-    <ul class="facts">
-      <li><strong>You don't need to install it again.</strong> Your progress is safe.</li>
-      <li><strong>iPhone or iPad:</strong> keep using the icon you already have. A second icon starts a new game, and deleting an icon deletes its save.</li>
-      <li><strong>Moving a game between devices or browsers:</strong> use <strong>Your save</strong> on the <strong>Warp</strong> tab to export it, then import it in the other one.</li>
-    </ul>
-  </section>
-
   <section aria-labelledby="install">
     <h2 id="install">Install it</h2>
-    <p class="first"><strong>Read your device's steps before you open the game.</strong> The game opens in a new tab and this page stays open in the old one, so you can switch back to it at any time.</p>
+    <p class="first"><strong>Read your device's steps before you start.</strong> On Android and Windows you download the new Star Quarry app. On iPhone, iPad and Mac you play in the browser for now; the app comes to those later.</p>
     <ul class="jump" style="margin-bottom:16px">
       <li><a href="#android">Android</a></li>
+      <li><a href="#pc">Windows</a></li>
       <li><a href="#iphone">iPhone &amp; iPad</a></li>
-      <li><a href="#pc">PC &amp; Mac</a></li>
+      <li><a href="#mac">Mac</a></li>
     </ul>
     <p class="elsewhere" id="elsewhere" hidden>The other devices are greyed out because the game installs on the device you're reading this on. To install it on another phone, tablet or computer, open this page on that device.</p>
     <div class="devices">
       <article class="dev" id="android">
-        <header><h3>Android</h3><span class="mine" hidden>Your device</span><span class="browser">Chrome</span></header>
+        <header><h3>Android</h3><span class="mine" hidden>Your device</span><span class="browser">App · Beta 0.56.20.250</span></header>
         <ol>
-          <li><span>Open the game <strong>only in Chrome</strong>.</span></li>
-          <li><span>Tap the <kbd>⋮</kbd> menu at the top right, then <strong>Add to Home screen</strong> (or <strong>Install app</strong>), then <strong>Install</strong>.</span></li>
-          <li><span>Close the Chrome tab and open Star Quarry from its new icon on your home screen.</span></li>
+          <li><span>On your Android phone or tablet, tap <strong>Download for Android</strong> below. Chrome downloads <strong>StarQuarryTest-0.56.20.250.apk</strong> (about 38 MB). If it warns that the file might be harmful, tap <strong>Download anyway</strong>.</span></li>
+          <li><span>Open the downloaded file, from Chrome's download message or your <strong>Files</strong> app.</span></li>
+          <li><span>If Android says your phone isn't allowed to install unknown apps from this source, tap <strong>Settings</strong>, turn on <strong>Allow from this source</strong>, then go back.</span></li>
+          <li><span>Tap <strong>Install</strong>. If Play Protect asks you to scan the app, you can scan it or tap <strong>More details › Install anyway</strong>.</span></li>
+          <li><span>Open <strong>Star Quarry Test</strong> from its new icon.</span></li>
         </ol>
-        <div class="linkrow"><a class="btn small" href="https://namewastaken-creator.github.io/star-quarry/" target="_blank" rel="noopener">Open the game ↗</a><button class="ghost" type="button" data-copy="https://namewastaken-creator.github.io/star-quarry/">Copy link</button><span class="url">namewastaken-creator.github.io/star-quarry</span></div>
-        <p class="note">From the icon it runs full screen and works offline.</p>
+        <div class="linkrow"><a class="btn small" href="https://github.com/namewastaken-creator/star-quarry/releases/download/unity-0.56.20.250/StarQuarryTest-0.56.20.250.apk">Download for Android</a></div>
+        <p class="note">To update, download and install a newer file the same way; your progress carries over. Uninstalling the app erases its save.</p>
+      </article>
+      <article class="dev" id="pc">
+        <header><h3>Windows</h3><span class="mine" hidden>Your device</span><span class="browser">App · Beta 0.56.20.250</span></header>
+        <ol>
+          <li><span>On your PC, click <strong>Download for Windows</strong> below. It downloads <strong>StarQuarryTest-Windows-0.56.20.250.zip</strong> (about 39 MB).</span></li>
+          <li><span>Right-click the zip in your <strong>Downloads</strong> folder, choose <strong>Extract All…</strong>, then click <strong>Extract</strong>. The game won't run from inside the zip.</span></li>
+          <li><span>Open the new <strong>StarQuarryTest</strong> folder and double-click <strong>StarQuarryTest.exe</strong>.</span></li>
+          <li><span>If Windows shows <strong>Windows protected your PC</strong>, click <strong>More info</strong>, then <strong>Run anyway</strong>. It warns because the game is new and not yet signed.</span></li>
+        </ol>
+        <div class="linkrow"><a class="btn small" href="https://github.com/namewastaken-creator/star-quarry/releases/download/unity-0.56.20.250/StarQuarryTest-Windows-0.56.20.250.zip">Download for Windows</a></div>
+        <p class="note">For a shortcut, right-click <strong>StarQuarryTest.exe</strong> and choose <strong>Show more options › Send to › Desktop</strong>. To update, extract a newer zip over the old folder; your save is kept separately and carries over.</p>
       </article>
       <article class="dev" id="iphone">
         <header><h3>iPhone &amp; iPad</h3><span class="mine" hidden>Your device</span><span class="browser">Safari</span></header>
@@ -182,53 +187,32 @@ kbd{font:500 .85em var(--f-data);background:var(--panel2);border:1px solid var(-
         <div class="linkrow"><a class="btn small" href="https://namewastaken-creator.github.io/star-quarry/" target="_blank" rel="noopener">Open the game ↗</a><button class="ghost" type="button" data-copy="https://namewastaken-creator.github.io/star-quarry/">Copy link</button><span class="url">namewastaken-creator.github.io/star-quarry</span></div>
         <p class="note"><strong style="color:var(--ink)">Always play from the home-screen icon.</strong> It keeps its own save, separate from Safari, so a game started in a Safari tab won't carry over.</p>
       </article>
-      <article class="dev" id="pc">
-        <header><h3>PC &amp; Mac</h3><span class="mine" hidden>Your device</span><span class="browser">Chrome or Edge</span></header>
+      <article class="dev" id="mac">
+        <header><h3>Mac</h3><span class="mine" hidden>Your device</span><span class="browser">Chrome or Edge</span></header>
         <ol>
           <li><span>Open the game <strong>only in Chrome or Microsoft Edge</strong>.</span></li>
           <li><span><strong>Chrome:</strong> click the install icon at the right end of the address bar (a small screen with a down arrow), or go to <kbd>⋮</kbd> › <strong>Cast, save and share</strong> › <strong>Install page as app</strong>.<br><strong>Edge:</strong> go to <kbd>⋯</kbd> › <strong>Apps</strong> › <strong>Install this site as an app</strong>.</span></li>
-          <li><span>Star Quarry opens in its own window, with a Start menu or desktop shortcut. You can close the browser tab.</span></li>
+          <li><span>Star Quarry opens in its own window, with a Dock icon. You can close the browser tab.</span></li>
         </ol>
         <div class="linkrow"><a class="btn small" href="https://namewastaken-creator.github.io/star-quarry/" target="_blank" rel="noopener">Open the game ↗</a><button class="ghost" type="button" data-copy="https://namewastaken-creator.github.io/star-quarry/">Copy link</button><span class="url">namewastaken-creator.github.io/star-quarry</span></div>
       </article>
     </div>
   </section>
 
-  <section aria-labelledby="unity">
-    <h2 id="unity">Try the new version</h2>
-    <p class="first">I'm rebuilding Star Quarry as a proper app, with new 3D graphics. <strong>Star Quarry Test</strong> is an early build of it for Android phones and tablets and for Windows PCs. It has the same game and rules, and it <strong>starts a new game</strong>: it keeps its own save and doesn't touch the game you already have.</p>
-    <div class="devices">
-      <article class="dev" id="u-android">
-        <header><h3>Android app</h3><span class="browser">Beta 0.56.20.250</span></header>
-        <ol>
-          <li><span>On your Android phone or tablet, tap <strong>Download for Android</strong> below. Chrome downloads <strong>StarQuarryTest-0.56.20.250.apk</strong> (about 38 MB). If it warns that the file might be harmful, tap <strong>Download anyway</strong>.</span></li>
-          <li><span>Open the downloaded file, from Chrome's download message or your <strong>Files</strong> app.</span></li>
-          <li><span>If Android says your phone isn't allowed to install unknown apps from this source, tap <strong>Settings</strong>, turn on <strong>Allow from this source</strong>, then go back.</span></li>
-          <li><span>Tap <strong>Install</strong>. If Play Protect asks you to scan the app, you can scan it or tap <strong>More details › Install anyway</strong>.</span></li>
-          <li><span>Open <strong>Star Quarry Test</strong> from its new icon.</span></li>
-        </ol>
-        <div class="linkrow"><a class="btn small" href="https://github.com/namewastaken-creator/star-quarry/releases/download/unity-0.56.20.250/StarQuarryTest-0.56.20.250.apk">Download for Android</a></div>
-        <p class="note">It sits beside the Star Quarry you already have, with its own icon and save. To update, download and install a newer file the same way, and your progress carries over. Uninstalling the app erases its save.</p>
-      </article>
-      <article class="dev" id="u-windows">
-        <header><h3>Windows PC</h3><span class="browser">Beta 0.56.20.250</span></header>
-        <ol>
-          <li><span>On your PC, click <strong>Download for Windows</strong> below. It downloads <strong>StarQuarryTest-Windows-0.56.20.250.zip</strong> (about 39 MB).</span></li>
-          <li><span>Right-click the zip in your <strong>Downloads</strong> folder, choose <strong>Extract All…</strong>, then click <strong>Extract</strong>. The game won't run from inside the zip.</span></li>
-          <li><span>Open the new <strong>StarQuarryTest</strong> folder and double-click <strong>StarQuarryTest.exe</strong>.</span></li>
-          <li><span>If Windows shows <strong>Windows protected your PC</strong>, click <strong>More info</strong>, then <strong>Run anyway</strong>. It warns because the game is new and not yet signed.</span></li>
-        </ol>
-        <div class="linkrow"><a class="btn small" href="https://github.com/namewastaken-creator/star-quarry/releases/download/unity-0.56.20.250/StarQuarryTest-Windows-0.56.20.250.zip">Download for Windows</a></div>
-        <p class="note">For a shortcut, right-click <strong>StarQuarryTest.exe</strong> and choose <strong>Show more options › Send to › Desktop</strong>. To update, extract a newer zip over the old folder. Your save is kept separately and carries over.</p>
-      </article>
-    </div>
+  <section aria-labelledby="already">
+    <h2 id="already">Already playing?</h2>
+    <ul class="facts">
+      <li><strong>Android or Windows:</strong> the new app has new 3D graphics and the same game and rules. It <strong>starts a new game</strong>: saves from the browser version don't carry over. The browser version and its save stay as they are, so you can keep playing it too.</li>
+      <li><strong>iPhone, iPad or Mac:</strong> you don't need to install anything again, and your progress is safe. On iPhone and iPad keep using the icon you already have: a second icon starts a new game, and deleting an icon deletes its save.</li>
+      <li><strong>Moving a game between devices:</strong> use <strong>Your save</strong> on the <strong>Warp</strong> tab to export it, then import it on the other one. This works between the apps, or between browsers, but not from the browser version to the app.</li>
+    </ul>
   </section>
 
   <section aria-labelledby="know">
     <h2 id="know">Good to know</h2>
     <ul class="facts">
-      <li><strong>Updates install themselves</strong> the next time you open the game, and your progress carries over.</li>
-      <li><strong>Your save stays on that device.</strong> Progress doesn't move between your phone and computer, and clearing your browser's site data erases it.</li>
+      <li><strong>Updates:</strong> on Android and Windows, I'll send you a new download when there's a new test build. On iPhone, iPad and Mac, updates install themselves the next time you open the game. Your progress carries over either way.</li>
+      <li><strong>Your save stays on that device.</strong> Progress doesn't move between your phone and computer on its own. In the browser version, clearing the browser's site data erases it.</li>
       <li><strong>New to the game?</strong> Open the <strong>Warp</strong> tab and tap <strong>Open the user guide</strong> to see how everything works, from mining crews to warps.</li>
       <li><strong>Tips and tricks</strong> is the last section of the user guide. Read it once you've got going.</li>
       <li>The version you're playing is shown on the <strong>Warp</strong> tab.</li>
@@ -266,7 +250,7 @@ kbd{font:500 .85em var(--f-data);background:var(--panel2);border:1px solid var(-
   <section class="legal" aria-labelledby="licence">
     <h2 id="licence">Licence</h2>
     <p><strong>Star Quarry © 2026 Fair Tap Studios. All rights reserved.</strong></p>
-    <p>You may play Star Quarry for free at namewastaken-creator.github.io/star-quarry and in its Android app. No other rights are granted. You may not copy, modify, redistribute, republish, sell or make derivative works from this game, its code, artwork, text or other files, in whole or in part, without written permission from Fair Tap Studios.</p>
+    <p>You may play Star Quarry for free at namewastaken-creator.github.io/star-quarry and in its Android and Windows apps. No other rights are granted. You may not copy, modify, redistribute, republish, sell or make derivative works from this game, its code, artwork, text or other files, in whole or in part, without written permission from Fair Tap Studios.</p>
     <p>Third-party software: Star Quarry uses Three.js r187, © 2010–2026 Three.js Authors, under the MIT License.</p>
   </section>
 
@@ -290,10 +274,10 @@ kbd{font:500 .85em var(--f-data);background:var(--panel2);border:1px solid var(-
 // installed from the device it will be played on. Unknown device: nothing is greyed.
 (function(){
   const ua=navigator.userAgent||'',ios=/iPhone|iPad|iPod/.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1);
-  const id=/Android/i.test(ua)?'android':ios?'iphone':/Windows|Macintosh|CrOS|Linux/.test(ua)?'pc':null;
+  const id=/Android/i.test(ua)?'android':ios?'iphone':/Windows/.test(ua)?'pc':/Macintosh/.test(ua)?'mac':null;
   const el=id&&document.getElementById(id);if(!el)return;
   el.classList.add('is-mine');el.querySelector('.mine').hidden=false;el.parentElement.prepend(el);
-  document.querySelectorAll('.dev').forEach(d=>{if(d===el)return;
+  document.querySelectorAll('[aria-labelledby="install"] .dev').forEach(d=>{if(d===el)return;
     d.classList.add('other');d.setAttribute('aria-disabled','true');
     d.querySelectorAll('.linkrow a,.linkrow button').forEach(c=>{c.tabIndex=-1;c.setAttribute('aria-disabled','true')})});
   document.querySelectorAll('.jump a').forEach(a=>{if(a.getAttribute('href')!=='#'+id){a.classList.add('off');a.setAttribute('aria-disabled','true');a.tabIndex=-1}});
